@@ -1,14 +1,12 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.params import Body
 from fastapi.responses import RedirectResponse
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from jose import JWTError, jwt
+from jose import jwt
 from typing import Optional
-import json
 import os
 from sqlalchemy.orm import Session
 from starlette.middleware.sessions import SessionMiddleware
@@ -17,7 +15,6 @@ from .database import get_db, get_user, create_user
 from .database import User as DBUser  # SQLAlchemy model
 from .config import settings
 from .email_service import generate_verification_token, send_verification_email
-from sqlalchemy import update
 
 # Initialize OAuth
 oauth = OAuth()
@@ -105,7 +102,6 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
 
 @app.get("/verify-email")
 async def verify_email(token: str, db: Session = Depends(get_db)):
-    # Corrected to use DBUser (SQLAlchemy model) instead of Pydantic User
     user = db.query(DBUser).filter(DBUser.verification_token == token).first()
     
     if not user:
