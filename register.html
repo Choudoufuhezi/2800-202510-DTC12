@@ -32,7 +32,7 @@
                 });
 
                 if (response.ok) {
-                    window.location.href = '/login';
+                    window.location.href = '/login.html';
                 } else {
                     const error = await response.json();
                     alert(error.detail || 'Registration failed');

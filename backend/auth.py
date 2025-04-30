@@ -8,6 +8,9 @@ from jose import JWTError, jwt
 from typing import Optional
 import json
 import os
+from sqlalchemy.orm import Session
+
+from .database import get_db, get_user, create_user
 
 # Config
 SECRET_KEY = "your-secret-key"  
@@ -41,9 +44,6 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-# User database (in-memory for now)
-users_db = {}
-
 # Utils
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -67,24 +67,22 @@ class UserRegister(BaseModel):
     password: str
 
 @app.post("/register")
-async def register(user: UserRegister):
-    if user.username in users_db:
+async def register(user: UserRegister, db: Session = Depends(get_db)):
+    db_user = get_user(db, user.username)
+    if db_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered"
         )
     
     hashed_password = get_password_hash(user.password)
-    users_db[user.username] = {
-        "username": user.username,
-        "hashed_password": hashed_password
-    }
+    create_user(db, user.username, hashed_password)
     return {"message": "User registered successfully"}
 
 @app.post("/login")
-async def login(user: User):
-    user_db = users_db.get(user.username)
-    if not user_db or not verify_password(user.password, user_db["hashed_password"]):
+async def login(user: User, db: Session = Depends(get_db)):
+    db_user = get_user(db, user.username)
+    if not db_user or not verify_password(user.password, db_user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
