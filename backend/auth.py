@@ -14,12 +14,11 @@ from authlib.integrations.starlette_client import OAuth
 from .database import get_db, get_user, create_user
 from .config import settings
 
-
 oauth = OAuth()
 oauth.register(
     name='google',
-    client_id='',
-    client_secret='',
+    client_id=settings.google_client_id,
+    client_secret=settings.google_client_secret,
     access_token_url='https://oauth2.googleapis.com/token',
     authorize_url='https://accounts.google.com/o/oauth2/v2/auth',
     api_base_url='https://openidconnect.googleapis.com/v1/',
@@ -153,7 +152,7 @@ async def auth_via_google_callback(request: Request, db: Session = Depends(get_d
         create_user(db, email, hashed_password)
     
     # Generate JWT token
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
         data={"sub": email}, expires_delta=access_token_expires
     )
