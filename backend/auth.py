@@ -1,4 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Request
+from fastapi.params import Body
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -12,26 +14,12 @@ from sqlalchemy.orm import Session
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
 from .database import get_db, get_user, create_user
+from .database import User as DBUser  # SQLAlchemy model
 from .config import settings
+from .email_service import generate_verification_token, send_verification_email
+from sqlalchemy import update
 
-oauth = OAuth()
-oauth.register(
-    name='google',
-    client_id=settings.google_client_id,
-    client_secret=settings.google_client_secret,
-    access_token_url='https://oauth2.googleapis.com/token',
-    authorize_url='https://accounts.google.com/o/oauth2/v2/auth',
-    api_base_url='https://openidconnect.googleapis.com/v1/',
-    userinfo_endpoint='https://openidconnect.googleapis.com/v1/userinfo',
-    jwks_uri='https://www.googleapis.com/oauth2/v3/certs',
-    client_kwargs={
-        'scope': 'openid email profile'
-    }
-)
-
-app = FastAPI()
-
-# Configure Google OAuth
+# Initialize OAuth
 oauth = OAuth()
 oauth.register(
     name='google',
@@ -43,16 +31,18 @@ oauth.register(
     }
 )
 
+app = FastAPI()
+
+# Middleware
 app.add_middleware(
     SessionMiddleware,
-    secret_key="Secret",  # Use your secret key from settings
+    secret_key=settings.secret_key,
     session_cookie="session_cookie"
 )
 
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: Change to frontend URL, only for dev
+    allow_origins=["*"],  # TODO: Change to frontend URL in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -61,68 +51,94 @@ app.add_middleware(
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# User model
-class UserInDB(BaseModel):
-    username: str
-    hashed_password: str
+# Pydantic Models
+class UserBase(BaseModel):
+    email: str
 
-class User(BaseModel):
-    username: str
+class UserCreate(UserBase):
     password: str
 
-# Token model
+class UserInDB(UserBase):
+    hashed_password: str
+
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-# Utils
-def verify_password(plain_password, hashed_password):
+# Utility functions
+def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
-def get_password_hash(password):
+def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
-    return encoded_jwt
+    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
 
 # Routes
-class UserRegister(BaseModel):
-    username: str
-    password: str
-
 @app.post("/register")
-async def register(user: UserRegister, db: Session = Depends(get_db)):
-    db_user = get_user(db, user.username)
+async def register(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = get_user(db, user.email)
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered"
+            detail="Email already registered"
         )
     
+    verification_token = generate_verification_token()
     hashed_password = get_password_hash(user.password)
-    create_user(db, user.username, hashed_password)
-    return {"message": "User registered successfully"}
+    create_user(db, user.email, hashed_password, verification_token)
+    
+    if not send_verification_email(user.email, verification_token):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send verification email"
+        )
+    
+    return {"message": "Registration successful. Please check your email for verification."}
+
+@app.get("/verify-email")
+async def verify_email(token: str, db: Session = Depends(get_db)):
+    # Corrected to use DBUser (SQLAlchemy model) instead of Pydantic User
+    user = db.query(DBUser).filter(DBUser.verification_token == token).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification token"
+        )
+    
+    user.email_verified = True
+    user.verification_token = None
+    db.commit()
+    
+    return {"message": "Email verified successfully"}
 
 @app.post("/login")
-async def login(user: User, db: Session = Depends(get_db)):
-    db_user = get_user(db, user.username)
-    if not db_user or not verify_password(user.password, db_user.hashed_password):
+async def login(user_data: dict = Body(...), db: Session = Depends(get_db)):
+    db_user = get_user(db, user_data["email"])
+    if not db_user or not verify_password(user_data["password"], db_user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    if not db_user.email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Email not verified. Please check your email for verification link."
         )
     
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": db_user.email}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -144,19 +160,14 @@ async def auth_via_google_callback(request: Request, db: Session = Depends(get_d
     if not email:
         raise HTTPException(status_code=400, detail="Email not available from Google")
     
-    # Check if user exists, if not create one
     db_user = get_user(db, email)
     if not db_user:
-        # Create user with random password (not used for Google auth)
         hashed_password = get_password_hash(os.urandom(16).hex())
         create_user(db, email, hashed_password)
     
-    # Generate JWT token
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
         data={"sub": email}, expires_delta=access_token_expires
     )
     
-    # Redirect to frontend with token
-    from fastapi.responses import RedirectResponse
-    return RedirectResponse(url="http://localhost:3000/login.html?token=" + access_token)
+    return RedirectResponse(url=f"{settings.frontend_url}/login?token={access_token}")
