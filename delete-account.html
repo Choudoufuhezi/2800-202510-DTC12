@@ -52,6 +52,49 @@
             </a>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('token');
+            // page is only accessible if user is logged in
+            if (!token) {
+                console.log('not logged in');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            document.getElementById('deleteForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                if (!confirm('Are you absolutely sure you want to delete your account? This cannot be undone.')) {
+                    return;
+                }
+
+                const formData = new FormData(e.target);
+
+                try {
+                    const response = await fetch('http://localhost:8000/account/delete', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                    });
+
+                    if (response.ok) {
+                        localStorage.removeItem('token');
+                        alert('Your account has been permanently deleted');
+                        window.location.href = '/about.html';
+                    } else {
+                        const error = await response.json();
+                        alert(error.detail || 'Account deletion failed');
+                    }
+                } catch (error) {
+                    alert('Account deletion failed');
+                    console.error('Error:', error);
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
