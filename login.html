@@ -4,57 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <style>
-        .login-container {
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #4285F4;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        .google-btn {
-            background-color: #DB4437;
-            margin-top: 10px;
-        }
-        .divider {
-            text-align: center;
-            margin: 20px 0;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="login-container">
-        <h1>Login</h1>
-        <form id="loginForm">
-            <div class="form-group">
-                <input type="email" name="email" placeholder="Email" required>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Login</h1>
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <input 
+                    type="email" 
+                    name="email" 
+                    placeholder="Email" 
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
             </div>
-            <div class="form-group">
-                <input type="password" name="password" placeholder="Password" required>
+            <div>
+                <input 
+                    type="password" 
+                    name="password" 
+                    placeholder="Password" 
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
             </div>
-            <button type="submit">Login</button>
+            <button 
+                type="submit"
+                class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+                Login
+            </button>
         </form>
 
-        <div class="divider">OR</div>
+        <div class="flex items-center my-6">
+            <div class="flex-grow border-t border-gray-300"></div>
+            <span class="mx-4 text-gray-500">OR</span>
+            <div class="flex-grow border-t border-gray-300"></div>
+        </div>
 
-        <button id="googleLogin" class="google-btn">Login with Google</button>
+        <button 
+            id="googleLogin"
+            class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+        >
+            Login with Google
+        </button>
 
-        <p>Don't have an account? <a href="register.html">Register</a></p>
+        <div class="mt-4 text-center text-sm">
+            <span class="text-gray-600">Don't have an account?</span>
+            <a href="register.html" class="text-blue-600 hover:text-blue-800 ml-1">
+                Register
+            </a>
+        </div>
     </div>
 
     <script>
@@ -67,14 +67,16 @@
                 password: formData.get('password')
             };
 
+            console.log(data);
+
             try {
                 const response = await fetch('http://localhost:8000/login', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                      'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(data)
-                });
+                  })
 
                 if (response.ok) {
                     const { access_token } = await response.json();
