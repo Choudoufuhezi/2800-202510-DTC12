@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email</title>
+    <style>
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .message {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Email Verification</h1>
+        <div id="message" class="message"></div>
+    </div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+    
+        if (!token) {
+            document.getElementById('message').className = 'message error';
+            document.getElementById('message').textContent = 'No verification token provided';
+        } else {
+            async function verifyEmail() {
+                try {
+                    const response = await fetch(`http://localhost:8000/verify-email?token=${token}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                    });
+    
+                    const data = await response.json();
+    
+                    if (response.ok) {
+                        document.getElementById('message').className = 'message success';
+                        document.getElementById('message').textContent = data.message;
+                        setTimeout(() => {
+                            window.location.href = '/login.html';
+                        }, 3000);
+                    } else {
+                        document.getElementById('message').className = 'message error';
+                        document.getElementById('message').textContent = data.detail || 'Verification failed';
+                    }
+                } catch (error) {
+                    document.getElementById('message').className = 'message error';
+                    document.getElementById('message').textContent = 'Verification failed';
+                }
+            }
+    
+            verifyEmail();
+        }
+    </script>
+</body>
+
+</html>

@@ -1,1 +1,14 @@
+# python cache
+__pycache__/
+*.py[cod]
+*$py.class
 
+# Virtual environments
+venv/
+.venv/
+
+#Credentials
+.env
+
+#Database
+*.db
