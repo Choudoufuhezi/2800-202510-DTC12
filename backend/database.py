@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Integer
+from sqlalchemy import create_engine, Column, String, Integer, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
@@ -20,8 +20,10 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    email_verified = Column(Boolean, default=False)
+    verification_token = Column(String, nullable=True)
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
@@ -34,11 +36,16 @@ def get_db():
     finally:
         db.close()
 
-def get_user(db, username: str):
-    return db.query(User).filter(User.username == username).first()
+def get_user(db, email: str):
+    return db.query(User).filter(User.email == email).first()
 
-def create_user(db, username: str, hashed_password: str):
-    db_user = User(username=username, hashed_password=hashed_password)
+def create_user(db, email: str, hashed_password: str, verification_token: str = None):
+    db_user = User(
+        email=email, 
+        hashed_password=hashed_password,
+        email_verified=False,
+        verification_token=verification_token
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
