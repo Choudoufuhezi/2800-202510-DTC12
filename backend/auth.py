@@ -9,10 +9,26 @@ from typing import Optional
 import json
 import os
 from sqlalchemy.orm import Session
+from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
 from .database import get_db, get_user, create_user
 from .config import settings
 
+
+oauth = OAuth()
+oauth.register(
+    name='google',
+    client_id='',
+    client_secret='',
+    access_token_url='https://oauth2.googleapis.com/token',
+    authorize_url='https://accounts.google.com/o/oauth2/v2/auth',
+    api_base_url='https://openidconnect.googleapis.com/v1/',
+    userinfo_endpoint='https://openidconnect.googleapis.com/v1/userinfo',
+    jwks_uri='https://www.googleapis.com/oauth2/v3/certs',
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
 
 app = FastAPI()
 
@@ -27,6 +43,13 @@ oauth.register(
         'scope': 'openid email profile'
     }
 )
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key="Secret",  # Use your secret key from settings
+    session_cookie="session_cookie"
+)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -103,3 +126,38 @@ async def login(user: User, db: Session = Depends(get_db)):
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+# Google OAuth routes
+@app.get("/auth/google")
+async def login_via_google(request: Request):
+    redirect_uri = request.url_for('auth_via_google_callback')
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+@app.get("/auth/google/callback")
+async def auth_via_google_callback(request: Request, db: Session = Depends(get_db)):
+    token = await oauth.google.authorize_access_token(request)
+    user_info = token.get('userinfo')
+    
+    if not user_info:
+        raise HTTPException(status_code=400, detail="Failed to fetch user info")
+    
+    email = user_info.get('email')
+    if not email:
+        raise HTTPException(status_code=400, detail="Email not available from Google")
+    
+    # Check if user exists, if not create one
+    db_user = get_user(db, email)
+    if not db_user:
+        # Create user with random password (not used for Google auth)
+        hashed_password = get_password_hash(os.urandom(16).hex())
+        create_user(db, email, hashed_password)
+    
+    # Generate JWT token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": email}, expires_delta=access_token_expires
+    )
+    
+    # Redirect to frontend with token
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="http://localhost:3000/login.html?token=" + access_token)
