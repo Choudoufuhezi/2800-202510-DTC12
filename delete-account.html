@@ -83,7 +83,7 @@
                     if (response.ok) {
                         localStorage.removeItem('token');
                         alert('Your account has been permanently deleted');
-                        window.location.href = '/about.html';
+                        window.location.href = '/login.html';
                     } else {
                         const error = await response.json();
                         alert(error.detail || 'Account deletion failed');

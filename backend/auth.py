@@ -166,4 +166,50 @@ async def auth_via_google_callback(request: Request, db: Session = Depends(get_d
         data={"sub": email}, expires_delta=access_token_expires
     )
     
-    return RedirectResponse(url=f"{settings.frontend_url}/login?token={access_token}")
+    return RedirectResponse(url=f"{settings.frontend_url}/login.html?token={access_token}")
+
+@app.delete("/account/delete")
+async def delete_account(request: Request, db: Session = Depends(get_db)):
+    # Get token
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+        )
+    
+    token = auth_header.split(" ")[1]
+    
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        email: str = payload.get("sub")
+        if email is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials",
+            )
+    except jwt.JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+        )
+    
+    # Get user from database
+    db_user = get_user(db, email)
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    
+    # Delete user from database
+    try:
+        db.delete(db_user)
+        db.commit()
+        return {"message": "Account deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete account",
+        )
