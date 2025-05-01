@@ -1,3 +1,4 @@
+import secrets
 from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.params import Body
 from fastapi.responses import RedirectResponse
@@ -14,7 +15,7 @@ from authlib.integrations.starlette_client import OAuth
 from .database import get_db, get_user, create_user
 from .database import User as DBUser  # SQLAlchemy model
 from .config import settings
-from .email_service import generate_verification_token, send_verification_email
+from .email_service import generate_verification_token, send_password_reset_email, send_verification_email
 
 # Initialize OAuth
 oauth = OAuth()
@@ -62,12 +63,18 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-# Utility functions
+# Utility functions TODO: move to a diff file?
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
+
+def generate_password_reset_token() -> str:
+    return secrets.token_urlsafe(32)
+
+def get_password_reset_token_expiry() -> datetime:
+    return datetime.utcnow() + timedelta(hours=1)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
@@ -213,3 +220,72 @@ async def delete_account(request: Request, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete account",
         )
+        
+@app.post("/forgot-password")
+async def forgot_password(request_data: dict = Body(...), db: Session = Depends(get_db)):
+    """
+    Initiate password reset process by sending email with reset token
+    """
+    email = request_data.get("email")
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email is required"
+        )
+    
+    db_user = get_user(db, email)
+    if not db_user:
+        return {"message": "If an account with this email exists, a password reset link has been sent"}
+    
+    # Generate reset token and expiry
+    reset_token = generate_password_reset_token()
+    reset_token_expiry = get_password_reset_token_expiry()
+    
+    # Store in database
+    db_user.reset_token = reset_token
+    db_user.reset_token_expiry = reset_token_expiry
+    db.commit()
+    
+    # Send email
+    reset_link = f"{settings.frontend_url}/reset-password.html?token={reset_token}"
+    if not send_password_reset_email(email, reset_link):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send password reset email"
+        )
+    
+    return {"message": "If an account with this email exists, a password reset link has been sent"}
+
+@app.post("/reset-password")
+async def reset_password(request_data: dict = Body(...), db: Session = Depends(get_db)):
+    """
+    Verify reset token and update password
+    """
+    token = request_data.get("token")
+    new_password = request_data.get("new_password")
+    
+    if not token or not new_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token and new password are required"
+        )
+    
+    # Find user with token
+    db_user = db.query(DBUser).filter(
+        DBUser.reset_token == token,
+        DBUser.reset_token_expiry > datetime.utcnow()  # Check token hasn't expired
+    ).first()
+    
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
+        )
+    
+    # Update password and clear reset token
+    db_user.hashed_password = get_password_hash(new_password)
+    db_user.reset_token = None
+    db_user.reset_token_expiry = None
+    db.commit()
+    
+    return {"message": "Password has been reset successfully"}
