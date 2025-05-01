@@ -9,53 +9,62 @@
     <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
 </head>
 
-<body class="bg-[#f5f3eb98] text-gray-800">
+<body class="bg-gradient-to-b from-indigo-50 to-gray-100 min-h-screen font-sans">
 
-    <!-- Top Navigation (Loaded by JS) -->
+    <!-- Top Navigation -->
     <nav id="topNav"></nav>
 
-    <!-- Main Content -->
-    <main class="min-h-[calc(100vh-128px)] px-4 pt-6 pb-24">
-        <h2 class="text-xl font-bold mb-4">Your Family Groups</h2>
+    <main class="max-w-3xl mx-auto px-4 py-10">
+        <!-- Heading -->
+        <h1 class="text-3xl font-extrabold text-center text-gray-900 mb-8">
+            Your Family Groups
+        </h1>
 
-        <!-- Family Groups List -->
-        <div class="space-y-6">
-            <!-- Family Group Card 1 -->
+        <!-- Group Cards Section -->
+        <section class="space-y-5">
+            <!-- Group Card 1 -->
             <a href="family-members.html"
-                class="group-card block bg-white p-6 rounded-xl shadow-md hover:bg-indigo-50 transition">
-                <div class="flex items-center justify-between">
-                    <span class="text-lg font-semibold text-gray-800">The Smith Family</span>
-                    <i class="fas fa-arrow-right text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                class="block bg-white rounded-xl p-6 shadow hover:shadow-md transition hover:bg-indigo-50">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-800">The Smith Family</h2>
+                        <p class="text-sm text-gray-500 mt-1">6 members • Last active: Today</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-indigo-600"></i>
                 </div>
-                <p class="text-sm text-gray-500 mt-2">6 members • Last active: Today</p>
             </a>
-        
-            <!-- Family Group Card 2 -->
+
+            <!-- Group Card 2 -->
             <a href="family-members.html"
-                class="group-card block bg-white p-6 rounded-xl shadow-md hover:bg-indigo-50 transition">
-                <div class="flex items-center justify-between">
-                    <span class="text-lg font-semibold text-gray-800">The Johnson Clan</span>
-                    <i class="fas fa-arrow-right text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                class="block bg-white rounded-xl p-6 shadow hover:shadow-md transition hover:bg-indigo-50">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-800">The Johnson Clan</h2>
+                        <p class="text-sm text-gray-500 mt-1">4 members • Last active: Yesterday</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-indigo-600"></i>
                 </div>
-                <p class="text-sm text-gray-500 mt-2">4 members • Last active: Yesterday</p>
             </a>
-        
-            <!-- Add New Group Button -->
+        </section>
+
+        <!-- Action Buttons -->
+        <section class="mt-10 space-y-4">
+            <a href="invite.html"
+                class="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-indigo-700 transition">
+                <i class="fas fa-user-plus"></i> Invite a Family Member
+            </a>
+
             <button
-                class="group-card flex items-center justify-center bg-blue-600 text-white p-6 rounded-xl shadow-md hover:bg-blue-700 transition w-full">
-                <i class="fas fa-plus mr-2"></i>
-                Create a New Family Group
+                class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-blue-700 transition">
+                <i class="fas fa-plus"></i> Create a New Family Group
             </button>
-        </div>
+        </section>
     </main>
 
-    <!-- Bottom Navigation  -->
+    <!-- Bottom Navigation -->
     <nav id="bottomNav" class="sticky bottom-0 bg-white shadow-md py-4"></nav>
 
-    <!-- Optional Footer -->
-    <nav id="footer"></nav>
-
-    <!-- JavaScript to inject nav -->
+    <!-- Inject Nav -->
     <script src="../scripts/add_nav.js"></script>
 </body>
 
