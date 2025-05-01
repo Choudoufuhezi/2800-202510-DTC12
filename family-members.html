@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Family Members</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
+</head>
+
+<body class="bg-[#f5f3eb98] text-gray-800">
+
+    <!-- Top Navigation (Loaded by JS) -->
+    <nav id="topNav"></nav>
+
+    <!-- Main Content -->
+    <main class="min-h-[calc(100vh-128px)] px-4 pt-6 pb-24 max-w-xl mx-auto">
+        <!-- Header -->
+        <header class="mb-6">
+            <h2 class="text-2xl font-bold flex items-center text-gray-900">
+                <i class="fas fa-user-friends mr-3 text-indigo-600"></i>
+                The Smith Family – Members
+            </h2>
+            <p class="text-gray-600 mt-2">Tap a member to view their memories.</p>
+        </header>
+
+        <!-- Members List -->
+        <div class="space-y-4">
+            <!-- Member 1 -->
+            <a href="member-categories.html" class="block bg-white p-4 rounded-lg shadow hover:bg-gray-100 transition">
+                <div class="flex items-center justify-between">
+                    <span class="font-semibold text-gray-800">Grandma Rose</span>
+                    <i class="fas fa-arrow-right text-indigo-600"></i>
+                </div>
+                <p class="text-sm text-gray-500 mt-1">Joined: Jan 2024</p>
+            </a>
+
+            <!-- Member 2 -->
+            <a href="member-categories.html" class="block bg-white p-4 rounded-lg shadow hover:bg-gray-100 transition">
+                <div class="flex items-center justify-between">
+                    <span class="font-semibold text-gray-800">Uncle Sam</span>
+                    <i class="fas fa-arrow-right text-indigo-600"></i>
+                </div>
+                <p class="text-sm text-gray-500 mt-1">Joined: Mar 2024</p>
+            </a>
+
+            <!-- Member 3 -->
+            <a href="member-categories.html" class="block bg-white p-4 rounded-lg shadow hover:bg-gray-100 transition">
+                <div class="flex items-center justify-between">
+                    <span class="font-semibold text-gray-800">Cousin Lily</span>
+                    <i class="fas fa-arrow-right text-indigo-600"></i>
+                </div>
+                <p class="text-sm text-gray-500 mt-1">Joined: Apr 2025</p>
+            </a>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation (Loaded by JS) -->
+    <nav id="bottomNav" class="sticky bottom-0 bg-white shadow-md py-4"></nav>
+
+    <!-- Optional Footer -->
+    <nav id="footer"></nav>
+
+    <!-- Inject Nav JS -->
+    <script src="../scripts/add_nav.js"></script>
+</body>
+
+</html>

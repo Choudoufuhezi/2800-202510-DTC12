@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Family Groups</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
+</head>
+
+<body class="bg-[#f5f3eb98] text-gray-800">
+
+    <!-- Top Navigation (Loaded by JS) -->
+    <nav id="topNav"></nav>
+
+    <!-- Main Content -->
+    <main class="min-h-[calc(100vh-128px)] px-4 pt-6 pb-24">
+        <h2 class="text-xl font-bold mb-4">Your Family Groups</h2>
+
+        <!-- Family Groups List -->
+        <div class="space-y-6">
+            <!-- Family Group Card 1 -->
+            <a href="family-members.html"
+                class="group-card block bg-white p-6 rounded-xl shadow-md hover:bg-indigo-50 transition">
+                <div class="flex items-center justify-between">
+                    <span class="text-lg font-semibold text-gray-800">The Smith Family</span>
+                    <i class="fas fa-arrow-right text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </div>
+                <p class="text-sm text-gray-500 mt-2">6 members • Last active: Today</p>
+            </a>
+        
+            <!-- Family Group Card 2 -->
+            <a href="family-members.html"
+                class="group-card block bg-white p-6 rounded-xl shadow-md hover:bg-indigo-50 transition">
+                <div class="flex items-center justify-between">
+                    <span class="text-lg font-semibold text-gray-800">The Johnson Clan</span>
+                    <i class="fas fa-arrow-right text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </div>
+                <p class="text-sm text-gray-500 mt-2">4 members • Last active: Yesterday</p>
+            </a>
+        
+            <!-- Add New Group Button -->
+            <button
+                class="group-card flex items-center justify-center bg-blue-600 text-white p-6 rounded-xl shadow-md hover:bg-blue-700 transition w-full">
+                <i class="fas fa-plus mr-2"></i>
+                Create a New Family Group
+            </button>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation  -->
+    <nav id="bottomNav" class="sticky bottom-0 bg-white shadow-md py-4"></nav>
+
+    <!-- Optional Footer -->
+    <nav id="footer"></nav>
+
+    <!-- JavaScript to inject nav -->
+    <script src="../scripts/add_nav.js"></script>
+</body>
+
+</html>
