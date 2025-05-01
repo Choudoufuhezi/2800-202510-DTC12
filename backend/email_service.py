@@ -42,6 +42,34 @@ def send_verification_email(email: str, verification_token: str):
         print(f"Error sending email: {e}")
         return False 
     
+def send_password_reset_email(email: str, reset_link: str) -> bool:
+    
+    msg = MIMEMultipart()
+    msg['From'] = settings.smtp_username
+    msg['To'] = email
+    msg['Subject'] = "Verify your email address"
+
+    
+    subject = "Password Reset Request"
+    body = f"""
+    You requested a password reset. Click the link below to reset your password:
+    {reset_link}
+    
+    If you didn't request this, please ignore this email.
+    """
+    
+    msg.attach(MIMEText(body, 'html'))
+    
+    try:
+        with smtplib.SMTP(settings.smtp_server, settings.smtp_port) as server:
+            server.starttls()
+            server.login(settings.smtp_username, settings.smtp_password)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        return False
+    
 def test_email():
     print("Starting email sending test...")
     
