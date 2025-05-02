@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
+</head>
+
+<body class="bg-[#f5f3eb98]">
+    <!--Top Nav-->
+    <nav id="topNav"></nav>
+
+    <!--Main Content-->
+    <div class="min-h-[calc(102vh-64px-64px)]">
+            <div class="m-4 text-2xl mb-10">
+                <h1 class="font-semibold md:ml-20">Setting</h1>
+            </div>
+        <div class="bg-white rounded-xl shadow-xl divide-y md:mr-60 md:ml-60">
+            <div class="flex items-center justify-between p-6 hover:bg-gray-100 transition">
+                <div>
+                    <h2 class="text-lg font-medium text-gray-900">Log Out</h2>
+                    <p class="text-sm text-gray-500">Sign out of your account</p>
+                </div>
+                <a href="#" class="text-red-500 font-semibold hover:underline">Log Out</a>
+            </div>
+        
+            <div class="flex items-center justify-between p-6 hover:bg-gray-100 transition">
+                <div>
+                    <h2 class="text-lg font-medium text-gray-900">Language</h2>
+                    <p class="text-sm text-gray-500">Select your preferred language</p>
+                </div>
+                <a href="#" class="text-blue-500 font-semibold hover:underline">Change</a>
+            </div>
+        
+            <div class="flex items-center justify-between p-6 hover:bg-gray-100 transition">
+                <div>
+                    <h2 class="text-lg font-medium text-gray-900">Dark Mode</h2>
+                    <p class="text-sm text-gray-500">Enable dark theme</p>
+                </div>
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" value="" class="sr-only peer">
+                    <div
+                        class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer dark:bg-gray-700 peer-checked:bg-blue-600 relative">
+                        <div
+                            class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-full">
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>
+    </div>
+</body>
+
+<footer>
+        <!--Bottom Nav-->
+        <nav id="bottomNav" class="sticky bottom-0"></nav>
+        
+        <!--Footer-->
+        <nav id="footer"></nav>
+        
+        <!--JavaScript-->
+        <script src="../scripts/add_nav.js"></script>
+</footer>
+
+</html>
