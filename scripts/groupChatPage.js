@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let replyTo = null;
 
-    function createMessageBubble(from, text, messageId = Date.now()) {
+    function createMessageBubble(from, text, messageId = Date.now(), replyText = null) {
         const bubble = document.createElement("div");
         bubble.className = `flex ${from === "You" ? "justify-end" : "justify-start"} relative`;
         bubble.dataset.id = messageId;
@@ -48,9 +48,26 @@ document.addEventListener("DOMContentLoaded", () => {
             // Add logic for reply/edit/delete
             menuBox.querySelector(".reply-btn").addEventListener("click", () => {
                 replyTo = { messageId, originalText: text };
-                input.placeholder = `Replying to: ${text}`;
+                document.getElementById("reply-text").textContent = text;
+                document.getElementById("reply-preview").classList.remove("hidden");
                 input.focus();
             });
+
+            // Cancel reply
+            document.getElementById("cancel-reply").addEventListener("click", () => {
+                replyTo = null;
+                document.getElementById("reply-preview").classList.add("hidden");
+            });
+
+
+
+            if (replyText) {
+                const replyBox = document.createElement("div");
+                replyBox.className = "text-xs text-gray-500 italic mb-1 border-l-2 border-blue-300 pl-2";
+                replyBox.textContent = replyText;
+                content.prepend(replyBox);
+            }
+
 
             menuBox.querySelector(".edit-btn").addEventListener("click", () => {
                 input.value = text;
@@ -98,17 +115,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const oldBubble = document.querySelector(`[data-id="${replyTo.messageId}"] div`);
             if (oldBubble) oldBubble.textContent = text;
         } else {
-            // Add new message
-            const bubble = createMessageBubble("You", text);
+            // Add new message with optional reply
+            const replyText = replyTo?.originalText || null;
+            const bubble = createMessageBubble("You", text, Date.now(), replyText);
             chatBox.appendChild(bubble);
         }
 
         input.value = "";
         input.placeholder = "Type a message";
         replyTo = null;
+        document.getElementById("reply-preview").classList.add("hidden");
         chatBox.scrollTop = chatBox.scrollHeight;
     }
-
+    
 
     sendBtn.addEventListener("click", sendMessage);
     input.addEventListener("keypress", e => {
