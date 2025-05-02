@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Account</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Delete Account</h1>
+
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-red-700">
+                        Warning: This action is permanent and cannot be undone. All your data will be deleted
+                        immediately.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <form id="deleteForm" class="space-y-6">
+            <div class="flex items-center">
+                <input id="confirmDelete" name="confirmDelete" type="checkbox" required
+                    class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                <label for="confirmDelete" class="ml-2 block text-sm text-gray-700">
+                    I understand that this action cannot be undone
+                </label>
+            </div>
+
+            <button type="submit"
+                class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                Permanently Delete Account
+            </button>
+        </form>
+
+        <div class="mt-4 text-center text-sm">
+            <a href="/dashboard.html" class="text-blue-600 hover:text-blue-800">
+                Go back to dashboard
+            </a>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('token');
+            // page is only accessible if user is logged in
+            if (!token) {
+                console.log('not logged in');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            document.getElementById('deleteForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                if (!confirm('Are you absolutely sure you want to delete your account? This cannot be undone.')) {
+                    return;
+                }
+
+                const formData = new FormData(e.target);
+
+                try {
+                    const response = await fetch('http://localhost:8000/account/delete', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                    });
+
+                    if (response.ok) {
+                        localStorage.removeItem('token');
+                        alert('Your account has been permanently deleted');
+                        window.location.href = '/login.html';
+                    } else {
+                        const error = await response.json();
+                        alert(error.detail || 'Account deletion failed');
+                    }
+                } catch (error) {
+                    alert('Account deletion failed');
+                    console.error('Error:', error);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

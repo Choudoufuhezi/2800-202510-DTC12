@@ -5,64 +5,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Vault Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
 </head>
 
-<body class="bg-gradient-to-b from-blue-50 to-gray-100 min-h-screen p-8 font-sans">
+<body class="bg-[#f5f3eb98]">
 
-    <div class="max-w-6xl mx-auto">
+    <!-- Optional Top Navigation -->
+    <nav id="topNav" class="sticky top-0"></nav>
+
+    <div class="max-w-5xl mx-auto px-6 py-12">
 
         <!-- Welcome Section -->
-        <div class="text-center mb-12">
-            <h1 class="text-5xl font-extrabold text-gray-900 tracking-tight">Welcome to the Family Vault</h1>
-            <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Capture, preserve, and share your family's most
-                cherished memories with love.</p>
-        </div>
+        <section class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900">Welcome to the Family Vault</h1>
+            <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Capture, preserve, and share your family's most
+                cherished memories.</p>
+        </section>
 
-        <!-- Upload Button -->
-        <div class="flex justify-center mb-12">
-            <a href="upload.html"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-10 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105"
-                aria-label="Upload a new memory">
-                Upload a New Memory
+        <!-- Upload Memory Section -->
+        <section class="bg-white p-8 rounded-2xl shadow-md text-center mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Start a New Memory</h2>
+            <p class="text-gray-600 mb-6">Upload photos, videos, or stories that matter to your family.</p>
+            <a href="upload.html?member=default-family&category=general"
+                class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow transition transform hover:scale-105">
+                <i class="fas fa-plus mr-2"></i> Upload a New Memory
             </a>
-        </div>
+        </section>
+
+        <!-- Family Groups Shortcut -->
+        <section class="text-center mb-8">
+            <a href="family-groups.html"
+                class="inline-block text-blue-600 hover:underline text-lg font-medium transition">
+                → View Family Groups
+            </a>
+        </section>
 
         <!-- Recent Memories Section -->
-        <div class="bg-white p-8 rounded-xl shadow-lg">
-            <h2 class="text-3xl font-bold text-gray-900 mb-6">Recent Memories</h2>
+        <section class="bg-white p-8 rounded-2xl shadow-md">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Recent Memories</h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
                 <!-- Memory Card 1 -->
-                <div
-                    class="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Grandma's Birthday</h3>
-                    <p class="text-gray-500 text-sm mb-3">Uploaded on April 24, 2025</p>
-                    <p class="text-gray-700 text-base">We celebrated her 80th birthday at home with the whole family!
-                    </p>
+                <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Grandma's Birthday</h3>
+                    <p class="text-gray-500 text-sm mb-2">Uploaded on April 24, 2025</p>
+                    <p class="text-gray-700 text-sm">We celebrated her 80th birthday at home with the whole family!</p>
                 </div>
 
                 <!-- Memory Card 2 -->
-                <div
-                    class="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Family Trip to Banff</h3>
-                    <p class="text-gray-500 text-sm mb-3">Uploaded on March 20, 2025</p>
-                    <p class="text-gray-700 text-base">Snowy mountains and lots of laughter. A trip to remember forever.
+                <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Family Trip to Banff</h3>
+                    <p class="text-gray-500 text-sm mb-2">Uploaded on March 20, 2025</p>
+                    <p class="text-gray-700 text-sm">Snowy mountains and lots of laughter. A trip to remember forever.
                     </p>
                 </div>
 
-                <!-- Placeholder for Additional Cards -->
-                <div
-                    class="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-2">More Coming Soon</h3>
-                    <p class="text-gray-500 text-sm mb-3">Stay tuned!</p>
-                    <p class="text-gray-700 text-base">Add more memories to fill this space with joy.</p>
+                <!-- Placeholder Card -->
+                <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">More Coming Soon</h3>
+                    <p class="text-gray-500 text-sm mb-2">Stay tuned!</p>
+                    <p class="text-gray-700 text-sm">Add more memories to fill this space with joy.</p>
                 </div>
-
             </div>
-        </div>
+        </section>
     </div>
+
+    <!-- Optional Bottom Navigation -->
+    <nav id="bottomNav" class="sticky bottom-0"></nav>
+    
+    <!--Footer-->
+    <nav id="footer"></nav>
+
+    <script src="../scripts/add_nav.js"></script>
 </body>
 
 </html>

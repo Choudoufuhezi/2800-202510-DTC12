@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Login</h1>
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <input 
+                    type="email" 
+                    name="email" 
+                    placeholder="Email" 
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+            </div>
+            <div>
+                <input 
+                    type="password" 
+                    name="password" 
+                    placeholder="Password" 
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+            </div>
+            <div class="text-right">
+                <a href="forgot-password.html" class="text-sm text-blue-600 hover:text-blue-800">
+                    Forgot password?
+                </a>
+            </div>
+            <button 
+                type="submit"
+                class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+                Login
+            </button>
+        </form>
+
+        <div class="flex items-center my-6">
+            <div class="flex-grow border-t border-gray-300"></div>
+            <span class="mx-4 text-gray-500">OR</span>
+            <div class="flex-grow border-t border-gray-300"></div>
+        </div>
+
+        <button 
+            id="googleLogin"
+            class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+        >
+            Login with Google
+        </button>
+
+        <div class="mt-4 text-center text-sm">
+            <span class="text-gray-600">Don't have an account?</span>
+            <a href="register.html" class="text-blue-600 hover:text-blue-800 ml-1">
+                Register
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Regular form login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                email: formData.get('email'),
+                password: formData.get('password')
+            };
+
+            try {
+                const response = await fetch('http://localhost:8000/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const { access_token } = await response.json();
+                    localStorage.setItem('token', access_token);
+                    window.location.href = '/dashboard.html';
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Login failed');
+                }
+            } catch (error) {
+                alert('Login failed');
+            }
+        });
+
+        // Google login
+        document.getElementById('googleLogin').addEventListener('click', () => {
+            window.location.href = 'http://localhost:8000/auth/google';
+        });
+
+        // Check for token in URL (for Google auth callback)
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        if (token) {
+            localStorage.setItem('token', token);
+            window.location.href = '/dashboard.html';
+        }
+    </script>
+</body>
+</html>
