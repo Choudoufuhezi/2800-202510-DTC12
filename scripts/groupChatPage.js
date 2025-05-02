@@ -1,19 +1,21 @@
 document.addEventListener("DOMContentLoaded", () => {
     const chat = JSON.parse(localStorage.getItem("activeChat"));
 
-    function createMessageBubble(from, text) {
+    let replyTo = null;
+
+    function createMessageBubble(from, text, messageId = Date.now()) {
         const bubble = document.createElement("div");
         bubble.className = `flex ${from === "You" ? "justify-end" : "justify-start"} relative`;
+        bubble.dataset.id = messageId;
 
         const content = document.createElement("div");
-        content.className = `${from === "You" ? "bg-blue-100" : "bg-gray-200"
-            } text-gray-800 px-4 py-2 rounded-lg max-w-xs shadow`;
+        content.className = `${from === "You" ? "bg-blue-100" : "bg-gray-200"} text-gray-800 px-4 py-2 rounded-lg max-w-xs shadow`;
         content.textContent = text;
 
         bubble.appendChild(content);
 
         if (from === "You") {
-            // Three-dot menu button
+            // Menu button
             const menuBtn = document.createElement("button");
             menuBtn.innerHTML = "⋮";
             menuBtn.className = "ml-2 text-gray-500 hover:text-gray-800 focus:outline-none";
@@ -22,11 +24,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const menuBox = document.createElement("div");
             menuBox.className = "absolute right-0 top-full mt-2 w-32 bg-white border rounded shadow hidden z-10";
             menuBox.innerHTML = `
-                <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="alert('Reply')">Reply</div>
-                <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="alert('Edit')">Edit</div>
-                <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="alert('Delete')">Delete</div>
-            `;
-            menuBox.classList.add("menu-box");
+            <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer reply-btn">Reply</div>
+            <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer edit-btn">Edit</div>
+            <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer delete-btn">Delete</div>
+        `;
 
             menuBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -42,12 +43,31 @@ document.addEventListener("DOMContentLoaded", () => {
             rightSide.className = "flex flex-col items-end";
             rightSide.appendChild(menuBtn);
             rightSide.appendChild(menuBox);
-
             bubble.appendChild(rightSide);
+
+            // Add logic for reply/edit/delete
+            menuBox.querySelector(".reply-btn").addEventListener("click", () => {
+                replyTo = { messageId, originalText: text };
+                input.placeholder = `Replying to: ${text}`;
+                input.focus();
+            });
+
+            menuBox.querySelector(".edit-btn").addEventListener("click", () => {
+                input.value = text;
+                input.focus();
+                replyTo = { messageId, editMode: true };
+            });
+
+            menuBox.querySelector(".delete-btn").addEventListener("click", () => {
+                bubble.remove();
+            });
+
+            menuBox.classList.add("menu-box");
         }
 
         return bubble;
     }
+
 
     if (!chat) {
         window.location.href = "inbox_page.html"; // fallback if accessed directly
@@ -73,11 +93,22 @@ document.addEventListener("DOMContentLoaded", () => {
         const text = input.value.trim();
         if (!text) return;
 
-        const bubble = createMessageBubble("You", text);
-        chatBox.appendChild(bubble);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        if (replyTo?.editMode) {
+            // Edit existing message
+            const oldBubble = document.querySelector(`[data-id="${replyTo.messageId}"] div`);
+            if (oldBubble) oldBubble.textContent = text;
+        } else {
+            // Add new message
+            const bubble = createMessageBubble("You", text);
+            chatBox.appendChild(bubble);
+        }
+
         input.value = "";
+        input.placeholder = "Type a message";
+        replyTo = null;
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
+
 
     sendBtn.addEventListener("click", sendMessage);
     input.addEventListener("keypress", e => {
