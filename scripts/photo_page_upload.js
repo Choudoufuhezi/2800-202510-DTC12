@@ -2,14 +2,21 @@ const removePhotoEmptyMessage = document.getElementById("photoEmptyMessage");
 const uploadButton = document.getElementById("uploadButton");
 const fileInput = document.getElementById("fileInput");
 const photoGrid = document.getElementById("photoGrid");
+const addMorePhotos = document.getElementById("addMorePhotosButton");
 
 uploadButton.addEventListener("click", () => {
+    fileInput.click();
+});
+
+addMorePhotosButton.addEventListener('click', () => {
     fileInput.click();
 });
 
 fileInput.addEventListener("change", (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
+        addMorePhotos.classList.remove('hidden');
+
         const reader = new FileReader();
 
         reader.onload = function (event) {
@@ -26,7 +33,9 @@ fileInput.addEventListener("change", (event) => {
         };
 
         reader.readAsDataURL(file);
-    } else {
+    } 
+
+    else {
         if (grid.children.length === 0) {
             removePhotoEmptyMessage.classList.remove('hidden');
         }
