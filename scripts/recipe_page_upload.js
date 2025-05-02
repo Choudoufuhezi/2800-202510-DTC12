@@ -1,27 +1,27 @@
-const removePhotoEmptyMessage = document.getElementById("photoEmptyMessage");
+const removeRecipeEmptyMessage = document.getElementById("recipeEmptyMessage");
 const uploadButton = document.getElementById("uploadButton");
 const fileInput = document.getElementById("fileInput");
-const photoGrid = document.getElementById("photoGrid");
-const addMorePhotos = document.getElementById("addMorePhotosButton");
+const recipeGrid = document.getElementById("recipeGrid");
+const addMoreRecipes = document.getElementById("addMoreRecipesButton");
 
 uploadButton.addEventListener("click", () => {
     fileInput.click();
 });
 
-addMorePhotos.addEventListener('click', () => {
+addMoreRecipes.addEventListener('click', () => {
     fileInput.click();
 });
 
 fileInput.addEventListener("change", (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
-        addMorePhotos.classList.remove('hidden');
+        addMoreRecipes.classList.remove('hidden');
 
         const reader = new FileReader();
 
         reader.onload = function (event) {
             // Hide empty message
-            removePhotoEmptyMessage.classList.add('hidden');
+            removeRecipeEmptyMessage.classList.add('hidden');
 
             // Create and style the image
             const img = document.createElement('img');
@@ -29,15 +29,15 @@ fileInput.addEventListener("change", (event) => {
             img.className = "max-w-full h-auto rounded shadow";
 
             // Add to photo grid
-            photoGrid.appendChild(img);
+            recipeGrid.appendChild(img);
         };
 
         reader.readAsDataURL(file);
     } 
 
     else {
-        if (photoGrid.children.length === 0) {
-            removePhotoEmptyMessage.classList.remove('hidden');
+        if (recipeGrid.children.length === 0) {
+            removeRecipeEmptyMessage.classList.remove('hidden');
         }
     }
 });
