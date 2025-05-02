@@ -2,17 +2,18 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Vault Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
 </head>
 
-<body class="bg-gradient-to-b from-blue-50 to-gray-100 min-h-screen font-sans">
+<body class="bg-[#f5f3eb98]">
 
     <!-- Optional Top Navigation -->
-    <nav id="topNav"></nav>
+    <nav id="topNav" class="sticky top-0"></nav>
 
     <div class="max-w-5xl mx-auto px-6 py-12">
 
@@ -72,7 +73,10 @@
     </div>
 
     <!-- Optional Bottom Navigation -->
-    <nav id="bottomNav"></nav>
+    <nav id="bottomNav" class="sticky bottom-0"></nav>
+    
+    <!--Footer-->
+    <nav id="footer"></nav>
 
     <script src="../scripts/add_nav.js"></script>
 </body>
