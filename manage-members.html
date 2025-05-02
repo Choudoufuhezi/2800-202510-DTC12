@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Family Member</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
+</head>
+
+<body class="bg-[#f5f3eb98] text-gray-800">
+
+    <!-- Top Navigation (Loaded by JS) -->
+    <nav id="topNav"></nav>
+
+    <!-- Main Content -->
+    <main class="min-h-[calc(100vh-128px)] px-4 pt-6 pb-24 max-w-xl mx-auto">
+        <!-- Header -->
+        <header class="mb-6">
+            <h2 class="text-2xl font-bold flex items-center text-gray-900">
+                <i class="fas fa-user-plus mr-3 text-indigo-600"></i>
+                Add Family Member
+            </h2>
+            <p class="text-gray-600 mt-2">Invite someone to join The Smith Family</p>
+        </header>
+
+        <!-- Invitation Content -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <div class="text-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-800">Send Invitation</h3>
+                <p class="text-gray-600 mt-1">Share this code or link with your family member</p>
+            </div>
+
+            <!-- Invitation Code -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">6-digit Invitation Code</label>
+                <div class="flex items-center justify-between bg-indigo-50 p-4 rounded-lg">
+                    <span class="text-2xl font-mono font-bold tracking-wider text-indigo-800">7A9B3C</span>
+                    <button class="text-indigo-600 hover:text-indigo-800">
+                        <i class="far fa-copy text-xl"></i>
+                    </button>
+                </div>
+                <p class="text-sm text-gray-500 mt-2">Expires in <span class="font-medium">60</span> minutes</p>
+            </div>
+
+            <!-- Invitation Link -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Invitation Link</label>
+                <div class="flex items-center bg-gray-100 p-3 rounded-lg">
+                    <span class="text-sm text-gray-600 truncate flex-grow">https://familyapp.com/join/7A9B3C</span>
+                    <button class="text-indigo-600 hover:text-indigo-800 ml-2">
+                        <i class="far fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation (Loaded by JS) -->
+    <nav id="bottomNav" class="sticky bottom-0 bg-white shadow-md py-4"></nav>
+
+    <!-- Optional Footer -->
+    <nav id="footer"></nav>
+
+    <!-- Inject Nav JS -->
+    <script src="../scripts/add_nav.js"></script>
+</body>
+
+</html>
