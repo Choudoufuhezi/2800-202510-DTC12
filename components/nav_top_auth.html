@@ -1,52 +1,52 @@
-    <div id="overlay" class="fixed inset-0 bg-black opacity-50 z-40 hidden"></div>
+<div id="overlay" class="fixed inset-0 bg-black opacity-50 z-40 hidden"></div>
 
-    <!--Navbar-->
-    <nav class="block bg-sky-200 h-14 px-3">
-        <div class="flex justify-between items-center h-full">
-            <div class="flex flex-row h-full">
-                <!--Menu Button-->
-                <div class="hidden md:flex hover:bg-sky-400 items-center h-full transition">
-                    <button id="showSidebar" class="p-3 cursor-pointer"><i class="fa-solid fa-bars fa-xl"></i></button>
-                </div>
-
-                <!--Logo-->
-                <div class="flex flex-row items-center pl-3">
-                    <i class="fa-solid fa-lock fa-xl"></i>
-                    <h1 class="hidden md:inline pl-3 font-semibold text-xl ">Heirloom Vault</h1>
-                </div>
+<!--Navbar-->
+<nav class="block bg-sky-200 h-14 px-3">
+    <div class="flex justify-between items-center h-full">
+        <div class="flex flex-row h-full">
+            <!--Menu Button-->
+            <div class="hidden md:flex hover:bg-sky-400 items-center h-full transition">
+                <button id="showSidebar" class="p-3 cursor-pointer"><i class="fa-solid fa-bars fa-xl"></i></button>
             </div>
 
-            <!--Search Form-->
-            <form class="flex">
-                <input name="search" type="search" placeholder="Search" class="bg-white rounded-l-full p-1.5 pl-3 w-70">
-                <button class="bg-sky-400 p-2 px-3 rounded-r-full cursor-pointer hover:bg-sky-300 transition"><i
-                        class="fa-solid fa-magnifying-glass"></i></button>
-            </form>
+            <!--Logo-->
+            <div class="flex flex-row items-center pl-3">
+                <i class="fa-solid fa-lock fa-xl"></i>
+                <h1 class="hidden md:inline pl-3 font-semibold text-xl ">Heirloom Vault</h1>
+            </div>
         </div>
-    </nav>
 
-    <!--Sidebar-->
-    <div id="sidebar" class="hidden bg-sky-200 h-full w-1/5 left-0 top-0 z-50 fixed border">
-        <div class="flex justify-end pt-3 pr-3">
-            <button id="closeSidebar" class="cursor-pointer hover:bg-sky-400 hover:rounded-full px-2 py-1"><i
-                    class="fa-solid fa-xmark fa-lg"></i></button>
+        <!--Search Form-->
+        <form class="flex">
+            <input name="search" type="search" placeholder="Search" class="bg-white rounded-l-full p-1.5 pl-3 w-70">
+            <button class="bg-sky-400 p-2 px-3 rounded-r-full cursor-pointer hover:bg-sky-300 transition"><i
+                    class="fa-solid fa-magnifying-glass"></i></button>
+        </form>
+    </div>
+</nav>
+
+<!--Sidebar-->
+<div id="sidebar" class="hidden bg-sky-200 h-full w-1/5 left-0 top-0 z-50 fixed border">
+    <div class="flex justify-end pt-3 pr-3">
+        <button id="closeSidebar" class="cursor-pointer hover:bg-sky-400 hover:rounded-full px-2 py-1"><i
+                class="fa-solid fa-xmark fa-lg"></i></button>
+    </div>
+    <div class="flex flex-col items-center h-full justify-between">
+        <div class="flex flex-col items-center pt-7">
+            <a href="/family-groups.html" class="hover:bg-sky-400 transition p-3"><i
+                    class="fa-solid fa-house fa-lg"></i><span class="pl-5 text-xl">Home</span></a>
+            <a href="/GroupChatPage.html" class="hover:bg-sky-400 transition p-3"><i class="fa-solid fa-comments fa-lg"></i><span
+                    class="pl-5 text-xl">Chat</span></a>
+            <a href="/profile.html" class="hover:bg-sky-400 transition p-3"><i class="fa-solid fa-user fa-lg"></i><span
+                    class="pl-5 text-xl">Profile</span></a>
         </div>
-        <div class="flex flex-col items-center h-full justify-between">
-            <div class="flex flex-col items-center pt-7">
-                <a href="/home.html" class="hover:bg-sky-400 transition p-3"><i
-                        class="fa-solid fa-house fa-lg"></i><span class="pl-5 text-xl">Home</span></a>
-                <a href="/chat.html" class="hover:bg-sky-400 transition p-3"><i
-                        class="fa-solid fa-comments fa-lg"></i><span class="pl-5 text-xl">Chat</span></a>
-                <a href="/profile.html" class="hover:bg-sky-400 transition p-3"><i
-                        class="fa-solid fa-user fa-lg"></i><span class="pl-5 text-xl">Profile</span></a>
-            </div>
-            <div class="flex flex-col items-center pb-20">
-                <a href="/settings.html" class="hover:bg-sky-400 transition p-3"><i
-                        class="fa-solid fa-cog fa-lg"></i><span class="pl-5 text-xl">Settings</span></a>
-                <a href="/logout.html" class="hover:bg-sky-400 transition p-3"><i
-                        class="fa-solid fa-right-from-bracket fa-lg"></i><span class="pl-5 text-xl">Logout</span></a>
-            </div>
+        <div class="flex flex-col items-center pb-20">
+            <a href="/settings.html" class="hover:bg-sky-400 transition p-3"><i class="fa-solid fa-cog fa-lg"></i><span
+                    class="pl-5 text-xl">Settings</span></a>
+            <a href="/logout.html" class="hover:bg-sky-400 transition p-3"><i
+                    class="fa-solid fa-right-from-bracket fa-lg"></i><span class="pl-5 text-xl">Logout</span></a>
         </div>
     </div>
+</div>
 
-    <script src="../scripts/nav.js"></script>
+<script src="../scripts/nav.js"></script>
