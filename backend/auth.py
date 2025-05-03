@@ -290,3 +290,7 @@ async def reset_password(request_data: dict = Body(...), db: Session = Depends(g
     db.commit()
     
     return {"message": "Password has been reset successfully"}
+
+@app.get("/")
+def read_root():
+    return {"status": "ok"}
