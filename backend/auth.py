@@ -12,10 +12,10 @@ import os
 from sqlalchemy.orm import Session
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
-from .database import get_db, get_user, create_user
-from .database import User as DBUser  # SQLAlchemy model
-from .config import settings
-from .email_service import generate_verification_token, send_password_reset_email, send_verification_email
+from database import get_db, get_user, create_user
+from database import User as DBUser  # SQLAlchemy model
+from config import settings
+from email_service import generate_verification_token, send_password_reset_email, send_verification_email
 
 # Initialize OAuth
 oauth = OAuth()

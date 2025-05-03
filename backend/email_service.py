@@ -1,7 +1,7 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from .config import settings
+from config import settings
 import secrets
 
 def generate_verification_token():
