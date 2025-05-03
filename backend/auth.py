@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from jose import jwt
+import jwt
 from typing import Optional
 import os
 from sqlalchemy.orm import Session
@@ -83,7 +83,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    token = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    return token if isinstance(token, str) else token.decode("utf-8")
 
 # Routes
 @app.post("/register")
