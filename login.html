@@ -62,8 +62,9 @@
         </div>
     </div>
 
-    <script>
-        // Regular form login
+    <script type="module">
+        import {API_URL} from '/scripts/config.js';
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -73,7 +74,7 @@
             };
 
             try {
-                const response = await fetch('http://localhost:8000/login', {
+                const response = await fetch(`${API_URL}/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -96,7 +97,7 @@
 
         // Google login
         document.getElementById('googleLogin').addEventListener('click', () => {
-            window.location.href = 'http://localhost:8000/auth/google';
+            window.location.href = `${API_URL}/auth/google`;
         });
 
         // Check for token in URL (for Google auth callback)

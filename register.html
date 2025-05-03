@@ -32,7 +32,9 @@
         </div>
     </div>
 
-    <script>
+    
+    <script type="module">
+        import {API_URL} from '/scripts/config.js';
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -42,7 +44,7 @@
             };
 
             try {
-                const response = await fetch('http://localhost:8000/register', {
+                const response = await fetch(`${API_URL}/register`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
