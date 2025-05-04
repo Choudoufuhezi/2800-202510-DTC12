@@ -36,7 +36,8 @@
         <h1>Email Verification</h1>
         <div id="message" class="message"></div>
     </div>
-    <script>
+    <script type="module">
+        import {API_URL} from '/scripts/config.js';
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
     
@@ -46,7 +47,7 @@
         } else {
             async function verifyEmail() {
                 try {
-                    const response = await fetch(`http://localhost:8000/verify-email?token=${token}`, {
+                    const response = await fetch(`${API_URL}/verify-email?token=${token}`, {
                         method: 'GET',
                         headers: {
                             'Accept': 'application/json',

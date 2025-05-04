@@ -6,16 +6,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from jose import jwt
+import jwt
 from typing import Optional
 import os
 from sqlalchemy.orm import Session
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
-from .database import get_db, get_user, create_user
-from .database import User as DBUser  # SQLAlchemy model
-from .config import settings
-from .email_service import generate_verification_token, send_password_reset_email, send_verification_email
+from database import get_db, get_user, create_user
+from database import User as DBUser  # SQLAlchemy model
+from config import settings
+from email_service import generate_verification_token, send_password_reset_email, send_verification_email
 
 # Initialize OAuth
 oauth = OAuth()
@@ -83,7 +83,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    token = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    return token if isinstance(token, str) else token.decode("utf-8")
 
 # Routes
 @app.post("/register")
@@ -289,3 +290,7 @@ async def reset_password(request_data: dict = Body(...), db: Session = Depends(g
     db.commit()
     
     return {"message": "Password has been reset successfully"}
+
+@app.get("/")
+def read_root():
+    return {"status": "ok"}
