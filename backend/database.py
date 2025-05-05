@@ -1,6 +1,7 @@
 from sqlalchemy import DateTime, create_engine, Column, String, Integer, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import ForeignKey
 import os
 
 # Create database directory if it doesn't exist
@@ -27,6 +28,30 @@ class User(Base):
     reset_token = Column(String, nullable=True)
     reset_token_expiry = Column(DateTime, nullable=True)
 
+class ChatRoom(Base):
+    __tablename__ = "chatroom"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    created_date = Column(DateTime, nullable=False)
+
+class UserChatRoom(Base):
+    __tablename__ = "userchatroom"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    chatroom_id = Column(Integer, ForeignKey("chatroom.id"))
+
+class Message(Base):
+    __tablename__ = "message"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    chatroom_id = Column(Integer, ForeignKey("chatroom.id"))
+    message_text = Column(String)
+    time_stamp = Column(DateTime, nullable=False)
+    
+
 # Create all tables
 Base.metadata.create_all(bind=engine)
 
@@ -52,3 +77,35 @@ def create_user(db, email: str, hashed_password: str, verification_token: str = 
     db.commit()
     db.refresh(db_user)
     return db_user 
+
+def create_chatroom(db, name: str, date):
+    db_chatroom = ChatRoom(
+        name=name, 
+        created_date=date
+    )
+    db.add(db_chatroom)
+    db.commit()
+    db.refresh(db_chatroom)
+    return db_chatroom
+
+def create_userchatroom(db, user_id: int, chatroom_id: int):
+    db_userchatroom = UserChatRoom(
+        user_id=user_id, 
+        chatroom_id=chatroom_id
+    )
+    db.add(db_userchatroom)
+    db.commit()
+    db.refresh(db_userchatroom)
+    return db_userchatroom
+
+def create_message(db, user_id: int, chatroom_id: int,  message_text:str, time_stamp):
+    db_message = Message(
+        user_id=user_id, 
+        chatroom_id=chatroom_id,
+        message_text=message_text,
+        time_stamp=time_stamp
+    )
+    db.add(db_message)
+    db.commit()
+    db.refresh(db_message)
+    return db_message
