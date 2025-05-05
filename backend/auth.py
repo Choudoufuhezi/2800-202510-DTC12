@@ -1,8 +1,6 @@
 import secrets
-from fastapi import FastAPI, Depends, HTTPException, status, Request
-from fastapi.params import Body
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from fastapi.responses import RedirectResponse
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
@@ -10,41 +8,13 @@ import jwt
 from typing import Optional
 import os
 from sqlalchemy.orm import Session
-from starlette.middleware.sessions import SessionMiddleware
-from authlib.integrations.starlette_client import OAuth
 from database import get_db, get_user, create_user
-from database import User as DBUser  # SQLAlchemy model
+from database import User as DBUser
 from config import settings
 from email_service import generate_verification_token, send_password_reset_email, send_verification_email
+from main import oauth  # Import oauth from main
 
-# Initialize OAuth
-oauth = OAuth()
-oauth.register(
-    name='google',
-    client_id=settings.google_client_id,
-    client_secret=settings.google_client_secret,
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-    client_kwargs={
-        'scope': 'openid email profile'
-    }
-)
-
-app = FastAPI()
-
-# Middleware
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=settings.secret_key,
-    session_cookie="session_cookie"
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # TODO: Change to frontend URL in production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+router = APIRouter()
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -63,7 +33,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-# Utility functions TODO: move to a diff file?
+# Utility functions
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -86,8 +56,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     token = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
     return token if isinstance(token, str) else token.decode("utf-8")
 
-# Routes
-@app.post("/register")
+@router.post("/register")
 async def register(user: UserCreate, db: Session = Depends(get_db)):
     db_user = get_user(db, user.email)
     if db_user:
@@ -108,7 +77,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     
     return {"message": "Registration successful. Please check your email for verification."}
 
-@app.get("/verify-email")
+@router.get("/verify-email")
 async def verify_email(token: str, db: Session = Depends(get_db)):
     user = db.query(DBUser).filter(DBUser.verification_token == token).first()
     
@@ -124,7 +93,7 @@ async def verify_email(token: str, db: Session = Depends(get_db)):
     
     return {"message": "Email verified successfully"}
 
-@app.post("/login")
+@router.post("/login")
 async def login(user_data: dict = Body(...), db: Session = Depends(get_db)):
     db_user = get_user(db, user_data["email"])
     if not db_user or not verify_password(user_data["password"], db_user.hashed_password):
@@ -147,12 +116,12 @@ async def login(user_data: dict = Body(...), db: Session = Depends(get_db)):
     return {"access_token": access_token, "token_type": "bearer"}
 
 # Google OAuth routes
-@app.get("/auth/google")
+@router.get("/auth/google")
 async def login_via_google(request: Request):
     redirect_uri = request.url_for('auth_via_google_callback')
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
-@app.get("/auth/google/callback")
+@router.get("/auth/google/callback")
 async def auth_via_google_callback(request: Request, db: Session = Depends(get_db)):
     token = await oauth.google.authorize_access_token(request)
     user_info = token.get('userinfo')
@@ -176,7 +145,7 @@ async def auth_via_google_callback(request: Request, db: Session = Depends(get_d
     
     return RedirectResponse(url=f"{settings.frontend_url}/login.html?token={access_token}")
 
-@app.delete("/account/delete")
+@router.delete("/account/delete")
 async def delete_account(request: Request, db: Session = Depends(get_db)):
     # Get token
     auth_header = request.headers.get("Authorization")
@@ -222,7 +191,7 @@ async def delete_account(request: Request, db: Session = Depends(get_db)):
             detail="Failed to delete account",
         )
         
-@app.post("/forgot-password")
+@router.post("/forgot-password")
 async def forgot_password(request_data: dict = Body(...), db: Session = Depends(get_db)):
     """
     Initiate password reset process by sending email with reset token
@@ -257,7 +226,7 @@ async def forgot_password(request_data: dict = Body(...), db: Session = Depends(
     
     return {"message": "If an account with this email exists, a password reset link has been sent"}
 
-@app.post("/reset-password")
+@router.post("/reset-password")
 async def reset_password(request_data: dict = Body(...), db: Session = Depends(get_db)):
     """
     Verify reset token and update password
@@ -274,7 +243,7 @@ async def reset_password(request_data: dict = Body(...), db: Session = Depends(g
     # Find user with token
     db_user = db.query(DBUser).filter(
         DBUser.reset_token == token,
-        DBUser.reset_token_expiry > datetime.utcnow()  # Check token hasn't expired
+        DBUser.reset_token_expiry > datetime.utcnow()
     ).first()
     
     if not db_user:
@@ -290,7 +259,3 @@ async def reset_password(request_data: dict = Body(...), db: Session = Depends(g
     db.commit()
     
     return {"message": "Password has been reset successfully"}
-
-@app.get("/")
-def read_root():
-    return {"status": "ok"}
