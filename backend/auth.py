@@ -56,6 +56,34 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     token = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
     return token if isinstance(token, str) else token.decode("utf-8")
 
+async def get_current_user_email(request: Request):
+    """
+    Dependency to get current user's email from the JWT token
+    """
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+        )
+    
+    token = auth_header.split(" ")[1]
+    
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        email: str = payload.get("sub")
+        if email is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials",
+            )
+        return email
+    except jwt.PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+        )
+
 @router.post("/register")
 async def register(user: UserCreate, db: Session = Depends(get_db)):
     db_user = get_user(db, user.email)

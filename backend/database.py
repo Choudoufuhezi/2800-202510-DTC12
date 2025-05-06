@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy import DateTime, create_engine, Column, String, Integer, Boolean
 from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
@@ -72,6 +73,18 @@ class Registered(Base):
     )
     family = relationship("Family", back_populates="members")
     user = relationship("User", back_populates="families")
+    
+class FamilyInvite(Base):
+    __tablename__ = "family_invite"
+
+    id = Column(Integer, primary_key=True, index=True)
+    family_id = Column(Integer, ForeignKey("family.id"))
+    code = Column(String, unique=True, index=True)
+    created_by = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime)
+    max_uses = Column(Integer, default=1)  # How many times it can be used
+    uses = Column(Integer, default=0)
 
 class Memory(Base):
     __tablename__ = "memory"
