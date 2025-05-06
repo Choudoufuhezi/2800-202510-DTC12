@@ -13,21 +13,15 @@
     <div class="w-full max-w-md h-screen bg-white shadow-lg flex flex-col">
 
         <!-- Header -->
-        <div class="flex items-center gap-3 p-4 bg-blue-500 text-white shadow-md">
-            <img src="!" alt="Profile" class="w-10 h-10 rounded-full border-2 border-white" />
-            <h2 class="text-lg font-semibold">Group chat</h2>
+        <div id="group-header" class="flex items-center gap-3 p-4 bg-blue-500 text-white shadow-md cursor-pointer">
+            <img id="group-avatar" src="!" alt="Profile" class="w-10 h-10 rounded-full border-2 border-white" />
+            <h2 id="group-name" class="text-lg font-semibold">Group chat</h2>
         </div>
+
 
         <!-- Chat Box -->
         <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
             <!-- Messages will go here -->
-        </div>
-
-        <!-- Reply Preview (hidden by default) -->
-        <div id="reply-preview"
-            class="hidden px-4 py-2 border-t border-b border-gray-200 bg-gray-50 text-sm text-gray-700 relative">
-            <div id="reply-text" class="truncate"></div>
-            <button id="cancel-reply" class="absolute right-2 top-2 text-gray-400 hover:text-gray-700">✕</button>
         </div>
 
         <!-- Message input -->
@@ -36,6 +30,27 @@
                 class="flex-1 p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring focus:border-blue-300" />
             <button id="send-btn" class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600">Send</button>
         </div>
+
+        <!-- Group Info Modal -->
+        <div id="group-info"
+            class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+            <div
+                class="bg-white w-full max-w-sm md:max-w-md p-6 rounded-lg shadow-lg relative overflow-y-auto max-h-[90vh]">
+                <button id="close-group-info"
+                    class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
+                <h3 class="text-xl font-semibold mb-3">Group Info</h3>
+                <p><strong>Group Name:</strong> <span id="info-group-name"></span></p>
+                <p class="mt-2"><strong>Invite Link:</strong>
+                    <a href="#" id="invite-link" class="text-blue-500 underline break-words"></a>
+                </p>
+                <div class="mt-4">
+                    <p class="font-semibold mb-1">Members:</p>
+                    <ul id="member-list" class="space-y-1 text-sm text-gray-700 list-disc list-inside"></ul>
+                </div>
+            </div>
+        </div>
+
+
 
     </div>
 </body>
