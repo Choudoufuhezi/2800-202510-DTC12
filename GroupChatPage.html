@@ -23,6 +23,13 @@
             <!-- Messages will go here -->
         </div>
 
+        <!-- Reply Preview (hidden by default) -->
+        <div id="reply-preview"
+            class="hidden px-4 py-2 border-t border-b border-gray-200 bg-gray-50 text-sm text-gray-700 relative">
+            <div id="reply-text" class="truncate"></div>
+            <button id="cancel-reply" class="absolute right-2 top-2 text-gray-400 hover:text-gray-700">✕</button>
+        </div>
+
         <!-- Message input -->
         <div class="flex p-3 border-t border-gray-200 bg-white">
             <input id="message-input" type="text" placeholder="Type a message"
