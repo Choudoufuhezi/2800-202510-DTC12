@@ -1,7 +1,9 @@
 from sqlalchemy import DateTime, create_engine, Column, String, Integer, Boolean
+from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship
 import os
 
 # Create database directory if it doesn't exist
@@ -27,6 +29,7 @@ class User(Base):
     verification_token = Column(String, nullable=True)
     reset_token = Column(String, nullable=True)
     reset_token_expiry = Column(DateTime, nullable=True)
+    families = relationship("Registered", back_populates="user")
 
 class ChatRoom(Base):
     __tablename__ = "chatroom"
@@ -50,7 +53,25 @@ class Message(Base):
     chatroom_id = Column(Integer, ForeignKey("chatroom.id"))
     message_text = Column(String)
     time_stamp = Column(DateTime, nullable=False)
-    
+
+class Family(Base):
+    __tablename__ = "family"
+
+    id = Column(Integer, primary_key=True, index=True)
+    admin = Column(Integer, ForeignKey("users.id"))
+    members = relationship("Registered", back_populates="family")
+
+class Registered(Base):
+    __tablename__ = "registered"
+
+    email = Column(String, ForeignKey("users.email"))
+    family_id = Column(Integer, ForeignKey("family.id"))
+
+    __table_args__ = (
+        PrimaryKeyConstraint('email', 'family_id'),
+    )
+    family = relationship("Family", back_populates="members")
+    user = relationship("User", back_populates="families")
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
@@ -109,3 +130,22 @@ def create_message(db, user_id: int, chatroom_id: int,  message_text:str, time_s
     db.commit()
     db.refresh(db_message)
     return db_message
+
+def create_family(db, admin_user_id: int):
+    db_family = Family(
+        admin=admin_user_id
+    )
+    db.add(db_family)
+    db.commit()
+    db.refresh(db_family)
+    return db_family
+
+def register_user_to_family(db, email: str, family_id: int):
+    db_registration = Registered(
+        email=email,
+        family_id=family_id
+    )
+    db.add(db_registration)
+    db.commit()
+    db.refresh(db_registration)
+    return db_registration
