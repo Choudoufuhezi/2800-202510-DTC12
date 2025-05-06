@@ -134,7 +134,7 @@ def create_user(db, email: str, hashed_password: str, verification_token: str = 
     db.refresh(db_user)
     return db_user 
 
-def create_chatroom(db, name: str, date):
+def create_chatroom(db, name: str, date: datetime):
     db_chatroom = ChatRoom(
         name=name, 
         created_date=date
@@ -154,7 +154,7 @@ def create_userchatroom(db, user_id: int, chatroom_id: int):
     db.refresh(db_userchatroom)
     return db_userchatroom
 
-def create_message(db, user_id: int, chatroom_id: int,  message_text:str, time_stamp):
+def create_message(db, user_id: int, chatroom_id: int,  message_text:str, time_stamp: datetime):
     db_message = Message(
         user_id=user_id, 
         chatroom_id=chatroom_id,
@@ -184,7 +184,22 @@ def register_user_to_family(db, user_id: int, family_id: int, is_admin: bool):
     db.refresh(db_registration)
     return db_registration
 
-def create_memory(db, location: str, tags: str, file_location: str, time_stamp, user_id: int, family_id: int):
+
+def create_family_invite(db, family_id: int, code: int, created_by: int, expires_at: datetime, uses: int, max_uses: int):
+    db_invite = FamilyInvite(
+        family_id=family_id,
+        code=code,
+        created_by=created_by,
+        expires_at=expires_at,
+        uses=uses,
+        max_uses=max_uses,
+    )
+    db.add(db_invite)
+    db.commit()
+    db.refresh(db_invite)
+    return db_invite
+
+def create_memory(db, location: str, tags: str, file_location: str, time_stamp: datetime, user_id: int, family_id: int):
     db_memory = Memory(
         location=location,
         tags=tags,
