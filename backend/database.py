@@ -64,14 +64,36 @@ class Family(Base):
 class Registered(Base):
     __tablename__ = "registered"
 
-    email = Column(String, ForeignKey("users.email"))
+    user_id = Column(String, ForeignKey("users.id"))
     family_id = Column(Integer, ForeignKey("family.id"))
 
     __table_args__ = (
-        PrimaryKeyConstraint('email', 'family_id'),
+        PrimaryKeyConstraint('user_id', 'family_id'),
     )
     family = relationship("Family", back_populates="members")
     user = relationship("User", back_populates="families")
+
+class Memory(Base):
+    __tablename__ = "memory"
+
+    id = Column(Integer, primary_key=True, index=True)
+    location = Column(String)
+    tags = Column(String)
+    file_location = Column(String)
+    time_stamp = Column(DateTime, nullable=False)
+    user_id = Column(String, ForeignKey("users.id"))
+    family_id = Column(Integer, ForeignKey("family.id"))
+
+class Comment(Base):
+    __tablename__ = "comment"
+
+    id = Column(Integer, primary_key=True, index=True)
+    memory_id = Column(String, ForeignKey("memory.id"))
+    comment_text = Column(String)
+    user_id = Column(String, ForeignKey("users.id"))
+
+    memory = relationship("Memory", backref="comments")
+    user = relationship("User")
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
@@ -140,12 +162,37 @@ def create_family(db, admin_user_id: int):
     db.refresh(db_family)
     return db_family
 
-def register_user_to_family(db, email: str, family_id: int):
+def register_user_to_family(db, user_id: int, family_id: int):
     db_registration = Registered(
-        email=email,
+        user_id=user_id,
         family_id=family_id
     )
     db.add(db_registration)
     db.commit()
     db.refresh(db_registration)
     return db_registration
+
+def create_memory(db, location: str, tags: str, file_location: str, time_stamp, user_id: int, family_id: int):
+    db_memory = Memory(
+        location=location,
+        tags=tags,
+        file_location=file_location,
+        time_stamp=time_stamp,
+        user_id=user_id,
+        family_id=family_id
+    )
+    db.add(db_memory)
+    db.commit()
+    db.refresh(db_memory)
+    return db_memory
+
+def create_comment(db, memory_id: int, comment_text: str, user_id: int):
+    db_comment = Comment(
+        memory_id=memory_id,
+        comment_text=comment_text,
+        user_id=user_id
+    )
+    db.add(db_comment)
+    db.commit()
+    db.refresh(db_comment)
+    return db_comment
