@@ -35,7 +35,9 @@ app.add_middleware(
 
 # Include routers
 from auth import router as auth_router
+from family_management import router as family_router
 app.include_router(auth_router)
+app.include_router(family_router)
 
 @app.get("/")
 def read_root():
