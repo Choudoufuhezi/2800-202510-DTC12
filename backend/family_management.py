@@ -39,6 +39,9 @@ class InviteResponse(BaseModel):
     max_uses: int
     family_id: int
     
+class JoinFamilyRequest(BaseModel):
+    code: str
+    
 @router.post("/create", response_model=FamilyInfo)
 async def create_family(
     db: Session = Depends(get_db),
@@ -117,4 +120,62 @@ async def create_invite(
         "expires_at": expires_at,
         "max_uses": request.max_uses,
         "family_id": request.family_id
+    }
+    
+@router.post("/join", response_model=FamilyInfo)
+async def join_family(
+    request: JoinFamilyRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Join a family using a valid invite code.
+    
+    Usage: send a POST request to the /family/create-invite endpoint with header including 'Authorization': `Bearer ${JWT} and data invite code`
+    """
+    # Check if the invite code is valid
+    db_invite = db.query(FamilyInvite).filter(
+        FamilyInvite.code == request.code,
+        FamilyInvite.expires_at > datetime.utcnow(),
+        FamilyInvite.uses < FamilyInvite.max_uses
+    ).first()
+
+    if not db_invite:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired invite code",
+        )
+
+    # Check if user is already in this family
+    existing_registration = db.query(Registered).filter(
+        Registered.email == current_user.email,
+        Registered.family_id == db_invite.family_id
+    ).first()
+
+    if existing_registration:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User already in this family",
+        )
+
+    # Register the user
+    db_registration = Registered(
+        email=current_user.email,
+        family_id=db_invite.family_id
+    )
+    db.add(db_registration)
+
+    # Update invite usage count
+    db_invite.uses += 1
+    db.commit()
+
+    # Return updated family info
+    members = [r.email for r in db.query(Registered).filter(
+        Registered.family_id == db_invite.family_id
+    ).all()]
+
+    return {
+        "id": db_invite.family_id,
+        "admin": db.query(Family).get(db_invite.family_id).admin,
+        "members": members
     }
