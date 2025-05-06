@@ -78,15 +78,11 @@ async def get_current_user_email(request: Request):
                 detail="Invalid authentication credentials",
             )
         return email
-    except jwt.JWTError:
+    except jwt.PyJWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
         )
-        
-@router.get("/protected")
-async def protected_route(email: str = Depends(get_current_user_email)):
-    return {"email": email}
 
 @router.post("/register")
 async def register(user: UserCreate, db: Session = Depends(get_db)):

@@ -1,3 +1,4 @@
+import random
 import secrets
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from pydantic import BaseModel
@@ -6,7 +7,7 @@ from typing import Optional
 import os
 from sqlalchemy.orm import Session
 from auth import get_current_user_email
-from database import get_db, Family, User, Registered
+from database import FamilyInvite, get_db, Family, User, Registered
 from config import settings
 from typing import List
 
@@ -26,6 +27,17 @@ class FamilyInfo(BaseModel):
     id: int
     admin: int
     members: List[str]
+    
+class CreateInviteRequest(BaseModel):
+    family_id: int
+    expires_in_hours: Optional[int] = 24  # Default 24 hour expiration
+    max_uses: Optional[int] = 1  # Default single use
+
+class InviteResponse(BaseModel):
+    code: str
+    expires_at: datetime
+    max_uses: int
+    family_id: int
     
 @router.post("/create", response_model=FamilyInfo)
 async def create_family(
@@ -66,3 +78,43 @@ async def create_family(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create family: {str(e)}"
         )
+
+@router.post("/create-invite", response_model=InviteResponse)
+async def create_invite(
+    request: CreateInviteRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Create a new invite code for a family
+    
+    Usage: send a POST request to the /family/create-invite endpoint with header including 'Authorization': `Bearer ${JWT} and data family_id, expires_in_hours, and max_uses`
+    """
+    # Verify user is admin of the family
+    db_family = db.query(Family).filter(Family.id == request.family_id).first()
+    if not db_family or db_family.admin != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only family admin can create invites",
+        )
+
+    code = ''.join(random.choices('0123456789', k=6)) # generate random 6 number string
+    expires_at = datetime.utcnow() + timedelta(hours=request.expires_in_hours)
+
+    db_invite = FamilyInvite(
+        family_id=request.family_id,
+        code=code,
+        created_by=current_user.id,
+        expires_at=expires_at,
+        max_uses=request.max_uses
+    )
+    db.add(db_invite)
+    db.commit()
+    db.refresh(db_invite)
+
+    return {
+        "code": code,
+        "expires_at": expires_at,
+        "max_uses": request.max_uses,
+        "family_id": request.family_id
+    }
