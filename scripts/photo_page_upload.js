@@ -1,3 +1,5 @@
+import { getLocation } from './geolocation.js';
+
 const removePhotoEmptyMessage = document.getElementById("photoEmptyMessage");
 const uploadButton = document.getElementById("uploadButton");
 const fileInput = document.getElementById("fileInput");
@@ -43,10 +45,11 @@ async function getImageData(imageId) {
     // return fetch(`http://localhost:3000/api/photos/${imageId}`)
     //     .then(res => res.json());
     // FAKE response:
+    const location = await getLocation();
     return {
         src: document.querySelector(`img[data-image-id="${imageId}"]`).src,
         description: "This is a sample description for the image.",
-        geolocation: { lat: 123.0000, lon: 456.0000 }
+        geolocation: { location }
     };
 }
 
