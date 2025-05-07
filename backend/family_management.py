@@ -7,7 +7,7 @@ from typing import Optional
 import os
 from sqlalchemy.orm import Session
 from auth import get_current_user_email
-from database import FamilyInvite, get_db, Family, User, Registered
+from database import FamilyInvite, delete_family, get_db, Family, User, Registered
 from config import settings
 from typing import List
 
@@ -179,3 +179,39 @@ async def join_family(
         "admin": db.query(Family).get(db_invite.family_id).admin,
         "members": members
     }
+    
+@router.delete("/{family_id}", response_model=dict)
+async def delete_family_endpoint(
+    family_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete a family
+    
+    Usage: send a DELETE request to /family/{family_id} with Authorization header "Authorization': `Bearer ${JWT}`"
+    """
+    try:
+        success = delete_family(db, family_id, current_user.id)
+        if success:
+            return {"message": "Family deleted successfully"}
+        
+    except ValueError as e:
+        # Family does not exist
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except PermissionError as e:
+        # User not admin
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+    except Exception as e:
+        # Any other errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete family: {str(e)}"
+        )
+        
