@@ -194,3 +194,53 @@ fileInput.addEventListener("change", (event) => {
         }
     }
 });
+
+async function loadRecentMemories() {
+    // ⚠️ Replace with actual API call when backend is ready
+    const recentMemories = [
+        {
+            id: "1",
+            src: "https://via.placeholder.com/300",
+            title: "Sunset at the beach"
+        },
+        {
+            id: "2",
+            src: "https://via.placeholder.com/300",
+            title: "Grandma’s birthday"
+        },
+        {
+            id: "3",
+            src: "https://via.placeholder.com/300",
+            title: "Family BBQ"
+        },
+        {
+            id: "4",
+            src: "https://via.placeholder.com/300",
+            title: "Camping trip"
+        }
+    ];
+
+    const container = document.getElementById("recentMemories");
+
+    recentMemories.forEach(memory => {
+        const card = document.createElement("div");
+        card.className = "rounded overflow-hidden shadow hover:shadow-md transition cursor-pointer";
+
+        const img = document.createElement("img");
+        img.src = memory.src;
+        img.alt = memory.title;
+        img.className = "w-full h-40 object-cover";
+
+        const caption = document.createElement("div");
+        caption.className = "p-2 text-sm font-medium text-gray-700";
+        caption.innerText = memory.title;
+
+        card.appendChild(img);
+        card.appendChild(caption);
+        container.appendChild(card);
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadRecentMemories();
+});
