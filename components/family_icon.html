@@ -1,0 +1,20 @@
+<!-- Circular Family Icon Component -->
+<div class="flex items-center gap-4 px-6 py-4">
+    <!-- Family Icon -->
+    <div class="relative">
+        <img id="familyIconPreview" src="https://placekitten.com/100/100" alt="Family Icon"
+            class="w-16 h-16 rounded-full object-cover shadow" />
+        <!-- Upload Icon -->
+        <label for="familyIconInput"
+            class="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow cursor-pointer hover:bg-gray-100">
+            <i class="fa-solid fa-camera text-xs text-gray-600"></i>
+            <input type="file" id="familyIconInput" accept="image/*" class="hidden" />
+        </label>
+    </div>
+
+    <!-- Family Name -->
+    <div>
+        <h2 class="text-xl font-semibold text-gray-800">The Smith Family</h2>
+        <p class="text-sm text-gray-500">6 members • Active today</p>
+    </div>
+</div>

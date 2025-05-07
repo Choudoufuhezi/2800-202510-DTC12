@@ -14,18 +14,8 @@
 
     <!--Top Nav-->
     <nav id="topNav" class="sticky top-0 z-50"></nav>
+<div id="familyIconContainer"></div>
 
-    <!-- Family Banner Upload Section -->
-    <div class="w-full bg-gray-100 flex flex-col items-center justify-center py-6 border-b border-gray-300">
-        <label for="familyPhotoUpload" class="text-sm font-semibold text-gray-700 mb-2">Upload Family Banner</label>
-        <input type="file" id="familyPhotoUpload" accept="image/*"
-            class="text-sm file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-indigo-600 file:text-white file:rounded-md file:cursor-pointer hover:file:bg-indigo-700" />
-        <!-- Preview Container -->
-        <div id="familyPhotoContainer" class="w-full max-w-5xl px-4 mt-6 hidden">
-            <img id="familyPhotoPreview" src="" alt="Family Banner"
-                class="w-full max-h-72 object-cover rounded-xl shadow-lg" />
-        </div>
-    </div>
 
     <!--Main Content-->
     <div class="min-h-[calc(101vh-64px-64px)] max-w-4xl mx-auto px-10 py-10">
@@ -75,7 +65,7 @@
     <script src="../scripts/add_nav.js"></script>
     <script src="../scripts/photo_page_upload.js"></script>
     <script src="../scripts/family_photo_upload.js"></script>
-
+    <script src="../scripts/load_family_icon.js"></script>
 </body>
 
 </html>
