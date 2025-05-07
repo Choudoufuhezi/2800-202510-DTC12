@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from database import Registered, User, create_memory, get_db
+from database import Registered, User, create_memory, delete_memory, get_db
 from family_management import get_current_user
 
 router = APIRouter(prefix="/memories")
@@ -24,6 +24,9 @@ class MemoryResponse(BaseModel):
     time_stamp: datetime
     user_id: int
     family_id: int
+    
+class MemoryDeleteResponse(BaseModel):
+    message: str
 
 @router.post("/", response_model=MemoryResponse)
 async def create_memory_endpoint(
@@ -50,7 +53,6 @@ async def create_memory_endpoint(
         # Set current time if timestamp not provided
         timestamp = memory_data.time_stamp if memory_data.time_stamp else datetime.utcnow()
 
-        # Use the helper function
         db_memory = create_memory(
             db=db,
             location=memory_data.location,
@@ -67,4 +69,35 @@ async def create_memory_endpoint(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create memory: {str(e)}"
+        )
+        
+@router.delete("/{memory_id}", response_model=MemoryDeleteResponse)
+async def delete_single_memory_endpoint(
+    memory_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete a memory by ID
+    """
+    try:
+        success = delete_memory(db, memory_id, current_user.id)
+        if success:
+            return {
+                "message": "Memory deleted successfully",
+            }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except PermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete memory: {str(e)}"
         )
