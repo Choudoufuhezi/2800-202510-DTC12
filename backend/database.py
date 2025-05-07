@@ -223,3 +223,24 @@ def create_comment(db, memory_id: int, comment_text: str, user_id: int):
     db.commit()
     db.refresh(db_comment)
     return db_comment
+
+def delete_family(db, family_id: int, requesting_user_id: int):
+    family = db.query(Family).filter(Family.id == family_id).first() # verify user has admin perms
+    if not family:
+        raise ValueError("Family not found")
+    
+    if family.admin != requesting_user_id:
+        raise PermissionError("Only family admin can delete the family")
+    
+    try:
+        # delete sequentially
+        db.query(FamilyInvite).filter(FamilyInvite.family_id == family_id).delete()
+        db.query(Registered).filter(Registered.family_id == family_id).delete()
+        db.delete(family)
+        
+        db.commit()
+        return True
+    except Exception as e:
+        # If any issues, rollback all changes
+        db.rollback()
+        raise e
