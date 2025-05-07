@@ -213,6 +213,32 @@ def create_memory(db, location: str, tags: str, file_location: str, time_stamp: 
     db.refresh(db_memory)
     return db_memory
 
+def delete_memory(db, memory_id: int, requesting_user_id: int, family_id: int):
+    db_memory = db.query(Memory).filter(Memory.id == memory_id).first()
+    if not db_memory:
+        raise ValueError("Memory not found")
+    if family_id and db_memory.family_id != family_id:
+        raise ValueError("Invalid credentials")
+    
+    # only poster and admins can delete
+    is_owner = db_memory.user_id == requesting_user_id
+    is_admin = db.query(Family).filter(
+        Family.id == db_memory.family_id,
+        Family.admin == requesting_user_id
+    ).first()
+    
+    if not is_owner and not is_admin:
+        raise PermissionError("Only memory owner or family admin can delete")
+    
+    try:
+        db.delete(db_memory)
+        db.commit()
+        return True
+    except Exception as e:
+        # If anything goes wrong, rollback
+        db.rollback()
+        raise e
+
 def create_comment(db, memory_id: int, comment_text: str, user_id: int):
     db_comment = Comment(
         memory_id=memory_id,
