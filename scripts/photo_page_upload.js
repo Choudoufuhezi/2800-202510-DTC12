@@ -46,7 +46,7 @@ async function getImageData(imageId) {
     return {
         src: document.querySelector(`img[data-image-id="${imageId}"]`).src,
         description: "This is a sample description for the image.",
-        geolocation: { lat: 0.0000, lon: 0.0000 }
+        geolocation: { lat: 123.0000, lon: 456.0000 }
     };
 }
 
@@ -80,26 +80,44 @@ fileInput.addEventListener("change", (event) => {
                     }
                 });
                 const modalContent = document.createElement('div');
-                modalContent.className = "bg-white p-6 rounded shadow-lg max-w-md w-full";
+                // Reduced top padding to remove extra space above the header:
+                modalContent.className = "bg-white pt-2 pb-6 px-6 rounded shadow-lg max-w-md w-full";
+
+                // Create a header for the close button
+                const header = document.createElement('div');
+                header.className = "flex justify-end";
+
+                const closeButton = document.createElement('button');
+                closeButton.innerHTML = '<i class="fas fa-times"></i>';
+                closeButton.className = "text-gray-600 hover:text-gray-800 p-4 text-xl";
+                closeButton.addEventListener('click', () => modal.remove());
+                header.appendChild(closeButton);
+                modalContent.appendChild(header);
 
                 // Image in modal
                 const modalImage = document.createElement('img');
                 modalImage.src = data.src;
                 modalImage.className = "w-full h-auto rounded mb-4";
 
+                modalContent.appendChild(modalImage);
+
                 // Description
                 const description = document.createElement('p');
                 description.innerText = data.description;
                 description.className = "text-gray-700 mb-4";
+                modalContent.appendChild(description);
+
+                // Edit button
+                const editButton = document.createElement('button');
+                editButton.innerHTML = '<i class="fas fa-edit"></i>';
+                editButton.className = "bg-sky-400 text-white px-2 py-1 hover:bg-sky-300 rounded mr-2 mb-4";
+                modalContent.appendChild(editButton);
 
                 // Geolocation
                 const geolocation = document.createElement('p');
                 geolocation.innerText =
                     `Geolocation: Latitude ${data.geolocation.lat}, Longitude ${data.geolocation.lon}`;
                 geolocation.className = "text-gray-500 mb-4";
-
-                modalContent.appendChild(modalImage);
-                modalContent.appendChild(description);
                 modalContent.appendChild(geolocation);
 
                 // — COMMENTS SECTION —
@@ -123,30 +141,13 @@ fileInput.addEventListener("change", (event) => {
                 commentInput.className = "flex-grow border p-2 mr-2 rounded";
                 const commentSubmit = document.createElement('button');
                 commentSubmit.type = "submit";
-                commentSubmit.innerText = "Post";
-                commentSubmit.className = "bg-green-500 text-white px-4 py-2 rounded";
+                commentSubmit.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                commentSubmit.className = "bg-indigo-600 text-white px-4 py-2 hover:bg-indigo-700  rounded";
                 commentForm.appendChild(commentInput);
                 commentForm.appendChild(commentSubmit);
                 commentsSection.appendChild(commentForm);
 
                 modalContent.appendChild(commentsSection);
-
-                // Edit button
-                const editButton = document.createElement('button');
-                editButton.innerText = "Edit";
-                editButton.className = "bg-blue-500 text-white px-4 py-2 rounded mr-2";
-
-                // Close button
-                const closeButton = document.createElement('button');
-                closeButton.innerText = "Close";
-                closeButton.className = "bg-red-500 text-white px-4 py-2 rounded";
-                closeButton.addEventListener('click', () => {
-                    modal.remove();
-                });
-
-                // Append elements to modal 
-                modalContent.appendChild(editButton);
-                modalContent.appendChild(closeButton);
 
                 // Append modal content to the modal
                 modal.appendChild(modalContent);
