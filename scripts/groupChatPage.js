@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const bubble = document.createElement("div");
         bubble.className = `${from === "You" ? "bg-blue-100" : "bg-gray-200"} text-gray-800 px-4 py-2 rounded-lg max-w-xs shadow`;
 
-        // Top reply preview (like Telegram)
+        // Top reply preview
         if (replyText) {
             const replyPreview = document.createElement("div");
             replyPreview.className = "text-xs text-gray-600 italic border-l-2 border-blue-400 pl-2 mb-1";
@@ -114,6 +114,74 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("reply-preview").classList.add("hidden");
         chatBox.scrollTop = chatBox.scrollHeight;
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        console.log("Script loaded!");
+
+        const groupHeader = document.getElementById("group-header");
+        const groupInfoModal = document.getElementById("group-info");
+        const closeGroupInfo = document.getElementById("close-group-info");
+
+        const memberDetailModal = document.getElementById("member-detail-modal");
+        const closeMemberDetail = document.getElementById("close-member-detail");
+        const memberNameSpan = document.getElementById("member-name");
+        const dmButton = document.getElementById("dm-button");
+
+        const memberListContainer = document.getElementById("member-list");
+
+        // Check if activeChat exists in localStorage
+        const chat = JSON.parse(localStorage.getItem("activeChat"));
+        if (!chat) {
+            window.location.href = "inbox_page.html";
+            return;
+        }
+
+        console.log("Chat data:", chat);
+
+        // Open Group Info Modal when clicking on group header
+        groupHeader.addEventListener("click", () => {
+            console.log("Group header clicked - opening modal");
+
+            document.getElementById("info-group-name").textContent = chat.name;
+            document.getElementById("invite-link").href = chat.inviteLink;
+            document.getElementById("invite-link").textContent = chat.inviteLink;
+
+            // Populate member list
+            memberListContainer.innerHTML = "";
+            chat.members.forEach(member => {
+                const listItem = document.createElement("li");
+                listItem.textContent = member.name;
+                listItem.className = "cursor-pointer text-blue-600 hover:underline";
+                listItem.dataset.id = member.id;
+
+                listItem.addEventListener("click", () => {
+                    console.log("Member selected:", member.name);
+                    memberNameSpan.textContent = member.name;
+                    memberDetailModal.classList.remove("hidden");
+
+                    dmButton.onclick = () => {
+                        console.log(`Redirecting to chat_page.html?user=${member.id}`);
+                        window.location.href = `chat_page.html?user=${member.id}`;
+                    };
+                });
+
+                memberListContainer.appendChild(listItem);
+            });
+
+            groupInfoModal.classList.remove("hidden");
+        });
+
+        // Close Modals
+        closeGroupInfo.addEventListener("click", () => {
+            console.log("Closing group info modal");
+            groupInfoModal.classList.add("hidden");
+        });
+
+        closeMemberDetail.addEventListener("click", () => {
+            console.log("Closing member detail modal");
+            memberDetailModal.classList.add("hidden");
+        });
+    });
 
     sendBtn.addEventListener("click", sendMessage);
     input.addEventListener("keypress", e => {
