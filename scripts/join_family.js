@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const response = await fetch("/family/join", {
+            const response = await fetch("http://127.0.0.1:8000/family/join", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (response.ok) {
                 alert("Successfully joined the family!");
-                window.location.href = "family-groups.html"; 
+                window.location.href = "family-groups.html";
             } else {
                 alert(result.detail || "Failed to join family.");
             }
