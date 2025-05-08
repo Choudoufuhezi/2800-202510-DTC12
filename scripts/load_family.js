@@ -21,9 +21,22 @@ document.addEventListener('DOMContentLoaded', async function() {
         const familyIds = await response.json();
 
         console.log(familyIds)
-
-        loadingMessage.remove();
         // Fetch details for each family
+
+        familyIds.forEach(async (familyId) => {
+            const response = await fetch(`${API_URL}/family/${familyId}/members`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch family');
+            }
+
+            const family = await response.json();
+            console.log(family);
+        });
     } catch (error) {
         console.error('Error loading families:', error);
     }
