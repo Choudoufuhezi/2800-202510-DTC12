@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let replyTo = null;
 
-    function createMessageBubble(from, text, messageId = Date.now(), replyText = null) {
+        // Create message bubble
         const bubble = document.createElement("div");
         bubble.className = `flex ${from === "You" ? "justify-end" : "justify-start"} relative`;
         bubble.dataset.id = messageId;
@@ -130,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     sendBtn.addEventListener("click", sendMessage);
-    input.addEventListener("keypress", e => {
+    messageInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter") sendMessage();
     });
 });
