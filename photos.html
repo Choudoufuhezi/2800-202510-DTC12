@@ -5,20 +5,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Photos</title>
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
 </head>
 
 <body class="bg-[#f5f3eb98] text-gray-800">
 
-    <!--Top Nav-->
+    <!-- Top Navigation -->
     <nav id="topNav" class="sticky top-0 z-50"></nav>
     <div id="familyIconContainer"></div>
 
     <main class="max-w-5xl mx-auto px-4 pt-6 pb-28">
 
-        <!--  RECENT MEMORIES SECTION -->
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div class="flex flex-row items-center space-x-4">
+                <i class="fa-solid fa-image fa-2xl text-indigo-600"></i>
+                <h1 class="text-2xl font-semibold text-gray-800">Photos</h1>
+            </div>
+            <div id="addMorePhotosButton"
+                class="hidden text-indigo-600 hover:text-indigo-700 transition cursor-pointer">
+                <i class="fa-solid fa-square-plus fa-2xl"></i>
+            </div>
+        </div>
+
+        <!-- RECENT MEMORIES -->
         <section class="bg-white/80 rounded-xl p-4 mb-10 shadow">
             <h2 class="text-xl font-semibold mb-4 text-gray-800">Recent Memories</h2>
             <div id="recentMemories" class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -26,7 +37,7 @@
             </div>
         </section>
 
-        <!--  UPLOADED PHOTOS SECTION -->
+        <!-- UPLOADED PHOTOS -->
         <section class="bg-white/90 rounded-xl p-4 shadow">
             <h2 class="text-lg font-semibold mb-4">Your Uploaded Photos</h2>
 
@@ -43,30 +54,20 @@
                 </div>
             </div>
 
-            <!-- Upload file -->
             <input id="fileInput" type="file" accept="image/*" class="hidden" />
 
-            <!-- Uploaded photo grid -->
             <div id="photoGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                 <!-- Images will appear here -->
             </div>
         </section>
 
-        <!-- Floating + Add Button -->
-        <div id="addMorePhotosButton" class="fixed bottom-24 right-6 md:right-12 z-50 hidden">
-            <div
-                class="bg-indigo-600 text-white p-4 rounded-full shadow-lg cursor-pointer hover:bg-indigo-700 transition">
-                <i class="fa-solid fa-plus fa-xl"></i>
-            </div>
-        </div>
-
     </main>
 
-    <!--Bottom Nav + Footer-->
+    <!-- Bottom Navigation and Footer -->
     <nav id="bottomNav" class="sticky bottom-0 z-40"></nav>
     <nav id="footer"></nav>
 
-    <!--JavaScript Files-->
+    <!-- JS Files -->
     <script src="../scripts/add_nav.js"></script>
     <script src="../scripts/photo_page_upload.js"></script>
     <script src="../scripts/family_photo_upload.js"></script>
