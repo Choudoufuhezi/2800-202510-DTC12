@@ -35,8 +35,8 @@ function openMemoryModal(memory) {
     closeButton.addEventListener('click', () => modal.remove());
 
     const img = document.createElement('img');
-    img.src = memory.src;
-    img.alt = memory.title;
+    img.src = `http://localhost:8000/${memory.file_location}`;
+    img.alt = memory.tags || "Family memory";
     img.className = "w-full h-auto rounded mb-4";
 
     const description = document.createElement('p');
@@ -95,7 +95,7 @@ function openMemoryModal(memory) {
     loadComments();
 }
 
-fileInput.addEventListener("change", (event) => {
+fileInput.addEventListener("change", async (event) => {
     const file = event.target.files[0];
     if (!file || !file.type.startsWith('image/')) return;
 
@@ -103,31 +103,71 @@ fileInput.addEventListener("change", (event) => {
     removePhotoEmptyMessage.classList.add('hidden');
 
     const reader = new FileReader();
-    reader.onload = function (e) {
-        const img = document.createElement('img');
-        img.src = e.target.result;
-        img.dataset.imageId = Date.now();
-        img.className = "max-w-full h-auto rounded shadow cursor-pointer";
+    reader.onload = async function (e) {
+        const imageData = e.target.result;
+        const location = await getGeolocation();
+        const token = localStorage.getItem("token");
+        const familyId = localStorage.getItem("familyId");
 
-        photoGrid.appendChild(img);
-        img.addEventListener('click', () => {
-            const memory = {
-                id: img.dataset.imageId,
-                src: img.src,
-                title: "New Upload",
-                description: "Just uploaded",
-                geolocation: { lat: "N/A", lon: "N/A" }
-            };
-            openMemoryModal(memory);
-        });
+        try {
+            const response = await fetch("http://localhost:8000/memories/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    location: location ? `${location.lat},${location.lon}` : "Unknown",
+                    tags: "untagged",
+                    file_location: imageData,
+                    family_id: parseInt(familyId),
+                    time_stamp: new Date().toISOString()
+                })
+            });
+
+            const newMemory = await response.json();
+
+            const img = document.createElement('img');
+            img.src = `http://localhost:8000/${newMemory.file_location}`;
+            img.dataset.imageId = newMemory.id;
+            img.className = "max-w-full h-auto rounded shadow cursor-pointer";
+
+            photoGrid.appendChild(img);
+            img.addEventListener('click', () => openMemoryModal(newMemory));
+
+        } catch (err) {
+            console.error("Error uploading memory:", err);
+        }
     };
     reader.readAsDataURL(file);
 });
 
+async function getGeolocation() {
+    return new Promise((resolve) => {
+        if (!navigator.geolocation) return resolve(null);
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                resolve({
+                    lat: position.coords.latitude,
+                    lon: position.coords.longitude
+                });
+            },
+            (error) => {
+                console.warn("Geolocation error:", error);
+                resolve(null);
+            },
+            { enableHighAccuracy: true, timeout: 5000 }
+        );
+    });
+}
+
 async function loadRecentMemories() {
     try {
-        const response = await fetch('/api/photos/recent');
-        const memories = await response.json();
+        const response = await fetch('http://127.0.0.1:8000/memories/recent');
+        const rawText = await response.text();
+        console.log("RAW response from /memories/recent:", rawText);
+        const memories = JSON.parse(rawText);
         const container = document.getElementById("recentMemories");
         container.innerHTML = "";
 
@@ -141,14 +181,14 @@ async function loadRecentMemories() {
             card.className = "rounded border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 transition p-1 cursor-pointer";
 
             const img = document.createElement("img");
-            img.src = memory.src;
-            img.alt = memory.title;
+            img.src = memory.file_location;
+            img.alt = memory.tags;
             img.className = "w-full h-40 object-cover";
             img.dataset.imageId = memory.id;
 
             const caption = document.createElement("div");
             caption.className = "p-2 text-sm font-medium text-gray-700 truncate";
-            caption.innerText = memory.title;
+            caption.textContent = memory.tags;
 
             card.appendChild(img);
             card.appendChild(caption);
