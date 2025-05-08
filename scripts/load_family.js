@@ -60,3 +60,32 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.error('Error loading families:', error);
     }
 });
+
+// Create new family
+
+const createFamilyButton = document.getElementById('create-family-button');
+createFamilyButton.addEventListener('click', async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/family/create`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to create family');
+        }
+
+        const family = await response.json();
+        console.log(family);
+    } catch (error) {
+        console.error('Error creating family:', error);
+    }
+});
