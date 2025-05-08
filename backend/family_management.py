@@ -161,9 +161,9 @@ async def join_family(
             detail="Invalid or expired invite code",
         )
 
-    # Check if user is already in this family
+    # Check if user already in family
     existing_registration = db.query(Registered).filter(
-        Registered.email == current_user.email,
+        Registered.user_id == current_user.id,
         Registered.family_id == db_invite.family_id
     ).first()
 
@@ -175,8 +175,9 @@ async def join_family(
 
     # Register the user
     db_registration = Registered(
-        email=current_user.email,
-        family_id=db_invite.family_id
+        user_id=current_user.id,
+        family_id=db_invite.family_id,
+        is_admin=False
     )
     db.add(db_registration)
 
@@ -184,16 +185,24 @@ async def join_family(
     db_invite.uses += 1
     db.commit()
 
-    # Return updated family info
-    members = [r.email for r in db.query(Registered).filter(
+    # Get all members with their admin status
+    members = db.query(User.email, Registered.is_admin).join(
+        Registered, Registered.user_id == User.id
+    ).filter(
         Registered.family_id == db_invite.family_id
-    ).all()]
+    ).all()
 
-    return {
-        "id": db_invite.family_id,
-        "admin": db.query(Family).get(db_invite.family_id).admin,
-        "members": members
-    }
+    # Get admin user_id
+    admin = db.query(Registered.user_id).filter(
+        Registered.family_id == db_invite.family_id,
+        Registered.is_admin == True
+    ).first()
+
+    return FamilyInfo(
+        id=db_invite.family_id,
+        admin=admin[0] if admin else None,
+        members=[MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members]
+    )
     
 @router.delete("/{family_id}", response_model=dict)
 async def delete_family_endpoint(
