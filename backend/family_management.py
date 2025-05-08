@@ -239,7 +239,7 @@ async def delete_family_endpoint(
             detail=f"Failed to delete family: {str(e)}"
         )
         
-@router.get("/{family_id}/members", response_model=List[str])
+@router.get("/{family_id}/members", response_model=List[MemberInfo])
 async def get_family_members(
     family_id: int,
     db: Session = Depends(get_db),
@@ -252,7 +252,7 @@ async def get_family_members(
     """
     # Check if user is part of the family
     is_member = db.query(Registered).filter(
-        Registered.email == current_user.email,
+        Registered.user_id == current_user.id,
         Registered.family_id == family_id
     ).first()
     
@@ -262,9 +262,11 @@ async def get_family_members(
             detail="You must be a member of this family to view its members"
         )
     
-    # Get all members
-    members = [r.email for r in db.query(Registered).filter( #hacky, #TODO: refactor
+    # Get all members with email and admin status
+    members = db.query(User.email, Registered.is_admin).join(
+        Registered, Registered.user_id == User.id
+    ).filter(
         Registered.family_id == family_id
-    ).all()]
+    ).all()
     
-    return members
+    return [MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members]
