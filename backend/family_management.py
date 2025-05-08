@@ -270,3 +270,19 @@ async def get_family_members(
     ).all()
     
     return [MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members]
+
+@router.get("/my-families", response_model=List[int])
+async def get_user_families(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all family IDs that the current user belongs to
+    """
+    # Query all family IDs where user is registered
+    family_ids = db.query(Registered.family_id).filter(
+        Registered.user_id == current_user.id
+    ).all()
+    
+    # Extract just the IDs from the query results
+    return [family_id for (family_id,) in family_ids]
