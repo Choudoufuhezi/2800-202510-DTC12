@@ -104,8 +104,13 @@ async def create_invite(
     Usage: send a POST request to the /family/create-invite endpoint with header including 'Authorization': `Bearer ${JWT} and data family_id, expires_in_hours, and max_uses`
     """
     # Verify user is admin of the family
-    db_family = db.query(Family).filter(Family.id == request.family_id).first()
-    if not db_family or db_family.admin != current_user.id:
+    is_admin = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == request.family_id,
+        Registered.is_admin == True
+    ).first()
+
+    if not is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only family admin can create invites",
