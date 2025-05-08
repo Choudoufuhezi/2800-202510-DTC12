@@ -36,7 +36,13 @@ def update_my_profile(
     
     if updates.username is not None:
         current_user.username = updates.username
-    if updates.email is not None:
+    if updates.email is not None and updates.email != current_user.email:
+        existing = db.query(User).filter(User.email == updates.email).first()
+        if existing:
+            raise HTTPException(
+                status_code=400,
+                detail="email already taken"
+            )
         current_user.email = updates.email
     if updates.date_of_birth is not None:
         current_user.date_of_birth = updates.date_of_birth
