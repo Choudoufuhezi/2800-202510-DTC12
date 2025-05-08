@@ -255,7 +255,13 @@ def delete_family(db, family_id: int, requesting_user_id: int):
     if not family:
         raise ValueError("Family not found")
     
-    if family.admin != requesting_user_id:
+    is_admin = db.query(Registered).filter(
+        Registered.user_id == requesting_user_id,
+        Registered.family_id == family_id,
+        Registered.is_admin == True
+    ).first()
+    
+    if not is_admin:
         raise PermissionError("Only family admin can delete the family")
     
     try:
