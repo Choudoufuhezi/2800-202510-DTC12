@@ -23,10 +23,14 @@ async def get_current_user(db: Session = Depends(get_db), email: str = Depends(g
         )
     return db_user
 
+class MemberInfo(BaseModel):
+    email: str
+    is_admin: bool
+
 class FamilyInfo(BaseModel):
     id: int
-    admin: int
-    members: List[str]
+    admin: int  # user_id of the admin
+    members: List[MemberInfo]
     
 class CreateInviteRequest(BaseModel):
     family_id: int
@@ -54,25 +58,31 @@ async def create_family(
     """
     try:
         # Create the family
-        db_family = Family(admin=current_user.id)
+        db_family = Family()
         db.add(db_family)
         db.commit()
         db.refresh(db_family)
         
-        # Add creator to the family
+        # Register the creator as admin of the family
         db_registration = Registered(
-            email=current_user.email,
-            family_id=db_family.id
+            user_id=current_user.id,
+            family_id=db_family.id,
+            is_admin=True
         )
         db.add(db_registration)
         db.commit()
         
         # Get all members
-        members = [current_user.email]
+        members = [
+            {
+                "email": current_user.email,
+                "is_admin": True
+            }
+        ]
         
         return {
             "id": db_family.id,
-            "admin": db_family.admin,
+            "admin": current_user.id,
             "members": members
         }
     except Exception as e:
@@ -215,3 +225,32 @@ async def delete_family_endpoint(
             detail=f"Failed to delete family: {str(e)}"
         )
         
+@router.get("/{family_id}/members", response_model=List[str])
+async def get_family_members(
+    family_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all members of a family
+    
+    Usage: send a GET request to /family/{family_id}/members with Authorization header "Authorization': `Bearer ${JWT}`"
+    """
+    # Check if user is part of the family
+    is_member = db.query(Registered).filter(
+        Registered.email == current_user.email,
+        Registered.family_id == family_id
+    ).first()
+    
+    if not is_member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must be a member of this family to view its members"
+        )
+    
+    # Get all members
+    members = [r.email for r in db.query(Registered).filter( #hacky, #TODO: refactor
+        Registered.family_id == family_id
+    ).all()]
+    
+    return members
