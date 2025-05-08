@@ -15,7 +15,7 @@ addMorePhotos.addEventListener('click', () => {
 // --- Comment fetch APIs ---
 async function getComments(imageId) {
     // Real route would be:
-    // return fetch(`http://localhost:3000/api/photos/${imageId}/comments`)
+    // return fetch(`http://localhost:3000/memories/${memoryId}/comments`)
     //     .then(res => res.json());
     // FAKE response:
     return [
