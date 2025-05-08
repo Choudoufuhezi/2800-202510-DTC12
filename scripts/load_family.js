@@ -8,6 +8,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     try {
+
+        const familiesContainer = document.getElementById('families-container');
+
         const response = await fetch(`${API_URL}/family/my-families`, {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -36,6 +39,22 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             const family = await response.json();
             console.log(family);
+            
+            const familyCard = document.createElement('a');
+                familyCard.href = `family-members.html?familyId=${familyId}`;
+                familyCard.className = 'block bg-white rounded-xl p-6 shadow hover:shadow-md transition hover:bg-indigo-50';
+                
+                familyCard.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-800">${`Family ${familyId}`}</h2>
+                            <p class="text-sm text-gray-500 mt-1">${family.length} members</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-indigo-600"></i>
+                    </div>
+                `;
+                
+                familiesContainer.appendChild(familyCard);
         });
     } catch (error) {
         console.error('Error loading families:', error);
