@@ -12,9 +12,9 @@
 <body class="bg-[#f5f3eb98]">
     <!--Top Nav-->
     <nav id="topNav" class="sticky top-0"></nav>
-<div id="familyIconContainer"></div>
+    <div id="familyIconContainer"></div>
 
-<!--Main Content-->
+    <!--Main Content-->
     <div class="min-h-[calc(100vh-64px-64px)]">
         <div class="m-4 text-2xl mb-10">
             <p class="font-semibold ml-40">User Profile</p>
@@ -26,7 +26,6 @@
             <div class="flex flex-row justify-center md:space-x-20 space-x-5 mt-20">
                 <div class="flex flex-col">
                     <p class="text-left md:text-2xl text-sm font-semibold">Username</p>
-                    <p class="text-left md:text-2xl text-sm mt-5 font-semibold">Email</p>
                     <p class="text-left md:text-2xl text-sm mt-5 font-semibold">Address</p>
                     <p class="text-left md:text-2xl text-sm mt-5 font-semibold">Date of Birth</p>
                 </div>
@@ -35,20 +34,6 @@
                         <fieldset id="username">
                             <input type="text" class="bg-white md:text-2xl text-sm border rounded-sm"
                                 placeholder="please enter username" id="username_text">
-                        </fieldset>
-                        <a href="#">
-                            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30"
-                                viewBox="0 0 50 50">
-                                <path
-                                    d="M 43.125 2 C 41.878906 2 40.636719 2.488281 39.6875 3.4375 L 38.875 4.25 L 45.75 11.125 C 45.746094 11.128906 46.5625 10.3125 46.5625 10.3125 C 48.464844 8.410156 48.460938 5.335938 46.5625 3.4375 C 45.609375 2.488281 44.371094 2 43.125 2 Z M 37.34375 6.03125 C 37.117188 6.0625 36.90625 6.175781 36.75 6.34375 L 4.3125 38.8125 C 4.183594 38.929688 4.085938 39.082031 4.03125 39.25 L 2.03125 46.75 C 1.941406 47.09375 2.042969 47.457031 2.292969 47.707031 C 2.542969 47.957031 2.90625 48.058594 3.25 47.96875 L 10.75 45.96875 C 10.917969 45.914063 11.070313 45.816406 11.1875 45.6875 L 43.65625 13.25 C 44.054688 12.863281 44.058594 12.226563 43.671875 11.828125 C 43.285156 11.429688 42.648438 11.425781 42.25 11.8125 L 9.96875 44.09375 L 5.90625 40.03125 L 38.1875 7.75 C 38.488281 7.460938 38.578125 7.011719 38.410156 6.628906 C 38.242188 6.246094 37.855469 6.007813 37.4375 6.03125 C 37.40625 6.03125 37.375 6.03125 37.34375 6.03125 Z">
-                                </path>
-                            </svg>
-                        </a>
-                    </div>
-                    <div class="flex flex-row space-x-5 md:mt-5 mt-3">
-                        <fieldset id="email">
-                            <input type="text" class="bg-white md:text-2xl text-sm border rounded-sm"
-                                placeholder="please enter email" id="email_text">
                         </fieldset>
                         <a href="#">
                             <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30"
@@ -83,22 +68,68 @@
         </div>
 
         <div class="flex justify-end mr-40 mt-20">
-            <button class="bg-white md:text-2xl text-sm rounded-xl shadow-2xl p-4 hover:bg-black hover:text-white">
+            <button class="bg-white md:text-2xl text-sm rounded-xl shadow-2xl p-4 hover:bg-black hover:text-white"
+                id="save">
                 <a href="#">Save</a>
             </button>
         </div>
     </div>
-<script src="../scripts/load_family_icon.js"></script>
+    <script src="../scripts/load_family_icon.js"></script>
 </body>
 
 
-    <!--Bottom Nav-->
-    <nav id="bottomNav" class="sticky bottom-0"></nav>
+<!--Bottom Nav-->
+<nav id="bottomNav" class="sticky bottom-0"></nav>
 
-    <!--Footer-->
-    <nav id="footer"></nav>
+<!--Footer-->
+<nav id="footer"></nav>
 
-    <!--JavaScript-->
-    <script src="../scripts/add_nav.js"></script>
+<!--JavaScript-->
+<script src="../scripts/add_nav.js"></script>
+<script type="module">
+    import { API_URL } from '/scripts/config.js'
+
+    const token = localStorage.getItem("token");
+
+    document.getElementById("save").addEventListener("click", async function () {
+        const username = document.getElementById("username_text").value
+        const address = document.getElementById("address_text").value
+        const date_of_birth = document.getElementById("dob_date").value
+
+        console.log(username, address, date_of_birth)
+        await fetch(`${API_URL}/profile/update`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ username, address, date_of_birth })
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+            })
+    })
+
+    document.addEventListener("DOMContentLoaded", async function () {
+        const token = localStorage.getItem('token');
+
+        const response = await fetch(`${API_URL}/profile/current`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        const data = await response.json();
+        console.log(data);
+
+        document.getElementById("username_text").value = data.username;
+        document.getElementById("address_text").value = data.address;
+        document.getElementById("dob_date").value = data.date_of_birth.slice(0, 10);;
+    });
+
+
+</script>
 
 </html>
