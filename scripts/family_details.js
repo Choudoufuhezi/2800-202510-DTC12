@@ -51,6 +51,33 @@ async function loadFamilyMembers() {
     }
 }
 
+async function createInvite() {
+    try {
+        const response = await fetch(`${API_URL}/family/create-invite`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                family_id: parseInt(familyId),
+                expires_in_hours: 24,
+                max_uses: 1
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to create invite');
+        }
+
+        const inviteData = await response.json();
+        // redirect to manage-members.html with the invite code
+        window.location.href = `manage-members.html?inviteCode=${inviteData.code}`;
+    } catch (error) {
+        console.error('Error creating invite:', error);
+    }
+}
+
 // Add click handler to invite button
 document.querySelector('a[href="manage-members.html"]').addEventListener('click', (e) => {
     e.preventDefault();
