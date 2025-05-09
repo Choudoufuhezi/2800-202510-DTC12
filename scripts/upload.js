@@ -9,7 +9,7 @@ function showSuccessPopup() {
     }
 
     // Show modal
-    const modal = document.getElementById("successModal");
+    const modal = document.getEleme ntById("successModal");
     modal.classList.remove("hidden");
 
     // Optional: Update modal content

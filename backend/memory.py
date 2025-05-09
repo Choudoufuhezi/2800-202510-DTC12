@@ -10,7 +10,7 @@ from family_management import get_current_user
 router = APIRouter(prefix="/memories")
 
 class MemoryCreateRequest(BaseModel):
-    location: str
+    location: dict
     tags: str
     file_location: str
     time_stamp: Optional[datetime] = None
@@ -18,7 +18,7 @@ class MemoryCreateRequest(BaseModel):
 
 class MemoryResponse(BaseModel):
     id: int
-    location: str
+    location: dict
     tags: str
     file_location: str
     time_stamp: datetime
