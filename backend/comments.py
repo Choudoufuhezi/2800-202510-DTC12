@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from database import Registered, User, Comment, create_comment, get_db
+from database import Memory, User, Comment, Registered, create_comment, get_db
 from family_management import get_current_user
 
 router = APIRouter(prefix="/comments")
@@ -10,7 +10,6 @@ router = APIRouter(prefix="/comments")
 class CommentCreateRequest(BaseModel):
     memory_id: int
     comment_text: str
-    user_id: int
 
 class CommentResponse(BaseModel):
     id: int
@@ -18,23 +17,34 @@ class CommentResponse(BaseModel):
     comment_text: str
     user_id: int
 
-@router.get("/{memory_id}", response_model=list[CommentResponse])
+class CommentDeleteResponse(BaseModel):
+    message: str
+
+@router.get("/memory/{memory_id}", response_model=list[CommentResponse])
 async def get_comments_endpoint(
     memory_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get all comments for a specific memory
+    """
+    Get all comments for a specific memory
     """
     try:
-        # Verify that the memory exists and belongs to the user's family
-        memory = db.query(Registered).filter_by(id=memory_id).first()
+        # Verify that the memory exists
+        memory = db.query(Memory).filter_by(id=memory_id).first()
         if not memory:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Memory not found"
             )
-        if memory.family_id != current_user.family_id:
+        
+        # Check if user is a member of the family associated with the memory
+        membership = db.query(Registered).filter_by(
+            user_id=current_user.id,
+            family_id=memory.family_id
+            ).first()
+
+        if not membership:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have permission to view comments for this memory"
@@ -56,16 +66,6 @@ async def get_comments_endpoint(
         
         return comment_response
         
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-    except PermissionError as e:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(e)
-        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -83,16 +83,22 @@ async def create_comments_endpoint(
     """
     try:
         # Verify that the memory exists and belongs to the user's family
-        memory = db.query(Registered).filter_by(id=comment_data.memory_id).first()
+        memory = db.query(Memory).filter_by(id=comment_data.memory_id).first()
         if not memory:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Memory not found"
             )
-        if memory.family_id != current_user.family_id:
+        
+        membership = db.query(Registered).filter_by(
+            user_id=current_user.id,
+            family_id=memory.family_id
+            ).first()
+
+        if not membership:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to comment on this memory"
+                detail="You do not have permission to view comments for this memory"
             )
         
         # Create the comment
@@ -106,23 +112,47 @@ async def create_comments_endpoint(
         # Return the created comment
         return db_comment
         
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-    except PermissionError as e:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(e)
-        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create comment: {str(e)}"
         )
+    
+@router.delete("/{comment_id}", response_model=CommentDeleteResponse)
+async def delete_comment_endpoint(
+    comment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete a comment by ID
+    """
+    try:
+        # Verify that the comment exists
+        comment = db.query(Comment).filter_by(id=comment_id).first()
+        if not comment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Comment not found"
+            )
+        
+        # Verify if the user is the owner of the comment
+        if comment.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to delete this comment"
+            )
+        
+        # Delete the comment
+        db.delete(comment)
+        db.commit()
+        
+        return {
+            "message": "Comment deleted successfully",
+        }
+        
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create memory: {str(e)}"
+            detail=f"Failed to delete comment: {str(e)}"
         )
