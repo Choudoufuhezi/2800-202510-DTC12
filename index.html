@@ -2,17 +2,12 @@
 
 <head>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
 </head>
 
-<header class="bg-[#EAE7DE]">
-    <div class="flex space-x-3 justify-end mr-3 mt-3">
-        <a href="#">Home</a>
-        <a href="#">About Us</a>
-        <a href="#">Contact</a>
-    </div>
-</header>
-
-<body class="bg-[#EAE7DE]">
+<body class="bg-[#f5f3eb98]">
+    <!--Top Nav-->
+    <nav id="topNav" class="sticky top-0"></nav>
     <div class="flex justify-center py-20">
         <p class="font-semibold text-5xl text-left">Digital Family Vault</p>
     </div>
@@ -40,9 +35,6 @@
                     captivating stories, complete with context and connection, creating a meaningful heirloom to pass
                     down.</p>
             </div>
-            <button class="m-4 p-2 rounded-full border font-semibold hover:bg-black hover:text-white"><a
-                    href="login.html">Sign Up / Sign In</a>
-            </button>
         </div>
         <div class="grid grid-cols-2 grid-rows-2 space-x-3 space-y-3 mt-6 md:mt-6 lg:mt-0 image-grid">
             <img class="shadow-2xl" src="images/family.webp" width="500" height="500">
@@ -51,6 +43,10 @@
             <img class="shadow-2xl" src="images/family4.jpg" width="500" height="500">
         </div>
     </div>
+    <!--Bottom Nav-->
+    <nav id="bottomNav" class="sticky bottom-0"></nav>
+    <script src="../scripts/load_family_icon.js"></script>
+    <script src="../scripts/add_nav.js"></script>
 </body>
 
 </html>

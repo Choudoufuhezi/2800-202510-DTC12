@@ -13,7 +13,9 @@
 
     <!-- Top Navigation (Loaded by JS) -->
     <nav id="topNav" class="sticky top-0"></nav>
+<div id="familyIconContainer"></div>
 
+    
     <!-- Main Content -->
     <main class="min-h-[calc(101vh-64px-64px)] px-4 pt-6 pb-24 max-w-xl mx-auto">
         <!-- Header -->
@@ -26,34 +28,14 @@
         </header>
 
         <!-- Members List -->
-        <div class="space-y-4">
-            <!-- Member 1 -->
-            <a href="member-categories.html" class="block bg-white p-4 rounded-lg shadow hover:bg-gray-100 transition">
-                <div class="flex items-center justify-between">
-                    <span class="font-semibold text-gray-800">Grandma Rose</span>
-                    <i class="fas fa-arrow-right text-indigo-600"></i>
-                </div>
-                <p class="text-sm text-gray-500 mt-1">Joined: Jan 2024</p>
-            </a>
-
-            <!-- Member 2 -->
-            <a href="member-categories.html" class="block bg-white p-4 rounded-lg shadow hover:bg-gray-100 transition">
-                <div class="flex items-center justify-between">
-                    <span class="font-semibold text-gray-800">Uncle Sam</span>
-                    <i class="fas fa-arrow-right text-indigo-600"></i>
-                </div>
-                <p class="text-sm text-gray-500 mt-1">Joined: Mar 2024</p>
-            </a>
-
-            <!-- Member 3 -->
-            <a href="member-categories.html" class="block bg-white p-4 rounded-lg shadow hover:bg-gray-100 transition">
-                <div class="flex items-center justify-between">
-                    <span class="font-semibold text-gray-800">Cousin Lily</span>
-                    <i class="fas fa-arrow-right text-indigo-600"></i>
-                </div>
-                <p class="text-sm text-gray-500 mt-1">Joined: Apr 2025</p>
-            </a>
+        <div id="members-container" class="space-y-4">
         </div>
+        <section class="mt-10 space-y-4">
+            <a href="manage-members.html"
+                class="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-indigo-700 transition">
+                <i class="fas fa-user-plus"></i> Invite a Family Member
+            </a>
+        </section>
     </main>
 
     <!-- Bottom Navigation (Loaded by JS) -->
@@ -64,6 +46,8 @@
 
     <!-- Inject Nav JS -->
     <script src="../scripts/add_nav.js"></script>
+    <script src="../scripts/load_family_icon.js"></script>
+    <script type="module" src="../scripts/family_details.js"></script>
 </body>
 
 </html>

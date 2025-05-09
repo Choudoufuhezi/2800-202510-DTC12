@@ -2,8 +2,8 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Messages</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script defer src="scripts/inbox-chat-page.js"></script>
@@ -12,14 +12,32 @@
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div class="w-full max-w-md h-screen bg-white shadow-lg flex flex-col">
         <!-- Header -->
-        <div class="p-4 bg-blue-500 text-white text-xl font-semibold shadow">
-            Messages
+        <div class="p-4 bg-blue-500 text-white text-xl font-semibold shadow flex justify-between items-center relative">
+            <span>Messages</span>
+            <button id="announcement-btn" class="bg-white text-blue-500 px-3 py-1 rounded text-sm hover:bg-gray-200">
+                🔔Announcements
+            </button>
         </div>
+
         <!-- Chat List -->
         <div id="chat-list" class="flex-1 overflow-y-auto divide-y divide-gray-200 bg-white">
             <!-- JavaScript will insert chat rows here -->
         </div>
     </div>
+
+    <!-- Announcement Modal (Pulse-style) -->
+    <div id="announcement-modal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm p-6 rounded-lg shadow-lg relative">
+            <button id="close-announcement" class="absolute top-2 right-2 text-gray-500 text-xl">&times;</button>
+            <h3 class="text-xl font-semibold mb-3 text-blue-700">🔔 Updates</h3>
+            <div id="announcement-content" class="max-h-80 overflow-y-auto space-y-2">
+                <!-- JavaScript will insert announcements here -->
+            </div>
+        </div>
+    </div>
+
+    <script defer src="scripts/load_family_icon.js"></script>
 </body>
 
 </html>

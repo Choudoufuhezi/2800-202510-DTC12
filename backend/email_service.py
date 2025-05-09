@@ -1,7 +1,7 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from .config import settings
+from config import settings
 import secrets
 
 def generate_verification_token():
@@ -15,7 +15,7 @@ def send_verification_email(email: str, verification_token: str):
     msg['Subject'] = "Verify your email address"
 
     # Create verification link
-    verification_link = f"http://localhost:3000/verify-email.html?token={verification_token}"
+    verification_link = f"{settings.backend_url}/verify-email?token={verification_token}"
 
     # Create email body
     body = f"""

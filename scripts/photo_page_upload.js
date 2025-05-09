@@ -1,3 +1,5 @@
+import { getLocation } from './geolocation.js';
+
 const removePhotoEmptyMessage = document.getElementById("photoEmptyMessage");
 const uploadButton = document.getElementById("uploadButton");
 const fileInput = document.getElementById("fileInput");
@@ -12,6 +14,31 @@ addMorePhotos.addEventListener('click', () => {
     fileInput.click();
 });
 
+// --- Comment fetch APIs ---
+async function getComments(imageId) {
+    return [
+        { user: "Alice", text: "Nice shot!" },
+        { user: "Bob", text: "Great view." }
+    ];
+}
+
+// Comment posting API
+async function postComment(imageId, text) {
+    console.log(`(faked) POST comment "${text}" for image ${imageId}`);
+    return { success: true };
+}
+
+// --- Image Data API ---
+async function getImageData(imageId) {
+    const location = await getLocation();
+    return {
+        src: document.querySelector(`img[data-image-id="${imageId}"]`).src,
+        description: "This is a sample description for the image.",
+        tags: "sample, test", // Example tags
+        geolocation: { location }
+    };
+}
+
 fileInput.addEventListener("change", (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
@@ -20,24 +47,188 @@ fileInput.addEventListener("change", (event) => {
         const reader = new FileReader();
 
         reader.onload = function (event) {
-            // Hide empty message
             removePhotoEmptyMessage.classList.add('hidden');
 
-            // Create and style the image
             const img = document.createElement('img');
             img.src = event.target.result;
+            img.dataset.imageId = Date.now().toString();
             img.className = "max-w-full h-auto rounded shadow";
 
-            // Add to photo grid
+            img.addEventListener('click', async () => {
+                const data = await getImageData(img.dataset.imageId);
+
+                const modal = document.createElement('div');
+                modal.className = "fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50";
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                });
+
+                const modalContent = document.createElement('div');
+                modalContent.className = "bg-white pt-2 pb-6 px-6 rounded shadow-lg max-w-md w-full";
+                const header = document.createElement('div');
+                header.className = "flex justify-between items-center";
+
+                // Delete button at top left using the trash can icon
+                const deleteButtonModal = document.createElement('button');
+                deleteButtonModal.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteButtonModal.className = "text-red-500 hover:text-red-700 p-4 text-xl";
+                deleteButtonModal.addEventListener('click', () => {
+                    if (confirm("Are you sure you want to delete this photo?")) {
+                        img.remove(); // Remove the photo from the grid
+                        modal.remove(); // Close the modal
+
+                        // If no photos remain, show the "Get started" message
+                        if (photoGrid.children.length === 0) {
+                            removePhotoEmptyMessage.classList.remove('hidden');
+                            addMorePhotos.classList.add('hidden')
+                        }
+                    }
+                });
+                header.appendChild(deleteButtonModal);
+
+                // Close button at top right.
+                const closeButton = document.createElement('button');
+                closeButton.innerHTML = '<i class="fas fa-times"></i>';
+                closeButton.className = "text-gray-600 hover:text-gray-800 p-4 text-xl";
+                closeButton.addEventListener('click', () => modal.remove());
+                header.appendChild(closeButton);
+
+                modalContent.appendChild(header);
+
+                const modalImage = document.createElement('img');
+                modalImage.src = data.src;
+                modalImage.className = "w-full h-auto rounded mb-4";
+                modalContent.appendChild(modalImage);
+
+                const description = document.createElement('p');
+                description.innerText = data.description;
+                description.className = "text-gray-700 mb-4";
+                modalContent.appendChild(description);
+
+
+                const tags = document.createElement('p'); 
+                tags.innerText = `Tags: ${data.tags}`; 
+                tags.className = "text-gray-700 mb-4";    
+                modalContent.appendChild(tags);
+
+                // Edit button
+                const editButton = document.createElement('button');
+                editButton.innerHTML = '<i class="fas fa-edit"></i>';
+                editButton.className = "bg-sky-400 text-white px-2 py-1 hover:bg-sky-300 rounded mr-2 mb-4";
+                modalContent.appendChild(editButton);
+                
+                console.log(data.geolocation);
+
+                const geolocation = document.createElement('p');
+                geolocation.innerText = `Location: ${data.geolocation.location.address.city}, ${data.geolocation.location.address.country}`;
+                geolocation.className = "text-gray-500 mb-4";
+                modalContent.appendChild(geolocation);
+
+                const commentsSection = document.createElement('div');
+                commentsSection.className = "comments-section mb-4";
+
+                const commentsHeader = document.createElement('h3');
+                commentsHeader.innerText = "Comments";
+                commentsHeader.className = "text-lg font-semibold mb-2";
+                commentsSection.appendChild(commentsHeader);
+
+                const commentsList = document.createElement('div');
+                commentsList.className = "comments-list max-h-40 overflow-auto mb-2";
+                commentsSection.appendChild(commentsList);
+
+                const commentForm = document.createElement('form');
+                commentForm.className = "flex";
+                const commentInput = document.createElement('input');
+                commentInput.type = "text";
+                commentInput.placeholder = "Add a comment…";
+                commentInput.className = "flex-grow border p-2 mr-2 rounded";
+                const commentSubmit = document.createElement('button');
+                commentSubmit.type = "submit";
+                commentSubmit.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                commentSubmit.className = "bg-indigo-600 text-white px-4 py-2 hover:bg-indigo-700  rounded";
+                commentForm.appendChild(commentInput);
+                commentForm.appendChild(commentSubmit);
+                commentsSection.appendChild(commentForm);
+
+                modalContent.appendChild(commentsSection);
+                modal.appendChild(modalContent);
+                document.body.appendChild(modal);
+
+                async function loadComments() {
+                    const comments = await getComments(img.dataset.imageId);
+                    commentsList.innerHTML = "";
+                    comments.forEach((c, index) => {
+                        const commentItem = document.createElement('div');
+                        commentItem.className = "flex justify-between items-center mb-1";
+
+                        const commentText = document.createElement('p');
+                        commentText.className = "text-gray-800";
+                        commentText.innerText = `${c.user}: ${c.text}`;
+                        commentItem.appendChild(commentText);
+
+                        const deleteButton = document.createElement('button');
+                        deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                        deleteButton.className = "text-red-500 hover:text-red-700 ml-2";
+                        deleteButton.addEventListener('click', async () => {
+                            await deleteComment(img.dataset.imageId, index);
+                            await loadComments();
+                        });
+                        commentItem.appendChild(deleteButton);
+
+                        commentsList.appendChild(commentItem);
+                    });
+                }
+
+                commentForm.addEventListener('submit', async e => {
+                    e.preventDefault();
+                    const text = commentInput.value.trim();
+                    if (!text) return;
+                    await postComment(img.dataset.imageId, text);
+                    commentInput.value = "";
+                    await loadComments();
+                });
+
+                loadComments();
+            });
+
             photoGrid.appendChild(img);
         };
 
         reader.readAsDataURL(file);
-    } 
-
-    else {
+    } else {
         if (photoGrid.children.length === 0) {
             removePhotoEmptyMessage.classList.remove('hidden');
         }
     }
 });
+
+async function uploadMemory({ location, fileLocation, tags, familyId, timeStamp }) {
+    const token = localStorage.getItem("token");
+    const response = await fetch("http://localhost:8000/memories", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            location,
+            tags,
+            file_location: fileLocation,
+            family_id: familyId,
+            time_stamp: timeStamp
+        })
+    });
+
+    if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        const errorText = contentType && contentType.includes("application/json")
+            ? (await response.json()).detail
+            : await response.text();
+
+        throw new Error(errorText || "Upload failed.");
+    }
+
+    return await response.json();
+}
