@@ -1,3 +1,7 @@
+import {API_URL} from './config.js';
+
+console.log(API_URL);
+
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.querySelector("form");
 
@@ -18,8 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 alert("You're not logged in. Please log in first.");
                 return;
             }
-
-            const response = await fetch("/family/join", {
+            const response = await fetch(`${API_URL}/family/join`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
