@@ -5,11 +5,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function createMessageBubble(from, text, messageId = Date.now(), replyText = null) {
         const bubble = document.createElement("div");
-        bubble.className = flex ${ from === "You" ? "justify-end" : "justify-start" } relative;
+        bubble.className = `flex ${from === "You" ? "justify-end" : "justify-start"} relative`;
         bubble.dataset.id = messageId;
 
         const content = document.createElement("div");
-        content.className = ${ from === "You" ? "bg-blue-100" : "bg-gray-200" } text - gray - 800 px - 4 py - 2 rounded - lg max - w - xs shadow;
+        content.className = `${from === "You" ? "bg-blue-100" : "bg-gray-200"} text-gray-800 px-4 py-2 rounded-lg max-w-xs shadow`;
         content.textContent = text;
 
         bubble.appendChild(content);
@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (replyTo?.editMode) {
             // Edit existing message
-            const oldBubble = document.querySelector([data - id="${replyTo.messageId}"] div);
+            const oldBubble = document.querySelector(`[data-id="${replyTo.messageId}"] div`);
             if (oldBubble) oldBubble.textContent = text;
         } else {
             // Add new message with optional reply

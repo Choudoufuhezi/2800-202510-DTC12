@@ -52,7 +52,8 @@
             </a>
         </div>
     </div>
-    <script>
+    <script type="module">
+        import {API_URL} from '/scripts/config.js';
         document.addEventListener('DOMContentLoaded', async () => {
             const token = localStorage.getItem('token');
             // page is only accessible if user is logged in
@@ -72,7 +73,7 @@
                 const formData = new FormData(e.target);
 
                 try {
-                    const response = await fetch('http://localhost:8000/account/delete', {
+                    const response = await fetch(`${API_URL}/account/delete`, {
                         method: 'DELETE',
                         headers: {
                             'Content-Type': 'application/json',
@@ -95,6 +96,7 @@
             });
         });
     </script>
+<script src="../scripts/load_family_icon.js"></script>
 </body>
 
 </html>
