@@ -35,7 +35,7 @@ async function getImageData(imageId) {
         src: document.querySelector(`img[data-image-id="${imageId}"]`).src,
         description: "This is a sample description for the image.",
         tags: "sample, test", // Example tags
-        geolocation: { lat: 49.2827, lon: -123.1207 } // Example coords
+        geolocation: { location }
     };
 }
 
@@ -97,9 +97,11 @@ fileInput.addEventListener("change", (event) => {
                 editButton.innerHTML = '<i class="fas fa-edit"></i>';
                 editButton.className = "bg-sky-400 text-white px-2 py-1 hover:bg-sky-300 rounded mr-2 mb-4";
                 modalContent.appendChild(editButton);
+                
+                console.log(data.geolocation);
 
                 const geolocation = document.createElement('p');
-                geolocation.innerText = `Geolocation: Latitude ${data.geolocation.lat}, Longitude ${data.geolocation.lon}`;
+                geolocation.innerText = `Location: ${data.geolocation.location.address.city}, ${data.geolocation.location.address.country}`;
                 geolocation.className = "text-gray-500 mb-4";
                 modalContent.appendChild(geolocation);
 
