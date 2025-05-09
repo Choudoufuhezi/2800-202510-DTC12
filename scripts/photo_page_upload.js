@@ -16,10 +16,6 @@ addMorePhotos.addEventListener('click', () => {
 
 // --- Comment fetch APIs ---
 async function getComments(imageId) {
-    // Real route would be:
-    // return fetch(`http://localhost:3000/api/photos/${imageId}/comments`)
-    //     .then(res => res.json());
-    // FAKE response:
     return [
         { user: "Alice", text: "Nice shot!" },
         { user: "Bob", text: "Great view." }
@@ -28,28 +24,18 @@ async function getComments(imageId) {
 
 // Comment posting API
 async function postComment(imageId, text) {
-    // Real route would be:
-    // return fetch(`http://localhost:3000/api/photos/${imageId}/comments`, {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ text })
-    // }).then(res => res.json());
-    // FAKE behavior:
     console.log(`(faked) POST comment "${text}" for image ${imageId}`);
     return { success: true };
 }
 
 // --- Image Data API ---
 async function getImageData(imageId) {
-    // Real route would be:
-    // return fetch(`http://localhost:3000/api/photos/${imageId}`)
-    //     .then(res => res.json());
-    // FAKE response:
     const location = await getLocation();
     return {
         src: document.querySelector(`img[data-image-id="${imageId}"]`).src,
         description: "This is a sample description for the image.",
-        geolocation: { location }
+        tags: "sample, test", // Example tags
+        geolocation: { lat: 49.2827, lon: -123.1207 } // Example coords
     };
 }
 
@@ -61,18 +47,14 @@ fileInput.addEventListener("change", (event) => {
         const reader = new FileReader();
 
         reader.onload = function (event) {
-            // Hide empty message
             removePhotoEmptyMessage.classList.add('hidden');
 
-            // Create and style the image
             const img = document.createElement('img');
             img.src = event.target.result;
             img.dataset.imageId = Date.now().toString();
             img.className = "max-w-full h-auto rounded shadow";
 
-            // Create a modal 
             img.addEventListener('click', async () => {
-                // Fetch image metadata
                 const data = await getImageData(img.dataset.imageId);
 
                 const modal = document.createElement('div');
@@ -82,11 +64,10 @@ fileInput.addEventListener("change", (event) => {
                         modal.remove();
                     }
                 });
+
                 const modalContent = document.createElement('div');
-                // Reduced top padding to remove extra space above the header:
                 modalContent.className = "bg-white pt-2 pb-6 px-6 rounded shadow-lg max-w-md w-full";
 
-                // Create a header for the close button
                 const header = document.createElement('div');
                 header.className = "flex justify-end";
 
@@ -97,33 +78,31 @@ fileInput.addEventListener("change", (event) => {
                 header.appendChild(closeButton);
                 modalContent.appendChild(header);
 
-                // Image in modal
                 const modalImage = document.createElement('img');
                 modalImage.src = data.src;
                 modalImage.className = "w-full h-auto rounded mb-4";
-
                 modalContent.appendChild(modalImage);
 
-                // Description
                 const description = document.createElement('p');
                 description.innerText = data.description;
                 description.className = "text-gray-700 mb-4";
                 modalContent.appendChild(description);
 
-                // Edit button
+                const tags = document.createElement('p');
+                tags.innerText = `Tags: ${data.tags}`;
+                tags.className = "text-gray-700 mb-4";
+                modalContent.appendChild(tags);
+
                 const editButton = document.createElement('button');
                 editButton.innerHTML = '<i class="fas fa-edit"></i>';
                 editButton.className = "bg-sky-400 text-white px-2 py-1 hover:bg-sky-300 rounded mr-2 mb-4";
                 modalContent.appendChild(editButton);
 
-                // Geolocation
                 const geolocation = document.createElement('p');
-                geolocation.innerText =
-                    `Geolocation: Latitude ${data.geolocation.lat}, Longitude ${data.geolocation.lon}`;
+                geolocation.innerText = `Geolocation: Latitude ${data.geolocation.lat}, Longitude ${data.geolocation.lon}`;
                 geolocation.className = "text-gray-500 mb-4";
                 modalContent.appendChild(geolocation);
 
-                // — COMMENTS SECTION —
                 const commentsSection = document.createElement('div');
                 commentsSection.className = "comments-section mb-4";
 
@@ -151,14 +130,9 @@ fileInput.addEventListener("change", (event) => {
                 commentsSection.appendChild(commentForm);
 
                 modalContent.appendChild(commentsSection);
-
-                // Append modal content to the modal
                 modal.appendChild(modalContent);
-
-                // Append modal to the body
                 document.body.appendChild(modal);
 
-                // Fetch & render existing comments
                 async function loadComments() {
                     const comments = await getComments(img.dataset.imageId);
                     commentsList.innerHTML = "";
@@ -170,7 +144,6 @@ fileInput.addEventListener("change", (event) => {
                     });
                 }
 
-                // Handle new comment posts
                 commentForm.addEventListener('submit', async e => {
                     e.preventDefault();
                     const text = commentInput.value.trim();
@@ -180,20 +153,45 @@ fileInput.addEventListener("change", (event) => {
                     await loadComments();
                 });
 
-                // initial load
                 loadComments();
             });
 
-            // Add to photo grid
             photoGrid.appendChild(img);
         };
 
         reader.readAsDataURL(file);
-    }
-
-    else {
+    } else {
         if (photoGrid.children.length === 0) {
             removePhotoEmptyMessage.classList.remove('hidden');
         }
     }
 });
+
+async function uploadMemory({ location, fileLocation, tags, familyId, timeStamp }) {
+    const token = localStorage.getItem("token");
+    const response = await fetch("http://localhost:8000/memories", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            location,
+            tags,
+            file_location: fileLocation,
+            family_id: familyId,
+            time_stamp: timeStamp
+        })
+    });
+
+    if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        const errorText = contentType && contentType.includes("application/json")
+            ? (await response.json()).detail
+            : await response.text();
+
+        throw new Error(errorText || "Upload failed.");
+    }
+
+    return await response.json();
+}
