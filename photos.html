@@ -1,60 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Photos</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
 </head>
-<body class="bg-[#f5f3eb98]">
+
+<body class="bg-[#f5f3eb98] text-gray-800">
+
     <!--Top Nav-->
-    <nav id="topNav" class="sticky top-0"></nav>
+    <nav id="topNav" class="sticky top-0 z-50"></nav>
+    <div id="familyIconContainer"></div>
 
-    <!--Main Content-->
-    <div class="min-h-[calc(101vh-64px-64px)] max-w-4xl mx-auto px-10 py-10">
-        
-        <div class="flex justify-between">
-            <div class="flex flex-row items-center space-x-4 mb-8">
-                <i class="fa-solid fa-image fa-2xl text-indigo-600"></i>
-                <h1 class="text-2xl font-semibold my-auto">Photos</h1>
+    <main class="max-w-5xl mx-auto px-4 pt-6 pb-28">
+
+        <!--  RECENT MEMORIES SECTION -->
+        <section class="bg-white/80 rounded-xl p-4 mb-10 shadow">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Recent Memories</h2>
+            <div id="recentMemories" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Injected by JS -->
             </div>
-            <div id="addMorePhotosButton" class="hidden text-indigo-600 hover:text-indigo-700 transition cursor-pointer">
-                <i class="fa-solid fa-square-plus fa-2xl "></i>
+        </section>
+
+        <!--  UPLOADED PHOTOS SECTION -->
+        <section class="bg-white/90 rounded-xl p-4 shadow">
+            <h2 class="text-lg font-semibold mb-4">Your Uploaded Photos</h2>
+
+            <!-- Upload empty state -->
+            <div id="photoEmptyMessage" class="flex flex-col space-y-6 items-center justify-center text-center mb-6">
+                <h3 class="text-base text-gray-700 max-w-lg">
+                    Get started by uploading your first photo to share with your family. You can also add a description
+                    to provide context or share a story about the memory.
+                </h3>
+                <div id="uploadButton"
+                    class="cursor-pointer inline-flex items-center gap-2 bg-indigo-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-indigo-700 transition">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>Upload Photo</span>
+                </div>
+            </div>
+
+            <!-- Upload file -->
+            <input id="fileInput" type="file" accept="image/*" class="hidden" />
+
+            <!-- Uploaded photo grid -->
+            <div id="photoGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                <!-- Images will appear here -->
+            </div>
+        </section>
+
+        <!-- Floating + Add Button -->
+        <div id="addMorePhotosButton" class="fixed bottom-24 right-6 md:right-12 z-50 hidden">
+            <div
+                class="bg-indigo-600 text-white p-4 rounded-full shadow-lg cursor-pointer hover:bg-indigo-700 transition">
+                <i class="fa-solid fa-plus fa-xl"></i>
             </div>
         </div>
 
-        <!--No photos message -->
-        <div id="photoEmptyMessage" class="flex flex-col space-y-6 items-center justify-center text-center">
-            <h3>
-                Get started by uploading your first photo to share with your family.
-                You can also add a description to provide context or share a story about the memory.
-            </h3>
+    </main>
 
-            <!--Upload photos button-->
-            <div id="uploadButton" class="cursor-pointer max-w-3xl w-full inline-flex items-center justify-center gap-2 bg-indigo-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-indigo-700 transition">
-                <p>Upload Photo</p>
-            </div>    
-        </div>
-
-        <!--Upload file functionality-->
-        <input id="fileInput" type="file" accept="image/*" class="hidden">
-
-        <div id="photoGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <!-- Images added here -->
-        </div>
-
-    </div>
-    
-    <!--Bottom Nav-->
-    <nav id="bottomNav" class="sticky bottom-0"></nav>
-
-    <!--Footer-->
+    <!--Bottom Nav + Footer-->
+    <nav id="bottomNav" class="sticky bottom-0 z-40"></nav>
     <nav id="footer"></nav>
 
-    <!--JavaScript-->
-    <script src="../scripts/add_nav.js"></script>    
+    <!--JavaScript Files-->
+    <script src="../scripts/add_nav.js"></script>
     <script type="module" src="../scripts/photo_page_upload.js"></script>
+    <script src="../scripts/family_photo_upload.js"></script>
+    <script src="../scripts/load_family_icon.js"></script>
 </body>
+
 </html>
