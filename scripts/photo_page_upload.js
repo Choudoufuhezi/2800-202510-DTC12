@@ -67,15 +67,34 @@ fileInput.addEventListener("change", (event) => {
 
                 const modalContent = document.createElement('div');
                 modalContent.className = "bg-white pt-2 pb-6 px-6 rounded shadow-lg max-w-md w-full";
-
                 const header = document.createElement('div');
-                header.className = "flex justify-end";
+                header.className = "flex justify-between items-center";
 
+                // Delete button at top left using the trash can icon
+                const deleteButtonModal = document.createElement('button');
+                deleteButtonModal.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteButtonModal.className = "text-red-500 hover:text-red-700 p-4 text-xl";
+                deleteButtonModal.addEventListener('click', () => {
+                    if (confirm("Are you sure you want to delete this photo?")) {
+                        img.remove(); // Remove the photo from the grid
+                        modal.remove(); // Close the modal
+
+                        // If no photos remain, show the "Get started" message
+                        if (photoGrid.children.length === 0) {
+                            removePhotoEmptyMessage.classList.remove('hidden');
+                            addMorePhotos.classList.add('hidden')
+                        }
+                    }
+                });
+                header.appendChild(deleteButtonModal);
+
+                // Close button at top right.
                 const closeButton = document.createElement('button');
                 closeButton.innerHTML = '<i class="fas fa-times"></i>';
                 closeButton.className = "text-gray-600 hover:text-gray-800 p-4 text-xl";
                 closeButton.addEventListener('click', () => modal.remove());
                 header.appendChild(closeButton);
+
                 modalContent.appendChild(header);
 
                 const modalImage = document.createElement('img');
@@ -88,11 +107,13 @@ fileInput.addEventListener("change", (event) => {
                 description.className = "text-gray-700 mb-4";
                 modalContent.appendChild(description);
 
-                const tags = document.createElement('p');
-                tags.innerText = `Tags: ${data.tags}`;
-                tags.className = "text-gray-700 mb-4";
+
+                const tags = document.createElement('p'); 
+                tags.innerText = `Tags: ${data.tags}`; 
+                tags.className = "text-gray-700 mb-4";    
                 modalContent.appendChild(tags);
 
+                // Edit button
                 const editButton = document.createElement('button');
                 editButton.innerHTML = '<i class="fas fa-edit"></i>';
                 editButton.className = "bg-sky-400 text-white px-2 py-1 hover:bg-sky-300 rounded mr-2 mb-4";
@@ -138,11 +159,25 @@ fileInput.addEventListener("change", (event) => {
                 async function loadComments() {
                     const comments = await getComments(img.dataset.imageId);
                     commentsList.innerHTML = "";
-                    comments.forEach(c => {
-                        const p = document.createElement('p');
-                        p.className = "text-gray-800 mb-1";
-                        p.innerText = `${c.user}: ${c.text}`;
-                        commentsList.appendChild(p);
+                    comments.forEach((c, index) => {
+                        const commentItem = document.createElement('div');
+                        commentItem.className = "flex justify-between items-center mb-1";
+
+                        const commentText = document.createElement('p');
+                        commentText.className = "text-gray-800";
+                        commentText.innerText = `${c.user}: ${c.text}`;
+                        commentItem.appendChild(commentText);
+
+                        const deleteButton = document.createElement('button');
+                        deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                        deleteButton.className = "text-red-500 hover:text-red-700 ml-2";
+                        deleteButton.addEventListener('click', async () => {
+                            await deleteComment(img.dataset.imageId, index);
+                            await loadComments();
+                        });
+                        commentItem.appendChild(deleteButton);
+
+                        commentsList.appendChild(commentItem);
                     });
                 }
 

@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import DateTime, create_engine, Column, String, Integer, Boolean
+from sqlalchemy import DateTime, create_engine, Column, String, Integer, Boolean, JSON
 from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -25,6 +25,8 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
+    username = Column(String, nullable=True)
+    date_of_birth = Column(DateTime, nullable=True)
     hashed_password = Column(String)
     email_verified = Column(Boolean, default=False)
     verification_token = Column(String, nullable=True)
@@ -90,7 +92,7 @@ class Memory(Base):
     __tablename__ = "memory"
 
     id = Column(Integer, primary_key=True, index=True)
-    location = Column(String)
+    location = Column(JSON)
     tags = Column(String)
     file_location = Column(String)
     time_stamp = Column(DateTime, nullable=False)
@@ -126,6 +128,8 @@ def create_user(db, email: str, hashed_password: str, verification_token: str = 
     db_user = User(
         email=email, 
         hashed_password=hashed_password,
+        username=None,
+        date_of_birth=None,
         email_verified=False,
         verification_token=verification_token
     )
@@ -199,7 +203,7 @@ def create_family_invite(db, family_id: int, code: int, created_by: int, expires
     db.refresh(db_invite)
     return db_invite
 
-def create_memory(db, location: str, tags: str, file_location: str, time_stamp: datetime, user_id: int, family_id: int):
+def create_memory(db, location: str, tags: str, file_location: object, time_stamp: datetime, user_id: int, family_id: int):
     db_memory = Memory(
         location=location,
         tags=tags,
@@ -255,7 +259,13 @@ def delete_family(db, family_id: int, requesting_user_id: int):
     if not family:
         raise ValueError("Family not found")
     
-    if family.admin != requesting_user_id:
+    is_admin = db.query(Registered).filter(
+        Registered.user_id == requesting_user_id,
+        Registered.family_id == family_id,
+        Registered.is_admin == True
+    ).first()
+    
+    if not is_admin:
         raise PermissionError("Only family admin can delete the family")
     
     try:

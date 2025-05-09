@@ -9,10 +9,11 @@
     <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
 </head>
 
-<body class="bg-[#f5f3eb98]">
+<body class="bg-[#f5f3eb98] text-gray-800">
 
     <!-- Top Navigation -->
     <nav id="topNav" class="sticky top-0"></nav>
+    <div id="familyIconContainer"></div>
 
     <main class="max-w-3xl mx-auto px-4 py-10 min-h-[calc(101vh-64px-64px)]">
         <!-- Heading -->
@@ -21,40 +22,12 @@
         </h1>
 
         <!-- Group Cards Section -->
-        <section class="space-y-5">
-            <!-- Group Card 1 -->
-            <a href="family-members.html"
-                class="block bg-white rounded-xl p-6 shadow hover:shadow-md transition hover:bg-indigo-50">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h2 class="text-lg font-semibold text-gray-800">The Smith Family</h2>
-                        <p class="text-sm text-gray-500 mt-1">6 members • Last active: Today</p>
-                    </div>
-                    <i class="fas fa-chevron-right text-indigo-600"></i>
-                </div>
-            </a>
-
-            <!-- Group Card 2 -->
-            <a href="family-members.html"
-                class="block bg-white rounded-xl p-6 shadow hover:shadow-md transition hover:bg-indigo-50">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h2 class="text-lg font-semibold text-gray-800">The Johnson Clan</h2>
-                        <p class="text-sm text-gray-500 mt-1">4 members • Last active: Yesterday</p>
-                    </div>
-                    <i class="fas fa-chevron-right text-indigo-600"></i>
-                </div>
-            </a>
+        <section id="families-container" class="space-y-5">
         </section>
 
         <!-- Action Buttons -->
         <section class="mt-10 space-y-4">
-            <a href="invite.html"
-                class="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-indigo-700 transition">
-                <i class="fas fa-user-plus"></i> Invite a Family Member
-            </a>
-
-            <button
+            <button id="create-family-button"
                 class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-blue-700 transition">
                 <i class="fas fa-plus"></i> Create a New Family Group
             </button>
@@ -64,8 +37,10 @@
     <!-- Bottom Navigation -->
     <nav id="bottomNav" class="sticky bottom-0"></nav>
 
-    <!-- Inject Nav -->
+    <!-- Scripts -->
     <script src="../scripts/add_nav.js"></script>
+    <script src="../scripts/load_family_icon.js"></script>
+    <script type="module" src="../scripts/load_family.js"></script>
 </body>
 
 </html>
