@@ -23,10 +23,14 @@ async def get_current_user(db: Session = Depends(get_db), email: str = Depends(g
         )
     return db_user
 
+class MemberInfo(BaseModel):
+    email: str
+    is_admin: bool
+
 class FamilyInfo(BaseModel):
     id: int
-    admin: int
-    members: List[str]
+    admin: int  # user_id of the admin
+    members: List[MemberInfo]
     
 class CreateInviteRequest(BaseModel):
     family_id: int
@@ -54,25 +58,31 @@ async def create_family(
     """
     try:
         # Create the family
-        db_family = Family(admin=current_user.id)
+        db_family = Family()
         db.add(db_family)
         db.commit()
         db.refresh(db_family)
         
-        # Add creator to the family
+        # Register the creator as admin of the family
         db_registration = Registered(
-            email=current_user.email,
-            family_id=db_family.id
+            user_id=current_user.id,
+            family_id=db_family.id,
+            is_admin=True
         )
         db.add(db_registration)
         db.commit()
         
         # Get all members
-        members = [current_user.email]
+        members = [
+            {
+                "email": current_user.email,
+                "is_admin": True
+            }
+        ]
         
         return {
             "id": db_family.id,
-            "admin": db_family.admin,
+            "admin": current_user.id,
             "members": members
         }
     except Exception as e:
@@ -94,8 +104,13 @@ async def create_invite(
     Usage: send a POST request to the /family/create-invite endpoint with header including 'Authorization': `Bearer ${JWT} and data family_id, expires_in_hours, and max_uses`
     """
     # Verify user is admin of the family
-    db_family = db.query(Family).filter(Family.id == request.family_id).first()
-    if not db_family or db_family.admin != current_user.id:
+    is_admin = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == request.family_id,
+        Registered.is_admin == True
+    ).first()
+
+    if not is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only family admin can create invites",
@@ -146,9 +161,9 @@ async def join_family(
             detail="Invalid or expired invite code",
         )
 
-    # Check if user is already in this family
+    # Check if user already in family
     existing_registration = db.query(Registered).filter(
-        Registered.email == current_user.email,
+        Registered.user_id == current_user.id,
         Registered.family_id == db_invite.family_id
     ).first()
 
@@ -160,8 +175,9 @@ async def join_family(
 
     # Register the user
     db_registration = Registered(
-        email=current_user.email,
-        family_id=db_invite.family_id
+        user_id=current_user.id,
+        family_id=db_invite.family_id,
+        is_admin=False
     )
     db.add(db_registration)
 
@@ -169,16 +185,24 @@ async def join_family(
     db_invite.uses += 1
     db.commit()
 
-    # Return updated family info
-    members = [r.email for r in db.query(Registered).filter(
+    # Get all members with their admin status
+    members = db.query(User.email, Registered.is_admin).join(
+        Registered, Registered.user_id == User.id
+    ).filter(
         Registered.family_id == db_invite.family_id
-    ).all()]
+    ).all()
 
-    return {
-        "id": db_invite.family_id,
-        "admin": db.query(Family).get(db_invite.family_id).admin,
-        "members": members
-    }
+    # Get admin user_id
+    admin = db.query(Registered.user_id).filter(
+        Registered.family_id == db_invite.family_id,
+        Registered.is_admin == True
+    ).first()
+
+    return FamilyInfo(
+        id=db_invite.family_id,
+        admin=admin[0] if admin else None,
+        members=[MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members]
+    )
     
 @router.delete("/{family_id}", response_model=dict)
 async def delete_family_endpoint(
@@ -215,3 +239,50 @@ async def delete_family_endpoint(
             detail=f"Failed to delete family: {str(e)}"
         )
         
+@router.get("/{family_id}/members", response_model=List[MemberInfo])
+async def get_family_members(
+    family_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all members of a family
+    
+    Usage: send a GET request to /family/{family_id}/members with Authorization header "Authorization': `Bearer ${JWT}`"
+    """
+    # Check if user is part of the family
+    is_member = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id
+    ).first()
+    
+    if not is_member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must be a member of this family to view its members"
+        )
+    
+    # Get all members with email and admin status
+    members = db.query(User.email, Registered.is_admin).join(
+        Registered, Registered.user_id == User.id
+    ).filter(
+        Registered.family_id == family_id
+    ).all()
+    
+    return [MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members]
+
+@router.get("/my-families", response_model=List[int])
+async def get_user_families(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all family IDs that the current user belongs to
+    """
+    # Query all family IDs where user is registered
+    family_ids = db.query(Registered.family_id).filter(
+        Registered.user_id == current_user.id
+    ).all()
+    
+    # Extract just the IDs from the query results
+    return [family_id for (family_id,) in family_ids]
