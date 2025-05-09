@@ -10,9 +10,9 @@ from family_management import get_current_user
 router = APIRouter(prefix="/profile")
 
 class UserProfileResponse(BaseModel):
-    username: str
+    username: Optional[str] = None
     email: str
-    date_of_birth: datetime
+    date_of_birth: Optional[datetime] = None
 
 class UserProfileUpdate(BaseModel):
     username: Optional[str] = None
