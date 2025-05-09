@@ -40,7 +40,7 @@ async def create_memory_endpoint(
     try:
         # Verify user belongs to the specified family
         is_member = db.query(Registered).filter(
-            Registered.email == current_user.email,
+            Registered.user_id == current_user.id,
             Registered.family_id == memory_data.family_id
         ).first()
         
