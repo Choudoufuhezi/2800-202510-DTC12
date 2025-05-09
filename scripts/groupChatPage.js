@@ -1,16 +1,41 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const chat = JSON.parse(localStorage.getItem("activeChat"));
+    let chat = JSON.parse(localStorage.getItem("activeChat"));
 
     if (!chat) {
-        window.location.href = "inbox_page.html";
-        return;
+        chat = {
+            name: "Robinson Family",
+            id: "family123",
+            avatar: "https://via.placeholder.com/40",
+            members: ["Alice Johnson", "Bob Smith", "Charlie Wang", "Diana Patel"],
+            messages: [
+                { from: "Alice Johnson", text: "Hi everyone!" },
+                { from: "You", text: "Hey Alice!" },
+                { from: "Charlie Wang", text: "Are we meeting tonight?" },
+                { from: "You", text: "Yes, 7 PM works." }
+            ]
+        };
+        localStorage.setItem("activeChat", JSON.stringify(chat));
     }
 
     let replyTo = null;
 
+    const groupHeader = document.getElementById("group-header");
+    const groupInfoModal = document.getElementById("group-info");
+    const closeGroupInfo = document.getElementById("close-group-info");
+    const groupNameSpan = document.getElementById("info-group-name");
+    const inviteLink = document.getElementById("invite-link");
+    const memberList = document.getElementById("member-list");
+
+    const memberDetailModal = document.getElementById("member-detail-modal");
+    const closeMemberDetail = document.getElementById("close-member-detail");
+    const memberNameSpan = document.getElementById("member-name");
+    const dmButton = document.getElementById("dm-button");
+
     const input = document.getElementById("message-input");
     const sendBtn = document.getElementById("send-btn");
     const chatBox = document.getElementById("chat-box");
+
+    let selectedMember = null;
 
     function createMessageBubble(from, text, messageId = Date.now(), replyText = null) {
         const bubbleWrapper = document.createElement("div");
@@ -20,7 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const bubble = document.createElement("div");
         bubble.className = `${from === "You" ? "bg-blue-100" : "bg-gray-200"} text-gray-800 px-4 py-2 rounded-lg max-w-xs shadow`;
 
-        // Top reply preview (like Telegram)
         if (replyText) {
             const replyPreview = document.createElement("div");
             replyPreview.className = "text-xs text-gray-600 italic border-l-2 border-blue-400 pl-2 mb-1";
@@ -28,11 +52,9 @@ document.addEventListener("DOMContentLoaded", () => {
             bubble.appendChild(replyPreview);
         }
 
-        // Message text
         const messageText = document.createElement("div");
         messageText.textContent = text;
         bubble.appendChild(messageText);
-
         bubbleWrapper.appendChild(bubble);
 
         if (from === "You") {
@@ -64,7 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
             rightSide.appendChild(menuBox);
             bubbleWrapper.appendChild(rightSide);
 
-            // Menu actions
             menuBox.querySelector(".reply-btn").addEventListener("click", () => {
                 replyTo = { messageId, originalText: text };
                 document.getElementById("reply-text").textContent = text;
@@ -90,7 +111,41 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("h2").textContent = chat.name;
     document.querySelector("img").src = chat.avatar;
 
-    // Render existing messages
+    groupHeader.addEventListener("click", () => {
+        groupNameSpan.textContent = chat.name;
+        inviteLink.href = `https://example.com/invite/${chat.id}`;
+        inviteLink.textContent = inviteLink.href;
+
+        memberList.innerHTML = "";
+        (chat.members || []).forEach(name => {
+            const li = document.createElement("li");
+            li.textContent = name;
+            li.className = "cursor-pointer text-blue-600 hover:underline";
+            li.addEventListener("click", () => {
+                selectedMember = name;
+                memberNameSpan.textContent = name;
+                memberDetailModal.classList.remove("hidden");
+            });
+            memberList.appendChild(li);
+        });
+
+        groupInfoModal.classList.remove("hidden");
+    });
+
+    closeGroupInfo.addEventListener("click", () => {
+        groupInfoModal.classList.add("hidden");
+    });
+
+    closeMemberDetail.addEventListener("click", () => {
+        memberDetailModal.classList.add("hidden");
+    });
+
+    dmButton.addEventListener("click", () => {
+        if (selectedMember) {
+            window.location.href = `chat.html?user=${encodeURIComponent(selectedMember)}`;
+        }
+    });
+
     chat.messages.forEach(msg => {
         const bubble = createMessageBubble(msg.from, msg.text);
         chatBox.appendChild(bubble);
