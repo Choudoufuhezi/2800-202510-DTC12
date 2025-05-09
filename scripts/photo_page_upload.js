@@ -1,3 +1,5 @@
+import { getLocation } from './geolocation.js';
+
 const removePhotoEmptyMessage = document.getElementById("photoEmptyMessage");
 const uploadButton = document.getElementById("uploadButton");
 const fileInput = document.getElementById("fileInput");
