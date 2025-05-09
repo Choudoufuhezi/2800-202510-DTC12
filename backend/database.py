@@ -27,6 +27,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     username = Column(String, nullable=True)
     date_of_birth = Column(DateTime, nullable=True)
+    address = Column(String, nullable=True)
     hashed_password = Column(String)
     email_verified = Column(Boolean, default=False)
     verification_token = Column(String, nullable=True)
@@ -130,6 +131,7 @@ def create_user(db, email: str, hashed_password: str, verification_token: str = 
         hashed_password=hashed_password,
         username=None,
         date_of_birth=None,
+        address=None,
         email_verified=False,
         verification_token=verification_token
     )
