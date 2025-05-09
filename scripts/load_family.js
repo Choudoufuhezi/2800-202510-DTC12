@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
 
         if (!response.ok) {
+            window.location.href = '/login.html';
             throw new Error('Failed to fetch families');
         }
 
