@@ -27,7 +27,10 @@ app.add_middleware(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: Change to frontend URL in production
+    allow_origins= [
+        "http://localhost:3000",  
+    "https://two800-202510-dtc12-0d55.onrender.com"  
+    ],                                             # TODO: Change to frontend URL in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

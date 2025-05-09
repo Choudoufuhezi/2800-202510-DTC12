@@ -10,7 +10,7 @@ from auth import get_current_user_email
 from database import FamilyInvite, delete_family, get_db, Family, User, Registered
 from config import settings
 from typing import List
-
+from database import create_message, Message  # Importing the create_message function from database module
 
 router = APIRouter(prefix="/family")
 
@@ -286,3 +286,65 @@ async def get_user_families(
     
     # Extract just the IDs from the query results
     return [family_id for (family_id,) in family_ids]
+
+
+class SendMessageRequest(BaseModel):
+    text: str
+    reply_to: Optional[int] = None
+
+@router.post("/{family_id}/messages")
+async def send_message(
+    family_id: int,
+    payload: SendMessageRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    is_member = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id
+    ).first()
+    if not is_member:
+        raise HTTPException(status_code=403, detail="You are not a member of this family")
+
+    msg = create_message(
+        db=db,
+        user_id=current_user.id,
+        chatroom_id=family_id, 
+        message_text=payload.text,
+        time_stamp=datetime.utcnow()
+    )
+
+    return {
+        "id": msg.id,
+        "from": current_user.email,
+        "text": msg.message_text,
+        "reply_to": msg.reply_to
+    }
+
+@router.get("/{family_id}/messages")
+async def get_messages(
+    family_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    is_member = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id
+    ).first()
+    if not is_member:
+        raise HTTPException(status_code=403, detail="You are not a member of this family")
+
+    messages = db.query(Message).filter(
+        Message.chatroom_id == family_id
+    ).order_by(Message.time_stamp).all()
+
+    result = []
+    for msg in messages:
+        sender = db.query(User).filter(User.id == msg.user_id).first()
+        result.append({
+            "id": msg.id,
+            "from": sender.email if sender else "Unknown",
+            "text": msg.message_text,
+            "reply_to": msg.reply_to
+        })
+    return result
