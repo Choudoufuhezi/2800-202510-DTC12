@@ -8,6 +8,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let replyTo = null;
 
+    const groupHeader = document.getElementById("group-header");
+    const groupInfoModal = document.getElementById("group-info");
+    const closeGroupInfo = document.getElementById("close-group-info");
+    const groupNameSpan = document.getElementById("info-group-name");
+    const inviteLink = document.getElementById("invite-link");
+    const memberList = document.getElementById("member-list");
+
     const input = document.getElementById("message-input");
     const sendBtn = document.getElementById("send-btn");
     const chatBox = document.getElementById("chat-box");
@@ -89,6 +96,61 @@ document.addEventListener("DOMContentLoaded", () => {
     // Set header
     document.querySelector("h2").textContent = chat.name;
     document.querySelector("img").src = chat.avatar;
+
+    groupHeader.addEventListener("click", () => {
+        groupNameSpan.textContent = chat.name;
+        inviteLink.href = `https://example.com/invite/${chat.id}`;
+        inviteLink.textContent = inviteLink.href;
+
+        memberList.innerHTML = "";
+        (chat.members || []).forEach(name => {
+            const li = document.createElement("li");
+            li.textContent = name;
+            memberList.appendChild(li);
+        });
+
+        groupInfoModal.classList.remove("hidden");
+    });
+
+    closeGroupInfo.addEventListener("click", () => {
+        groupInfoModal.classList.add("hidden");
+    });
+
+    // Member Detail Modal Elements
+    const memberDetailModal = document.getElementById("member-detail-modal");
+    const closeMemberDetail = document.getElementById("close-member-detail");
+    const memberNameSpan = document.getElementById("member-name");
+    const dmButton = document.getElementById("dm-button");
+
+    let selectedMember = null;
+
+    // Make member list clickable
+    memberList.innerHTML = "";
+    (chat.members || []).forEach(name => {
+        const li = document.createElement("li");
+        li.textContent = name;
+        li.className = "cursor-pointer text-blue-600 hover:underline";
+        li.addEventListener("click", () => {
+            selectedMember = name;
+            memberNameSpan.textContent = name;
+            memberDetailModal.classList.remove("hidden");
+        });
+        memberList.appendChild(li);
+    });
+
+    // Close member modal
+    closeMemberDetail.addEventListener("click", () => {
+        memberDetailModal.classList.add("hidden");
+    });
+
+    // DM button click
+    dmButton.addEventListener("click", () => {
+        if (selectedMember) {
+            // Redirect to personal chat page (adjust as needed)
+            window.location.href = `chat.html?user=${encodeURIComponent(selectedMember)}`;
+        }
+    });
+
 
     // Render existing messages
     chat.messages.forEach(msg => {
