@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import DateTime, create_engine, Column, String, Integer, Boolean, JSON
+from sqlalchemy import DateTime, create_engine, Column, String, Integer, Boolean, JSON, LargeBinary
 from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -95,8 +95,8 @@ class Memory(Base):
     id = Column(Integer, primary_key=True, index=True)
     location = Column(JSON)
     tags = Column(String)
-    file_location = Column(String)
-    time_stamp = Column(DateTime, nullable=False)
+    file = Column(LargeBinary)
+    date_for_notification = Column(DateTime, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"))
     family_id = Column(Integer, ForeignKey("family.id"))
 
@@ -205,12 +205,12 @@ def create_family_invite(db, family_id: int, code: int, created_by: int, expires
     db.refresh(db_invite)
     return db_invite
 
-def create_memory(db, location: str, tags: str, file_location: object, time_stamp: datetime, user_id: int, family_id: int):
+def create_memory(db, location: str, tags: str, file: LargeBinary, date_for_notification: datetime, user_id: int, family_id: int):
     db_memory = Memory(
         location=location,
         tags=tags,
-        file_location=file_location,
-        time_stamp=time_stamp,
+        file=file,
+        date_for_notification=date_for_notification,
         user_id=user_id,
         family_id=family_id
     )
