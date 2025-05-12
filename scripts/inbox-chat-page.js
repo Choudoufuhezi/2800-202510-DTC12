@@ -1,91 +1,84 @@
-const API_URL = "https://two800-202510-dtc12-0d55.onrender.com";
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("Script loaded!");
 
-function getToken() {
-    const token = localStorage.getItem("token");
-    if (!token) {
-        window.location.href = "/login.html";
-        throw new Error("Missing token");
-    }
-    return token;
-}
-
-async function apiGet(url) {
-    const token = getToken();
-    const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
-}
-
-async function apiPost(url, payload) {
-    const token = getToken();
-    const res = await fetch(url, {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
+    // Chat List Data
+    const chats = [
+        {
+            id: "bcit",
+            name: "Robinson Family",
+            avatar: "https://i.pravatar.cc/40?img=12",
+            messages: [
+                { from: "Alice", text: "Meeting at 5?" },
+                { from: "You", text: "Yes, see you there!" }
+            ]
         },
-        body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
-    const chatList = document.getElementById("chat-list");
-    chatList.innerHTML = "<p class='text-gray-500 p-4'>Loading chats...</p>";
-
-    try {
-        const familyIds = await apiGet(`${API_URL}/family/my-families`);
-        chatList.innerHTML = "";
-
-        for (const familyId of familyIds) {
-            let messages = [];
-
-            try {
-                messages = await apiGet(`${API_URL}/family/${familyId}/messages`);
-            } catch (err) {
-                if (err.message.includes("Not Found")) {
-                    try {
-                        const welcomeMsg = await apiPost(`${API_URL}/family/${familyId}/messages`, {
-                            text: "👋 Welcome to your new family group chat!",
-                            reply_to: null
-                        });
-                        messages = [welcomeMsg];
-                    } catch (createErr) {
-                        console.warn(`Unable to create welcome message for family ${familyId}`);
-                        continue;
-                    }
-                } else {
-                    console.error(`Failed to fetch members/messages for family ${familyId}:`, err);
-                    continue;
-                }
-            }
-
-            const lastMessage = messages[messages.length - 1];
-            const lastText = lastMessage?.text || "No messages yet";
-
-            const row = document.createElement("div");
-            row.className = "flex items-start gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer";
-            row.addEventListener("click", () => {
-                localStorage.setItem("activeGroupId", familyId);
-                window.location.href = "GroupChatPage.html";
-            });
-
-            row.innerHTML = `
-                <img src="https://via.placeholder.com/40" class="w-10 h-10 rounded-full mt-1" />
-                <div class="flex-1">
-                    <div class="font-semibold text-gray-800">Family ${familyId}</div>
-                    <div class="text-sm text-gray-600 truncate">${lastText}</div>
-                </div>
-                <div class="text-xs text-gray-400 self-start mt-1">${messages.length} message(s)</div>
-            `;
-
-            chatList.appendChild(row);
+        {
+            id: "Rose",
+            name: "Cousin Rose",
+            avatar: "https://i.pravatar.cc/40?img=20",
+            messages: [
+                { from: "Rose", text: "Thanks for the help!" },
+                { from: "You", text: "You're welcome!" }
+            ]
         }
-    } catch (err) {
-        chatList.innerHTML = `<p class='text-red-500 px-4 py-2'>Error loading chats. Try logging in again.</p>`;
-        console.error("Failed to load chat list:", err);
-    }
+    ];
+
+    const list = document.getElementById("chat-list");
+
+    // Render Chat List
+    chats.forEach(chat => {
+        const row = document.createElement("div");
+        row.className = "flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer";
+        row.addEventListener("click", () => {
+            localStorage.setItem("activeChat", JSON.stringify(chat));
+            window.location.href = "GroupChatPage.html";
+        });
+
+        row.innerHTML = `
+        <img src="${chat.avatar}" alt="Avatar" class="w-10 h-10 rounded-full mr-3">
+        <div class="flex-1">
+          <div class="flex justify-between">
+            <span class="font-medium">${chat.name}</span>
+            <span class="text-sm text-gray-400">${chat.time || ""}</span>
+          </div>
+        </div>
+      `;
+
+        list.appendChild(row);
+    });
+
+    // ANNOUNCEMENT FEATURE - Pulse-style Modal
+    const announcementBtn = document.getElementById("announcement-btn");
+    const announcementModal = document.getElementById("announcement-modal");
+    const closeAnnouncement = document.getElementById("close-announcement");
+    const announcementContent = document.getElementById("announcement-content");
+
+    const updates = [
+        { title: "✨ New Feature!", details: "Dark mode is now available." },
+        { title: "📅 Upcoming Event", details: "Family meeting scheduled for this Sunday at 6 PM." },
+        { title: "🔒 Security Update", details: "Please review the latest privacy settings." },
+        { title: "⚠️ System Maintenance", details: "Chat servers will be down tonight from 2 AM - 3 AM." },
+        { title: "👥 Group Announcement", details: "New members have joined the chat!" }
+    ];
+
+    // Open announcement modal with updates
+    announcementBtn.addEventListener("click", () => {
+        console.log("Opening updates modal...");
+
+        // Populate structured updates inside light blue tabs
+        announcementContent.innerHTML = updates.map(update => `
+            <div class="bg-blue-100 p-3 rounded-lg shadow">
+                <h4 class="font-semibold text-blue-900">${update.title}</h4>
+                <p class="text-gray-700 text-sm">${update.details}</p>
+            </div>
+        `).join("");
+
+        announcementModal.classList.remove("hidden");
+    });
+
+    // Close the modal when clicking the button
+    closeAnnouncement.addEventListener("click", () => {
+        console.log("Closing updates modal...");
+        announcementModal.classList.add("hidden");
+    });
 });

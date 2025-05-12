@@ -5,101 +5,73 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Group Chat</title>
-
-    <!-- TailwindCSS CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-
-    <!-- Font Awesome (Optional) -->
-    <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
-
-    <!-- Group Chat Logic -->
-    <script defer src="scripts/GroupChatPage.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script defer src="scripts/groupChatPage.js"></script>
 </head>
 
-<body class="bg-[#f5f3eb98]">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-md h-screen bg-white shadow-lg flex flex-col">
 
-    <!-- Top Navigation -->
-    <nav id="topNav" class="sticky top-0 z-50"></nav>
-
-    <!-- Family Icon -->
-    <div id="familyIconContainer"></div>
-
-    <!-- Main Content -->
-    <main class="min-h-[calc(100vh-64px-64px)] flex items-center justify-center px-2 py-4">
-        <div class="w-full max-w-md h-screen bg-white shadow-lg flex flex-col">
-
-            <!-- Header -->
-            <div id="group-header" class="flex items-center gap-3 p-4 bg-blue-500 text-white shadow-md cursor-pointer">
-                <img id="group-avatar" src="https://via.placeholder.com/40" alt="Profile"
-                    class="w-10 h-10 rounded-full border-2 border-white" />
-                <h2 id="group-name" class="text-lg font-semibold">Group chat</h2>
-            </div>
-
-            <!-- Chat Box -->
-            <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
-                <!-- Messages will go here -->
-            </div>
-
-            <!-- Reply Preview -->
-            <div id="reply-preview"
-                class="hidden px-4 py-2 border-t border-b border-gray-200 bg-gray-50 text-sm text-gray-700 relative">
-                <div id="reply-text" class="truncate pr-6"></div>
-                <button id="cancel-reply" class="absolute right-2 top-2 text-gray-400 hover:text-gray-700">✕</button>
-            </div>
-
-            <!-- Message input -->
-            <div class="flex p-3 border-t border-gray-200 bg-white">
-                <input id="message-input" type="text" placeholder="Type a message"
-                    class="flex-1 p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring focus:border-blue-300" />
-                <button id="send-btn"
-                    class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600">Send</button>
-            </div>
-
-            <!-- Group Info Modal -->
-            <div id="group-info"
-                class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 items-center justify-center p-4">
-                <div
-                    class="bg-white w-full max-w-sm md:max-w-md p-6 rounded-lg shadow-lg relative overflow-y-auto max-h-[90vh]">
-                    <button id="close-group-info"
-                        class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
-                    <h3 class="text-xl font-semibold mb-3">Group Info</h3>
-                    <p><strong>Group Name:</strong> <span id="info-group-name"></span></p>
-                    <p class="mt-2"><strong>Invite Link:</strong>
-                        <a href="#" id="invite-link" class="text-blue-500 underline break-words"></a>
-                    </p>
-                    <div class="mt-4">
-                        <p class="font-semibold mb-1">Members:</p>
-                        <ul id="member-list" class="space-y-1 text-sm text-gray-700 list-disc list-inside"></ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Member Detail Modal -->
-            <div id="member-detail-modal"
-                class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 items-center justify-center p-4">
-                <div class="bg-white w-full max-w-sm p-5 rounded-lg shadow-lg relative">
-                    <button id="close-member-detail"
-                        class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
-                    <h3 class="text-xl font-semibold mb-2">Member Info</h3>
-                    <p><strong>Name:</strong> <span id="member-name"></span></p>
-                    <button id="dm-button"
-                        class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Direct Message</button>
-                </div>
-            </div>
-
+        <!-- Header -->
+        <div id="group-header" class="flex items-center gap-3 p-4 bg-blue-500 text-white shadow-md cursor-pointer">
+            <img id="group-avatar" src="https://via.placeholder.com/40" alt="Profile"
+                class="w-10 h-10 rounded-full border-2 border-white" />
+            <h2 id="group-name" class="text-lg font-semibold"></h2>
         </div>
-    </main>
 
-    <!-- Bottom Navigation -->
-    <nav id="bottomNav" class="sticky bottom-0 z-50"></nav>
+        <!-- Chat Box -->
+        <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+            <!-- Messages will go here -->
+        </div>
 
-    <!-- Footer -->
-    <footer id="footer"></footer>
+        <!-- Reply Preview (Hidden by Default) -->
+        <div id="reply-preview"
+            class="hidden px-4 py-2 border-t border-b border-gray-200 bg-gray-50 text-sm text-gray-700 relative">
+            <div id="reply-text" class="truncate pr-6"></div>
+            <button id="cancel-reply" class="absolute right-2 top-2 text-gray-400 hover:text-gray-700">✕</button>
+        </div>
 
-    <!-- Shared UI Scripts -->
-    <script src="../scripts/add_nav.js"></script>
-    <script src="../scripts/load_family_icon.js"></script>
+        <!-- Message input -->
+        <div class="flex p-3 border-t border-gray-200 bg-white">
+            <input id="message-input" type="text" placeholder="Type a message"
+                class="flex-1 p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring focus:border-blue-300" />
+            <button id="send-btn" class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600">Send</button>
+        </div>
 
+        <!-- Group Info Modal -->
+        <div id="group-info"
+            class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+            <div
+                class="bg-white w-full max-w-sm md:max-w-md p-6 rounded-lg shadow-lg relative overflow-y-auto max-h-[90vh]">
+                <button id="close-group-info"
+                    class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
+                <h3 class="text-xl font-semibold mb-3">Info</h3>
+                <p><strong>Group Name:</strong> <span id="info-group-name"></span></p>
+                <p class="mt-2"><strong>Invite Link:</strong>
+                    <a href="#" id="invite-link" class="text-blue-500 underline break-words"></a>
+                </p>
+                <div class="mt-4">
+                    <p class="font-semibold mb-1">Members:</p>
+                    <ul id="member-list" class="space-y-1 text-sm text-gray-700 list-disc list-inside"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Member Detail Modal -->
+        <div id="member-detail-modal"
+            class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm p-5 rounded-lg shadow-lg relative">
+                <button id="close-member-detail"
+                    class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
+                <h3 class="text-xl font-semibold mb-2">Member Info</h3>
+                <p><strong>Name:</strong> <span id="member-name"></span></p>
+                <button id="dm-button" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Direct
+                    Message</button>
+            </div>
+        </div>
+
+    </div>
+<script src="../scripts/load_family_icon.js"></script>
 </body>
 
 </html>
