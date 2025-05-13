@@ -6,7 +6,7 @@ from config import settings
 
 app = FastAPI()
 
-# Initialize OAuth
+# Initialize OAuth for Google
 oauth = OAuth()
 oauth.register(
     name='google',
@@ -27,10 +27,11 @@ app.add_middleware(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins= [
+    allow_origins=[
         "http://localhost:3000",  
-    "https://two800-202510-dtc12-0d55.onrender.com"  
-    ],                                             # TODO: Change to frontend URL in production
+        "https://two800-202510-dtc12-0d55.onrender.com",
+        "https://dev--digitalfamilyvault.netlify.app"  # Add frontend URL
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,12 +43,12 @@ from family_management import router as family_router
 from profile import router as profile_router
 from memory import router as memory_router
 from comments import router as comments_router
+
 app.include_router(auth_router)
 app.include_router(family_router)
 app.include_router(memory_router)
 app.include_router(comments_router)
-app.include_router(profile_router) 
-
+app.include_router(profile_router)
 
 @app.get("/")
 def read_root():

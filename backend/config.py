@@ -1,5 +1,6 @@
 # config.py
 from pydantic_settings import BaseSettings
+from fastapi.security import OAuth2PasswordBearer
 
 class Settings(BaseSettings):
     # App settings
@@ -26,3 +27,6 @@ class Settings(BaseSettings):
         extra = 'ignore'  # ignore extra env variables
 
 settings = Settings()
+
+# OAuth2PasswordBearer for password-based authentication
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
