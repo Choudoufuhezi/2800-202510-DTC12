@@ -69,13 +69,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Populate structured updates inside modal
     function renderAnnouncements() {
-        announcementContent.innerHTML = updates.map(update => `
-            <div class="bg-blue-100 p-3 rounded-lg shadow">
-                <h4 class="font-semibold text-blue-900">${update.title}</h4>
-                <p class="text-gray-700 text-sm">${update.details}</p>
-            </div>
-        `).join("");
+        announcementContent.innerHTML = updates.map((update, index) => {
+            const isMine = update.from === "me"; // Only show more if from me
+
+            return `
+                <div class="relative bg-blue-100 p-3 rounded-lg shadow group">
+                    <h4 class="font-semibold text-blue-900">${update.title}</h4>
+                    <p class="text-gray-700 text-sm">${update.details}</p>
+    
+                    ${isMine ? `
+                        <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-800" data-index="${index}" title="More Options">
+                            ⋮
+                        </button>
+                    ` : ""}
+                </div>
+            `;
+        }).join("");
+
+        // Add event listeners to "More" buttons
+        document.querySelectorAll('[data-index]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const index = e.target.getAttribute('data-index');
+                const confirmDelete = confirm("Delete this announcement?");
+                if (confirmDelete) {
+                    updates.splice(index, 1);
+                    renderAnnouncements(); // Refresh the list
+                }
+            });
+        });
     }
+    
 
     // Open the modal
     announcementBtn.addEventListener("click", () => {
@@ -103,7 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (title && body) {
             // Add to the top of the updates array
-            updates.unshift({ title, details: body });
+            updates.unshift({ title, details: body, from: "me" });
 
             // Re-render announcements and reset form
             renderAnnouncements();
