@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 
-    frontend_url: str = "http://dev--digitalfamilyvault.netlify.app"
+    frontend_url: str = "https://dev--digitalfamilyvault.netlify.app"
     backend_url: str = "https://two800-202510-dtc12-0d55.onrender.com"
 
     # Google OAuth
