@@ -58,7 +58,9 @@ async def create_family(
     """
     try:
         # Create the family
-        db_family = Family()
+        db_family = Family(
+            family_banner = None
+        )
         db.add(db_family)
         db.commit()
         db.refresh(db_family)
