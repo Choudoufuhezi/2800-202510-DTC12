@@ -2,32 +2,48 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Messages</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <!-- Tailwind and Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
+
+    <!-- Page-specific Script -->
     <script defer src="scripts/inbox-chat-page.js"></script>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <div class="w-full max-w-md h-screen bg-white shadow-lg flex flex-col">
-        <!-- Header -->
-        <div class="p-4 bg-blue-500 text-white text-xl font-semibold shadow flex justify-between items-center relative">
-            <span>Messages</span>
-            <button id="announcement-btn" class="bg-white text-blue-500 px-3 py-1 rounded text-sm hover:bg-gray-200">
-                🔔Announcements
-            </button>
-        </div>
+<body class="bg-[#f5f3eb98]">
+    <!-- Top Nav -->
+    <nav id="topNav" class="sticky top-0"></nav>
 
-        <!-- Chat List -->
-        <div id="chat-list" class="flex-1 overflow-y-auto divide-y divide-gray-200 bg-white">
-            <!-- JavaScript will insert chat rows here -->
+    <div id="familyIconContainer"></div>
+
+    <!-- Main Content -->
+    <div class="min-h-[calc(102vh-64px-64px)] flex items-center justify-center">
+        <div class="w-full max-w-md h-screen bg-white shadow-lg flex flex-col">
+
+            <!-- Header -->
+            <div
+                class="p-4 bg-blue-500 text-white text-xl font-semibold shadow flex justify-between items-center relative">
+                <span>Messages</span>
+                <button id="announcement-btn"
+                    class="bg-white text-blue-500 px-3 py-1 rounded text-sm hover:bg-gray-200">
+                    🔔Announcements
+                </button>
+            </div>
+
+            <!-- Chat List -->
+            <div id="chat-list" class="flex-1 overflow-y-auto divide-y divide-gray-200 bg-white">
+                <!-- JavaScript will insert chat rows here -->
+            </div>
         </div>
     </div>
 
-    <!-- Announcement Modal (Pulse-style) -->
+    <!-- Announcement Modal -->
     <div id="announcement-modal"
-        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white w-full max-w-sm p-6 rounded-lg shadow-lg relative">
             <button id="close-announcement" class="absolute top-2 right-2 text-gray-500 text-xl">&times;</button>
             <h3 class="text-xl font-semibold mb-3 text-blue-700">🔔 Updates</h3>
@@ -37,7 +53,15 @@
         </div>
     </div>
 
-    <script defer src="scripts/load_family_icon.js"></script>
+    <!-- Bottom Nav -->
+    <nav id="bottomNav" class="sticky bottom-0"></nav>
+
+    <!-- Footer -->
+    <nav id="footer"></nav>
+
+    <!-- Scripts -->
+    <script src="../scripts/add_nav.js"></script>
+    <script src="../scripts/load_family_icon.js"></script>
 </body>
 
 </html>
