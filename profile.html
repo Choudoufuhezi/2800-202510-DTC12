@@ -21,9 +21,11 @@
         </div>
         <div class="bg-white justify-center md:ml-40 md:mr-40 pb-10 pt-10 rounded-xl shadow-2xl">
             <div class="flex justify-center relative">
-                <img id="userImage" src="images/user_image.png" class="rounded-full border" width="100" height="100">
-                <input type="file" id="fileInput" accept="image/*"
-                    class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer rounded-full">
+                <div class="w-[160px] h-[160px] relative rounded-full overflow-hidden border">
+                    <img id="userImage" src="images/user_image.png" class="object-cover w-full h-full">
+                    <input type="file" id="fileInput" accept="image/*"
+                        class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer">
+                </div>
             </div>
             <div class="flex flex-row justify-center md:space-x-20 space-x-5 mt-20">
                 <div class="flex flex-col">
@@ -121,7 +123,7 @@
             })
 
             const data = await upload_cloudinary.json()
-            const file_url = await data.secure_url
+            const profile_picture = await data.secure_url
 
             const update_profile = await fetch(`${API_URL}/profile/update`, {
                 method: "PUT",
@@ -132,7 +134,7 @@
                 body: JSON.stringify({ profile_picture })
             });
 
-            const result = await bupdate_profile.json();
+            const result = await update_profile.json();
             alert("Profile updated successfully!");
         } catch {
             alert("Profile updated failed, please try again!");
@@ -201,10 +203,11 @@
         document.getElementById("dob_date").value = data.date_of_birth.slice(0, 10);
 
         const user_profile_image = document.getElementById("userImage");
+        console.log(data.profile_picture)
         if (data.profile_picture) {
-            userImage.src = data.profile_picture;
+            user_profile_image.src = data.profile_picture;
         } else {
-            userImage.src = '/images/default_avatar.png';
+            user_profile_image.src = '/images/user_image.png';
         }
     });
 
