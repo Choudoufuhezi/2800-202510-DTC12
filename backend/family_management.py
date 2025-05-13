@@ -46,12 +46,8 @@ class InviteResponse(BaseModel):
 class JoinFamilyRequest(BaseModel):
     code: str
     
-class CreateFamily(BaseModel):
-    family_banner: str
-
 @router.post("/create", response_model=FamilyInfo)
 async def create_family(
-    family_info: CreateFamily,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -63,7 +59,7 @@ async def create_family(
     try:
         # Create the family
         db_family = Family(
-            family_info.family_banner
+            family_banner = None
         )
         db.add(db_family)
         db.commit()
