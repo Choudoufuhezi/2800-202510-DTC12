@@ -7,6 +7,7 @@ certifi==2025.4.26
 cffi==1.17.1
 charset-normalizer==3.4.1
 click==8.1.8
+cloudinary
 cryptography==44.0.2
 ecdsa==0.19.1
 fastapi==0.115.12

@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import DateTime, create_engine, Column, String, Integer, Boolean, JSON
+from sqlalchemy import DateTime, create_engine, Column, String, Integer, Boolean, JSON, LargeBinary
 from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -28,6 +28,8 @@ class User(Base):
     username = Column(String, nullable=True)
     date_of_birth = Column(DateTime, nullable=True)
     address = Column(String, nullable=True)
+    profile_picture = Column(String, nullable=True)
+    profile_background_picture = Column(String, nullable=True)
     hashed_password = Column(String)
     email_verified = Column(Boolean, default=False)
     verification_token = Column(String, nullable=True)
@@ -62,6 +64,7 @@ class Family(Base):
     __tablename__ = "family"
 
     id = Column(Integer, primary_key=True, index=True)
+    family_banner = Column(String, nullable=True)
     members = relationship("Registered", back_populates="family")
 
 class Registered(Base):
@@ -95,8 +98,8 @@ class Memory(Base):
     id = Column(Integer, primary_key=True, index=True)
     location = Column(JSON)
     tags = Column(String)
-    file_location = Column(String)
-    time_stamp = Column(DateTime, nullable=False)
+    file_url = Column(String)
+    date_for_notification = Column(DateTime, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"))
     family_id = Column(Integer, ForeignKey("family.id"))
 
@@ -132,6 +135,8 @@ def create_user(db, email: str, hashed_password: str, verification_token: str = 
         username=None,
         date_of_birth=None,
         address=None,
+        profile_picture=None,
+        profile_background_picture=None,
         email_verified=False,
         verification_token=verification_token
     )
@@ -173,7 +178,9 @@ def create_message(db, user_id: int, chatroom_id: int,  message_text:str, time_s
     return db_message
 
 def create_family(db):
-    db_family = Family()
+    db_family = Family(
+        family_banner=None
+    )
     db.add(db_family)
     db.commit()
     db.refresh(db_family)
@@ -205,12 +212,12 @@ def create_family_invite(db, family_id: int, code: int, created_by: int, expires
     db.refresh(db_invite)
     return db_invite
 
-def create_memory(db, location: str, tags: str, file_location: object, time_stamp: datetime, user_id: int, family_id: int):
+def create_memory(db, location: str, tags: str, file_url: str, date_for_notification: datetime, user_id: int, family_id: int):
     db_memory = Memory(
         location=location,
         tags=tags,
-        file_location=file_location,
-        time_stamp=time_stamp,
+        file_url=file_url,
+        date_for_notification=date_for_notification,
         user_id=user_id,
         family_id=family_id
     )
