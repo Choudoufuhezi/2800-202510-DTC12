@@ -95,7 +95,7 @@ class Memory(Base):
     id = Column(Integer, primary_key=True, index=True)
     location = Column(JSON)
     tags = Column(String)
-    file = Column(LargeBinary)
+    file_url = Column(String)
     date_for_notification = Column(DateTime, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"))
     family_id = Column(Integer, ForeignKey("family.id"))
@@ -205,11 +205,11 @@ def create_family_invite(db, family_id: int, code: int, created_by: int, expires
     db.refresh(db_invite)
     return db_invite
 
-def create_memory(db, location: str, tags: str, file: LargeBinary, date_for_notification: datetime, user_id: int, family_id: int):
+def create_memory(db, location: str, tags: str, file_url: str, date_for_notification: datetime, user_id: int, family_id: int):
     db_memory = Memory(
         location=location,
         tags=tags,
-        file=file,
+        file_url=file_url,
         date_for_notification=date_for_notification,
         user_id=user_id,
         family_id=family_id

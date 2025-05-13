@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-
 from database import Registered, User, create_memory, delete_memory, get_db
 from family_management import get_current_user
 
@@ -12,16 +11,16 @@ router = APIRouter(prefix="/memories")
 class MemoryCreateRequest(BaseModel):
     location: dict
     tags: str
-    file_location: str
-    time_stamp: Optional[datetime] = None
+    file_url: str
+    date_for_notification: Optional[datetime] = None
     family_id: int
 
 class MemoryResponse(BaseModel):
     id: int
     location: dict
     tags: str
-    file_location: str
-    time_stamp: datetime
+    file_url: str
+    date_for_notification: datetime
     user_id: int
     family_id: int
     
@@ -51,14 +50,14 @@ async def create_memory_endpoint(
             )
 
         # Set current time if timestamp not provided
-        timestamp = memory_data.time_stamp if memory_data.time_stamp else datetime.utcnow()
+        date_for_notification = memory_data.date_for_notification if memory_data.date_for_notification else datetime.utcnow()
 
         db_memory = create_memory(
             db=db,
             location=memory_data.location,
             tags=memory_data.tags,
-            file_location=memory_data.file_location,
-            time_stamp=timestamp,
+            file=memory_data.file,
+            date_for_notification=date_for_notification,
             user_id=current_user.id,
             family_id=memory_data.family_id
         )
