@@ -45,6 +45,8 @@ app.include_router(memory_router)
 app.include_router(comments_router)
 app.include_router(profile_router) 
 
+from chat_server import router as chat_router
+app.include_router(chat_router)
 
 @app.get("/")
 def read_root():
