@@ -64,6 +64,7 @@ class Family(Base):
     __tablename__ = "family"
 
     id = Column(Integer, primary_key=True, index=True)
+    family_banner = Column(String, nullable=True)
     members = relationship("Registered", back_populates="family")
 
 class Registered(Base):
@@ -177,7 +178,9 @@ def create_message(db, user_id: int, chatroom_id: int,  message_text:str, time_s
     return db_message
 
 def create_family(db):
-    db_family = Family()
+    db_family = Family(
+        family_banner=None
+    )
     db.add(db_family)
     db.commit()
     db.refresh(db_family)
