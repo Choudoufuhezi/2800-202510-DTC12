@@ -19,11 +19,6 @@ class Settings(BaseSettings):
     smtp_port: int
     smtp_username: str
     smtp_password: str
-
-    #CLOUDINARY settings
-    CLOUDINARY_CLOUD_NAME: str 
-    CLOUDINARY_API_KEY: str 
-    CLOUDINARY_API_SECRET: str
     
     class Config:
         env_file = ".env"
