@@ -36,6 +36,78 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let selectedMember = null;
 
+    // Settings Modal Elements
+    const settingsModal = document.getElementById("settings-modal");
+    const settingsBtn = document.getElementById("settings-btn");
+    const closeSettingsBtn = document.getElementById("close-settings");
+
+    // Notification State (true = notifications on, false = notifications off)
+    let notificationsEnabled = true;
+
+    // Open Group Info Modal
+    document.getElementById("info-btn").addEventListener("click", () => {
+        groupNameSpan.textContent = chat.name;
+        inviteLink.href = `https://example.com/invite/${chat.id}`;
+        inviteLink.textContent = inviteLink.href;
+
+        memberList.innerHTML = "";
+        (chat.members || []).forEach(name => {
+            const li = document.createElement("li");
+            li.textContent = name;
+            li.className = "cursor-pointer text-blue-600 hover:underline";
+            li.addEventListener("click", () => {
+                selectedMember = name;
+                memberNameSpan.textContent = name;
+                memberDetailModal.classList.remove("hidden");
+            });
+            memberList.appendChild(li);
+        });
+
+        groupInfoModal.classList.remove("hidden");
+    });
+
+    // Close Group Info Modal
+    closeGroupInfo.addEventListener("click", () => {
+        groupInfoModal.classList.add("hidden");
+    });
+
+    // Open Settings Modal when Settings Button is Clicked
+    settingsBtn.addEventListener("click", () => {
+        settingsModal.classList.remove("hidden");
+    });
+
+    // Close Settings Modal when Close Button is Clicked
+    closeSettingsBtn.addEventListener("click", () => {
+        settingsModal.classList.add("hidden");
+    });
+
+    // Toggle Notification Setting when Bell Icon is Clicked
+    const notificationToggleButton = document.getElementById("notification-toggle");
+
+    notificationToggleButton.addEventListener("click", () => {
+        notificationsEnabled = !notificationsEnabled;
+
+        // Update Bell Icon based on the state
+        if (notificationsEnabled) {
+            notificationToggleButton.innerHTML = '<i class="fas fa-bell"></i>'; // Filled Bell (Notifications On)
+        } else {
+            notificationToggleButton.innerHTML = '<i class="far fa-bell"></i>'; // Empty Bell (Notifications Off)
+        }
+    });
+
+    // Close Member Detail Modal
+    closeMemberDetail.addEventListener("click", () => {
+        memberDetailModal.classList.add("hidden");
+    });
+
+    // Direct Message button click
+    dmButton.addEventListener("click", () => {
+        if (selectedMember) {
+            window.location.href = `chat.html?user=${encodeURIComponent(selectedMember)}`;
+        }
+    });
+
+    // Create Message Bubbles
     function createMessageBubble(from, text, messageId = Date.now(), replyText = null) {
         const bubbleWrapper = document.createElement("div");
         bubbleWrapper.className = `flex ${from === "You" ? "justify-end" : "justify-start"} relative`;
@@ -106,48 +178,13 @@ document.addEventListener("DOMContentLoaded", () => {
         return bubbleWrapper;
     }
 
-    // No longer setting group name or avatar since header is removed
-
-    document.getElementById("info-btn").addEventListener("click", () => {
-        groupNameSpan.textContent = chat.name;
-        inviteLink.href = `https://example.com/invite/${chat.id}`;
-        inviteLink.textContent = inviteLink.href;
-
-        memberList.innerHTML = "";
-        (chat.members || []).forEach(name => {
-            const li = document.createElement("li");
-            li.textContent = name;
-            li.className = "cursor-pointer text-blue-600 hover:underline";
-            li.addEventListener("click", () => {
-                selectedMember = name;
-                memberNameSpan.textContent = name;
-                memberDetailModal.classList.remove("hidden");
-            });
-            memberList.appendChild(li);
-        });
-
-        groupInfoModal.classList.remove("hidden");
-    });
-
-    closeGroupInfo.addEventListener("click", () => {
-        groupInfoModal.classList.add("hidden");
-    });
-
-    closeMemberDetail.addEventListener("click", () => {
-        memberDetailModal.classList.add("hidden");
-    });
-
-    dmButton.addEventListener("click", () => {
-        if (selectedMember) {
-            window.location.href = `chat.html?user=${encodeURIComponent(selectedMember)}`;
-        }
-    });
-
+    // Display Messages
     chat.messages.forEach(msg => {
         const bubble = createMessageBubble(msg.from, msg.text);
         chatBox.appendChild(bubble);
     });
 
+    // Send Message
     function sendMessage() {
         const text = input.value.trim();
         if (!text) return;
