@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     let chat = JSON.parse(localStorage.getItem("activeChat"));
 
-    // Mock data in case there is no active chat in localStorage
+    // Mock data
     if (!chat) {
         chat = {
             name: "Robinson Family",
