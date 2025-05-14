@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from database import Message, UserChatRoom, get_db, User, ChatRoom
+from database import Message, UserChatRoom, create_chatroom, create_userchatroom, get_db, User, ChatRoom
+from datetime import datetime
 
 router = APIRouter()
 
@@ -88,3 +89,37 @@ async def get_chatroom_members(chatroom_id: int, user_id: int, db: Session = Dep
         "username": member.username,
         "email": member.email
     } for member in members]
+
+@router.post("/chatrooms/create")
+async def create_group_chat(user_id: int, target_email: str, db: Session = Depends(get_db)):
+    """
+    Create a new group chat with another user by their email
+    """
+    # Find the target user by email
+    target_user = db.query(User).filter(User.email == target_email).first()
+    if not target_user:
+        raise HTTPException(
+            status_code=404,
+            detail="User with this email not found"
+        )
+    
+    # Create a new chatroom
+    chatroom = create_chatroom(
+        db,
+        name=f"Chat with {target_user.username}",
+        date=datetime.now()
+    )
+    
+    # Add both users to the chatroom
+    create_userchatroom(db, user_id, chatroom.id)
+    create_userchatroom(db, target_user.id, chatroom.id)
+    
+    return { #TODO: use a response model instead, this is rushed
+        "chatroom_id": chatroom.id,
+        "name": chatroom.name,
+        "created_date": chatroom.created_date.isoformat(),
+        "members": [
+            {"user_id": user_id}, #TODO: support multiple users, can only do a dm for now
+            {"user_id": target_user.id}
+        ]
+    }
