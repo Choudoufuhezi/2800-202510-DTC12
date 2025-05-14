@@ -22,6 +22,17 @@ async function getComments(imageId) {
     ];
 }
 
+// Image Data API 
+async function getImageData(imageId) {
+    const location = await getLocation();
+    return {
+        src: document.querySelector(`img[data-image-id="${imageId}"]`).src,
+        description: "This is a sample description for the image.",
+        tags: "sample, test", // Example tags
+        geolocation: { location }
+    };
+}
+
 // Comment posting API
 async function postComment(imageId, text) {
     console.log(`(faked) POST comment "${text}" for image ${imageId}`);
@@ -56,11 +67,11 @@ fileInput.addEventListener("change", async (event) => {
             const location = await getLocation();
 
             await uploadMemory({
-                location: location.location,
+                location: location,
                 file_url: imageURL,
                 cloudinary_id: publicID,
                 tags: "sample, test",
-                family_id: 1 // Replace with actual family ID if dynamic
+                family_id: 1 // Update with family ID 
             });
 
             // Removing empty message and show add more photos button
@@ -230,20 +241,24 @@ async function uploadMemory({ location, file_url, cloudinary_id, tags, family_id
             body: JSON.stringify({
                 location,
                 tags,
-                file_url: file_url,
-                cloudinary_id: cloudinary_id,
-                family_id: family_id,
+                file_url,
+                cloudinary_id,
+                family_id
             })
         });
 
         if (!response.ok) {
-            console.error("Failed to upload memory");
+            const error = await response.json();
+            console.error("Failed to upload memory:", error);
             return null;
         }
+
+        return await response.json();
     } catch (error) {
         console.error(error);
         return null;
     }
-
-    return await response.json();
 }
+
+
+
