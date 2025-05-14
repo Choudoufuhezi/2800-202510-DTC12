@@ -38,6 +38,7 @@ class MemoryCreateRequest(BaseModel):
     location: dict
     tags: str
     file_url: str
+    cloudinary_id: str
     date_for_notification: Optional[datetime] = None
     family_id: int
 
@@ -82,7 +83,8 @@ async def create_memory_endpoint(
             db=db,
             location=memory_data.location,
             tags=memory_data.tags,
-            file=memory_data.file_url,
+            file_url=memory_data.file_url,
+            cloudinary_id=memory_data.cloudinary_id,
             date_for_notification=date_for_notification,
             user_id=current_user.id,
             family_id=memory_data.family_id
