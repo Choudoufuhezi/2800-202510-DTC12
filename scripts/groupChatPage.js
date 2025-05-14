@@ -19,7 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let replyTo = null;
 
-    //const groupHeader = document.getElementById("group-header");
     const groupInfoModal = document.getElementById("group-info");
     const closeGroupInfo = document.getElementById("close-group-info");
     const groupNameSpan = document.getElementById("info-group-name");
@@ -107,9 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return bubbleWrapper;
     }
 
-    // Set header
-    document.querySelector("h2").textContent = chat.name;
-    document.querySelector("img").src = chat.avatar;
+    // No longer setting group name or avatar since header is removed
 
     document.getElementById("info-btn").addEventListener("click", () => {
         groupNameSpan.textContent = chat.name;
