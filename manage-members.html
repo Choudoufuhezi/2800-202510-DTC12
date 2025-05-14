@@ -13,7 +13,7 @@
 
     <!-- Top Navigation (Loaded by JS) -->
     <nav id="topNav"></nav>
-<div id="familyIconContainer"></div>
+    <div id="familyIconContainer"></div>
 
 <!-- Main Content -->
     <main class="min-h-[calc(101vh-64px-64px)] px-4 pt-6 pb-24 max-w-xl mx-auto">
@@ -23,11 +23,18 @@
                 <i class="fas fa-user-plus mr-3 text-indigo-600"></i>
                 Add Family Member
             </h2>
-            <p class="text-gray-600 mt-2">Invite someone to join The Smith Family</p>
+            <p id = "family-description" class="text-gray-600 mt-2">Invite someone to join The Smith Family</p>
         </header>
 
+        <div id="loading" class="h flex justify-center mb-6">
+            <svg class="animate-spin h-5 w-5 text-sky-600" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8z"></path>
+            </svg>
+        </div>
+
         <!-- Invitation Content -->
-        <div class="bg-white p-6 rounded-lg shadow">
+        <div id ="invite-content" class="bg-white p-6 rounded-lg shadow hidden">
             <div class="text-center mb-6">
                 <h3 class="text-xl font-semibold text-gray-800">Send Invitation</h3>
                 <p class="text-gray-600 mt-1">Share this code or link with your family member</p>
@@ -38,7 +45,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">6-digit Invitation Code</label>
                 <div class="flex items-center justify-between bg-indigo-50 p-4 rounded-lg">
                     <span id="code" class="text-2xl font-mono font-bold tracking-wider text-indigo-800"></span>
-                    <button class="text-indigo-600 hover:text-indigo-800">
+                    <button id ="copy-code" class="text-indigo-600 hover:text-indigo-800">
                         <i class="far fa-copy text-xl"></i>
                     </button>
                 </div>
@@ -49,13 +56,14 @@
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Invitation Link</label>
                 <div class="flex items-center bg-gray-100 p-3 rounded-lg">
-                    <span class="text-sm text-gray-600 truncate flex-grow">https://familyapp.com/join/7A9B3C</span>
-                    <button class="text-indigo-600 hover:text-indigo-800 ml-2">
+                    <span id ="invite-link" class="text-sm text-gray-600 truncate flex-grow">https://familyapp.com/join/7A9B3C</span>
+                    <button id ="copy-link" class="text-indigo-600 hover:text-indigo-800 ml-2" aria-label="Copy invite link">
                         <i class="far fa-copy"></i>
                     </button>
                 </div>
             </div>
         </div>
+        <p id="error-message" class="text-red-500 mt-4 hidden"></p>
     </main>
 
     <!-- Bottom Navigation (Loaded by JS) -->
@@ -66,7 +74,8 @@
 
     <!-- Inject Nav JS -->
     <script src="../scripts/add_nav.js"></script>
-<script src="../scripts/load_family_icon.js"></script>
+    <script src="../scripts/manage-members.js"></script>
+    <script src="../scripts/load_family_icon.js"></script>
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const inviteCode = urlParams.get('inviteCode');

@@ -27,6 +27,10 @@ class MemberInfo(BaseModel):
     email: str
     is_admin: bool
 
+class FamilyCreate(BaseModel):
+    family_name: str
+    family_banner: Optional[str] = None  # Optional field for family banner
+
 class FamilyInfo(BaseModel):
     id: int
     admin: int  # user_id of the admin
@@ -60,6 +64,7 @@ async def create_family(
     try:
         # Create the family
         db_family = Family(
+            family_name = Request.family_name,
             family_banner = None
         )
         db.add(db_family)
@@ -202,10 +207,13 @@ async def join_family(
         Registered.is_admin == True
     ).first()
 
+    family = db.query(Family).filter(Family.id == db_invite.family_id).first()
+
     return FamilyInfo(
         id=db_invite.family_id,
         admin=admin[0] if admin else None,
-        members=[MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members]
+        members=[MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members],
+        family_name=family.family_name
     )
     
 @router.delete("/{family_id}", response_model=dict)
@@ -296,6 +304,63 @@ async def get_user_families(
     # Extract just the IDs from the query results
     return [family_id for (family_id,) in family_ids]
 
+@router.get("/invite/{code}", response_model=InviteResponse)
+async def get_invite_details(
+    code: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    invite = db.query(FamilyInvite).filter(
+        FamilyInvite.code == code,
+        FamilyInvite.expires_at > datetime.utcnow(),
+        FamilyInvite.uses < FamilyInvite.max_uses
+    ).first()
+
+    if not invite:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired invite code"
+        )
+
+    return {
+        "code": invite.code,
+        "expires_at": invite.expires_at,
+        "max_uses": invite.max_uses,
+        "family_id": invite.family_id
+    }
+
+@router.get("/{family_id}/invites", response_model=List[InviteResponse])
+async def get_family_invites(
+    family_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    is_member = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id
+    ).first()
+    
+    if not is_member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must be a member of this family to view its invites"
+        )
+    
+    invites = db.query(FamilyInvite).filter(
+        FamilyInvite.family_id == family_id,
+        FamilyInvite.expires_at > datetime.utcnow(),
+        FamilyInvite.uses < FamilyInvite.max_uses
+    ).all()
+    
+    return [
+        {
+            "code": invite.code,
+            "expires_at": invite.expires_at,
+            "max_uses": invite.max_uses,
+            "family_id": invite.family_id
+        }
+        for invite in invites
+    ]
 
 class SendMessageRequest(BaseModel):
     text: str
@@ -318,7 +383,7 @@ async def send_message(
     msg = create_message(
         db=db,
         user_id=current_user.id,
-        chatroom_id=family_id, 
+        chatroom_id=family_id,
         message_text=payload.text,
         time_stamp=datetime.utcnow()
     )
