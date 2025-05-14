@@ -31,6 +31,7 @@ class FamilyInfo(BaseModel):
     id: int
     admin: int  # user_id of the admin
     members: List[MemberInfo]
+    family_name: str  # Add family_name
     
 class CreateInviteRequest(BaseModel):
     family_id: int
@@ -85,7 +86,8 @@ async def create_family(
         return {
             "id": db_family.id,
             "admin": current_user.id,
-            "members": members
+            "members": members,
+            "family_name": db_family.family_name  # Include family_name in response
         }
     except Exception as e:
         db.rollback()
@@ -241,7 +243,7 @@ async def delete_family_endpoint(
             detail=f"Failed to delete family: {str(e)}"
         )
         
-@router.get("/{family_id}/members", response_model=List[MemberInfo])
+@router.get("/{family_id}/members", response_model=dict)
 async def get_family_members(
     family_id: int,
     db: Session = Depends(get_db),
@@ -270,8 +272,13 @@ async def get_family_members(
     ).filter(
         Registered.family_id == family_id
     ).all()
+
+    family = db.query(Family).filter(Family.id == family_id).first()
     
-    return [MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members]
+    return {
+        "family_name": family.family_name,
+        "members": [MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members]
+    }
 
 @router.get("/my-families", response_model=List[int])
 async def get_user_families(
