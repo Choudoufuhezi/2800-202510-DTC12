@@ -99,6 +99,7 @@ class Memory(Base):
     location = Column(JSON)
     tags = Column(String)
     file_url = Column(String)
+    cloudinary_id = Column(String)
     date_for_notification = Column(DateTime, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"))
     family_id = Column(Integer, ForeignKey("family.id"))
@@ -212,11 +213,12 @@ def create_family_invite(db, family_id: int, code: int, created_by: int, expires
     db.refresh(db_invite)
     return db_invite
 
-def create_memory(db, location: str, tags: str, file_url: str, date_for_notification: datetime, user_id: int, family_id: int):
+def create_memory(db, location: dict, tags: str, file_url: str, cloudinary_id: str, date_for_notification: datetime, user_id: int, family_id: int):
     db_memory = Memory(
         location=location,
         tags=tags,
         file_url=file_url,
+        cloudinary_id=cloudinary_id,
         date_for_notification=date_for_notification,
         user_id=user_id,
         family_id=family_id

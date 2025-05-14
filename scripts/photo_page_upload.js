@@ -14,7 +14,7 @@ addMorePhotos.addEventListener('click', () => {
     fileInput.click();
 });
 
-// --- Comment fetch APIs ---
+//  Comment fetch APIs 
 async function getComments(imageId) {
     return [
         { user: "Alice", text: "Nice shot!" },
@@ -22,13 +22,7 @@ async function getComments(imageId) {
     ];
 }
 
-// Comment posting API
-async function postComment(imageId, text) {
-    console.log(`(faked) POST comment "${text}" for image ${imageId}`);
-    return { success: true };
-}
-
-// --- Image Data API ---
+// Image Data API 
 async function getImageData(imageId) {
     const location = await getLocation();
     return {
@@ -39,19 +33,55 @@ async function getImageData(imageId) {
     };
 }
 
-fileInput.addEventListener("change", (event) => {
+// Comment posting API
+async function postComment(imageId, text) {
+    console.log(`(faked) POST comment "${text}" for image ${imageId}`);
+    return { success: true };
+}
+
+// Uploading image to Cloudinary
+fileInput.addEventListener("change", async (event) => {
     const file = event.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-        addMorePhotos.classList.remove('hidden');
+    if (!file) return;
 
-        const reader = new FileReader();
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "digital_family_vault");
 
-        reader.onload = function (event) {
-            removePhotoEmptyMessage.classList.add('hidden');
+    try {
+        const upload_cloudinary = await fetch(`https://api.cloudinary.com/v1_1/dz7lbivvf/image/upload`, {
+            method: "POST",
+            body: formData
+        });
 
-            const img = document.createElement('img');
-            img.src = event.target.result;
-            img.dataset.imageId = Date.now().toString();
+        const result = await upload_cloudinary.json();
+
+        if (result.secure_url) {
+            const imageURL = result.secure_url;
+            const publicID = result.public_id;
+
+            console.log("Upload successful");
+            console.log("Image URL:", imageURL);
+            console.log("Cloudinary ID:", publicID);
+
+            const location = await getLocation();
+
+            await uploadMemory({
+                location: location,
+                file_url: imageURL,
+                cloudinary_id: publicID,
+                tags: "sample, test",
+                family_id: 1 // Update with family ID 
+            });
+
+            // Removing empty message and show add more photos button
+            removePhotoEmptyMessage.classList.add("hidden");
+            addMorePhotos.classList.remove("hidden");
+
+            // Create and display uploaded image
+            const img = document.createElement("img");
+            img.src = imageURL;
+            img.dataset.imageId = publicID;
             img.className = "max-w-full h-auto rounded shadow";
 
             img.addEventListener('click', async () => {
@@ -67,28 +97,25 @@ fileInput.addEventListener("change", (event) => {
 
                 const modalContent = document.createElement('div');
                 modalContent.className = "bg-white pt-2 pb-6 px-6 rounded shadow-lg max-w-md w-full";
+
                 const header = document.createElement('div');
                 header.className = "flex justify-between items-center";
 
-                // Delete button at top left using the trash can icon
                 const deleteButtonModal = document.createElement('button');
                 deleteButtonModal.innerHTML = '<i class="fas fa-trash"></i>';
                 deleteButtonModal.className = "text-red-500 hover:text-red-700 p-4 text-xl";
                 deleteButtonModal.addEventListener('click', () => {
                     if (confirm("Are you sure you want to delete this photo?")) {
-                        img.remove(); // Remove the photo from the grid
-                        modal.remove(); // Close the modal
-
-                        // If no photos remain, show the "Get started" message
+                        img.remove();
+                        modal.remove();
                         if (photoGrid.children.length === 0) {
                             removePhotoEmptyMessage.classList.remove('hidden');
-                            addMorePhotos.classList.add('hidden')
+                            addMorePhotos.classList.add('hidden');
                         }
                     }
                 });
                 header.appendChild(deleteButtonModal);
 
-                // Close button at top right.
                 const closeButton = document.createElement('button');
                 closeButton.innerHTML = '<i class="fas fa-times"></i>';
                 closeButton.className = "text-gray-600 hover:text-gray-800 p-4 text-xl";
@@ -107,19 +134,15 @@ fileInput.addEventListener("change", (event) => {
                 description.className = "text-gray-700 mb-4";
                 modalContent.appendChild(description);
 
-
-                const tags = document.createElement('p'); 
-                tags.innerText = `Tags: ${data.tags}`; 
-                tags.className = "text-gray-700 mb-4";    
+                const tags = document.createElement('p');
+                tags.innerText = `Tags: ${data.tags}`;
+                tags.className = "text-gray-700 mb-4";
                 modalContent.appendChild(tags);
 
-                // Edit button
                 const editButton = document.createElement('button');
                 editButton.innerHTML = '<i class="fas fa-edit"></i>';
                 editButton.className = "bg-sky-400 text-white px-2 py-1 hover:bg-sky-300 rounded mr-2 mb-4";
                 modalContent.appendChild(editButton);
-                
-                console.log(data.geolocation);
 
                 const geolocation = document.createElement('p');
                 geolocation.innerText = `Location: ${data.geolocation.location.address.city}, ${data.geolocation.location.address.country}`;
@@ -147,14 +170,12 @@ fileInput.addEventListener("change", (event) => {
                 const commentSubmit = document.createElement('button');
                 commentSubmit.type = "submit";
                 commentSubmit.innerHTML = '<i class="fas fa-paper-plane"></i>';
-                commentSubmit.className = "bg-indigo-600 text-white px-4 py-2 hover:bg-indigo-700  rounded";
+                commentSubmit.className = "bg-indigo-600 text-white px-4 py-2 hover:bg-indigo-700 rounded";
                 commentForm.appendChild(commentInput);
                 commentForm.appendChild(commentSubmit);
                 commentsSection.appendChild(commentForm);
 
                 modalContent.appendChild(commentsSection);
-                modal.appendChild(modalContent);
-                document.body.appendChild(modal);
 
                 async function loadComments() {
                     const comments = await getComments(img.dataset.imageId);
@@ -181,54 +202,63 @@ fileInput.addEventListener("change", (event) => {
                     });
                 }
 
+                loadComments();
+                modal.appendChild(modalContent);
+                document.body.appendChild(modal);
+
                 commentForm.addEventListener('submit', async e => {
                     e.preventDefault();
                     const text = commentInput.value.trim();
                     if (!text) return;
-                    await postComment(img.dataset.imageId, text);
+                    console.log(`(faked) POST comment "${text}" for image ${img.dataset.imageId}`);
                     commentInput.value = "";
-                    await loadComments();
                 });
-
-                loadComments();
             });
 
             photoGrid.appendChild(img);
-        };
 
-        reader.readAsDataURL(file);
-    } else {
-        if (photoGrid.children.length === 0) {
-            removePhotoEmptyMessage.classList.remove('hidden');
+        } else {
+            alert("Upload failed. No secure_url returned.");
+            console.error(result);
         }
+
+    } catch (error) {
+        console.error("Cloudinary upload error:", error);
+        alert("Upload failed. Check console for details.");
     }
 });
 
-async function uploadMemory({ location, fileLocation, tags, familyId, timeStamp }) {
+async function uploadMemory({ location, file_url, cloudinary_id, tags, family_id }) {
     const token = localStorage.getItem("token");
-    const response = await fetch("http://localhost:8000/memories", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-            location,
-            tags,
-            file_location: fileLocation,
-            family_id: familyId,
-            time_stamp: timeStamp
-        })
-    });
 
-    if (!response.ok) {
-        const contentType = response.headers.get("content-type");
-        const errorText = contentType && contentType.includes("application/json")
-            ? (await response.json()).detail
-            : await response.text();
+    try {
+        const response = await fetch("http://localhost:8000/memories", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                location,
+                tags,
+                file_url,
+                cloudinary_id,
+                family_id
+            })
+        });
 
-        throw new Error(errorText || "Upload failed.");
+        if (!response.ok) {
+            const error = await response.json();
+            console.error("Failed to upload memory:", error);
+            return null;
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+        return null;
     }
-
-    return await response.json();
 }
+
+
+
