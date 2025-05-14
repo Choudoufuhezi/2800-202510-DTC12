@@ -21,23 +21,26 @@
     <div id="familyIconContainer"></div>
 
     <!-- Main Content -->
-    <div class="min-h-[calc(102vh-64px-64px)] flex items-center justify-center">
-        <div class="w-full max-w-md h-screen bg-white shadow-lg flex flex-col">
-
-            <!-- Header -->
-            <div class="p-4 bg-blue-500 text-white text-xl font-semibold shadow flex justify-between items-center relative">
-                <span>Messages</span>
-                <button id="announcement-btn" class="bg-white text-blue-500 px-3 py-1 rounded text-sm hover:bg-gray-200">
-                    🔔Announcements
+    <div class="w-screen h-[calc(100vh-64px-64px)]">
+        <div class="flex flex-col shadow-lg w-full h-full rounded-none overflow-hidden">
+    
+    
+            <!-- Announcement Button -->
+            <div class="w-full flex justify-end px-4 pt-4">
+                <button id="announcement-btn"
+                    class="bg-blue-500 text-white px-4 py-2 rounded-full text-sm shadow hover:bg-blue-600">
+                    🔔 Announcements
                 </button>
             </div>
-
-            <!-- Chat List -->
-            <div id="chat-list" class="flex-1 overflow-y-auto divide-y divide-gray-200 bg-white">
+    
+            <!-- Chat List (Scrollable) -->
+            <div id="chat-list" class="grow overflow-y-auto divide-y divide-gray-200 px-4 pb-4">
                 <!-- JavaScript will insert chat rows here -->
             </div>
+
         </div>
     </div>
+
 
     <!-- Announcement Modal -->
     <div id="announcement-modal"
