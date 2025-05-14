@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime
 from typing import Optional
@@ -5,6 +6,31 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from database import Registered, User, create_memory, delete_memory, get_db
 from family_management import get_current_user
+
+# Set your Cloudinary credentials
+# ==============================
+from dotenv import load_dotenv
+load_dotenv()
+
+# Import the Cloudinary libraries
+# ==============================
+import cloudinary
+from cloudinary import CloudinaryImage
+import cloudinary.uploader
+import cloudinary.api
+
+# Import to format the JSON responses
+# ==============================
+import json
+
+# Set configuration parameter:
+# ==============================
+config = cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    secure=False  # Update to True when using HTTPS
+)
 
 router = APIRouter(prefix="/memories")
 
@@ -56,7 +82,7 @@ async def create_memory_endpoint(
             db=db,
             location=memory_data.location,
             tags=memory_data.tags,
-            file=memory_data.file,
+            file=memory_data.file_url,
             date_for_notification=date_for_notification,
             user_id=current_user.id,
             family_id=memory_data.family_id
