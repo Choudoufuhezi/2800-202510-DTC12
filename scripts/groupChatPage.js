@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     let chat = JSON.parse(localStorage.getItem("activeChat"));
 
+    // Mock data in case there is no active chat in localStorage
     if (!chat) {
         chat = {
             name: "Robinson Family",
@@ -46,22 +47,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Open Group Info Modal
     document.getElementById("info-btn").addEventListener("click", () => {
+        // Set group name and invite link
         groupNameSpan.textContent = chat.name;
         inviteLink.href = `https://example.com/invite/${chat.id}`;
         inviteLink.textContent = inviteLink.href;
 
+        // Clear previous member list and debug
         memberList.innerHTML = "";
-        (chat.members || []).forEach(name => {
-            const li = document.createElement("li");
-            li.textContent = name;
-            li.className = "cursor-pointer text-blue-600 hover:underline";
-            li.addEventListener("click", () => {
-                selectedMember = name;
-                memberNameSpan.textContent = name;
-                memberDetailModal.classList.remove("hidden");
+        console.log("Members in chat:", chat.members);
+
+        // Check if members exist and loop through them
+        if (chat.members && chat.members.length > 0) {
+            chat.members.forEach(name => {
+                const li = document.createElement("li");
+                li.textContent = name;
+                li.className = "cursor-pointer text-blue-600 hover:underline";
+                li.addEventListener("click", () => {
+                    selectedMember = name;
+                    memberNameSpan.textContent = name;
+                    memberDetailModal.classList.remove("hidden");
+                });
+                memberList.appendChild(li);
             });
+        } else {
+            const li = document.createElement("li");
+            li.textContent = "No members found.";
             memberList.appendChild(li);
-        });
+        }
 
         groupInfoModal.classList.remove("hidden");
     });
