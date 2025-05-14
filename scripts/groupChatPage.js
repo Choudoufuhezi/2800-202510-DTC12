@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let replyTo = null;
 
-    const groupHeader = document.getElementById("group-header");
+    //const groupHeader = document.getElementById("group-header");
     const groupInfoModal = document.getElementById("group-info");
     const closeGroupInfo = document.getElementById("close-group-info");
     const groupNameSpan = document.getElementById("info-group-name");
@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("h2").textContent = chat.name;
     document.querySelector("img").src = chat.avatar;
 
-    groupHeader.addEventListener("click", () => {
+    document.getElementById("info-btn").addEventListener("click", () => {
         groupNameSpan.textContent = chat.name;
         inviteLink.href = `https://example.com/invite/${chat.id}`;
         inviteLink.textContent = inviteLink.href;

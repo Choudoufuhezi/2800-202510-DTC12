@@ -26,13 +26,14 @@
     <!--Main Content-->
     <div class="h-[calc(100vh-140px)] w-full flex items-center justify-center">
         <div class="w-full max-w-full h-full flex flex-col">
-
-            <!-- Header -->
-            <div id="group-header" class="flex items-center gap-3 p-4 bg-blue-500 text-white shadow-md cursor-pointer">
-                <!-- <img id="group-avatar" src="https://via.placeholder.com/40" alt="Profile"
-                    class="w-10 h-10 rounded-full border-2 border-white" /> -->
-                <h2 id="group-name" class="text-lg font-semibold"></h2>
+        
+            <!-- Info icon at top-right -->
+            <div class="flex justify-end px-4 pt-4">
+                <button id="info-btn" class="text-blue-600 hover:text-blue-800 text-2xl">
+                    <i class="fas fa-info-circle"></i>
+                </button>
             </div>
+
 
             <!-- Chat Box -->
             <div id="chat-box" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 bg-gray-50">
