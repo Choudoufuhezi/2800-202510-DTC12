@@ -26,9 +26,56 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
+    // Initialize chat UI elements
+    const groupInfoModal = document.getElementById("group-info");
+    const closeGroupInfo = document.getElementById("close-group-info");
+    const groupNameSpan = document.getElementById("info-group-name");
+    const inviteLink = document.getElementById("invite-link");
+    const memberList = document.getElementById("member-list");
+
+    const memberDetailModal = document.getElementById("member-detail-modal");
+    const closeMemberDetail = document.getElementById("close-member-detail");
+    const memberNameSpan = document.getElementById("member-name");
+    const dmButton = document.getElementById("dm-button");
+
+    const input = document.getElementById("message-input");
+    const sendBtn = document.getElementById("send-btn");
+    const chatBox = document.getElementById("chat-box");
+
+    let selectedMember = null;
+    let replyTo = null;
+    const chatroomId = 1;
+
+    // Fetch message history
+    try {
+        const response = await fetch(`http://localhost:8000/chatrooms/${chatroomId}/messages`, {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error("Failed to fetch message history");
+        }
+        const messages = await response.json();
+        console.log("Fetched message history:", messages);
+
+        // Display message history
+        messages.forEach(msg => {
+            const isOwnMessage = msg.sender_id.toString() === userId;
+            const bubble = createMessageBubble(
+                isOwnMessage ? "You" : `User ${msg.sender_id}`,
+                msg.content,
+                msg.id
+            );
+            chatBox.appendChild(bubble);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+    } catch (error) {
+        console.error("Error fetching message history:", error);
+    }
+
     // WebSocket setup
     const ws = new WebSocket(`ws://localhost:8000/ws/${userId}`);
-    const chatroomId = 1;
 
     console.log(`User ${userId}: Connected to WebSocket`);
 
@@ -74,25 +121,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     ws.onerror = (error) => {
         console.error(`User ${userId}: WebSocket error:`, error);
     };
-
-    // Initialize chat UI elements
-    const groupInfoModal = document.getElementById("group-info");
-    const closeGroupInfo = document.getElementById("close-group-info");
-    const groupNameSpan = document.getElementById("info-group-name");
-    const inviteLink = document.getElementById("invite-link");
-    const memberList = document.getElementById("member-list");
-
-    const memberDetailModal = document.getElementById("member-detail-modal");
-    const closeMemberDetail = document.getElementById("close-member-detail");
-    const memberNameSpan = document.getElementById("member-name");
-    const dmButton = document.getElementById("dm-button");
-
-    const input = document.getElementById("message-input");
-    const sendBtn = document.getElementById("send-btn");
-    const chatBox = document.getElementById("chat-box");
-
-    let selectedMember = null;
-    let replyTo = null;
 
     function createMessageBubble(from, text, messageId = Date.now(), replyText = null) {
         console.log(`User ${userId}: Creating message bubble - From: ${from}, Text: ${text}`);
