@@ -210,7 +210,7 @@ function modal(img, data) {
         });
     }
 
-        commentForm.addEventListener('submit', async e => {
+    commentForm.addEventListener('submit', async e => {
         e.preventDefault();
         const text = commentInput.value.trim();
         if (!text) return;
@@ -222,6 +222,27 @@ function modal(img, data) {
     modal.appendChild(modalContent);
     document.body.appendChild(modal);
 };
+
+window.addEventListener("DOMContentLoaded", async () => {
+    const memberUserId = 1; // replace with dynamic logic
+    const familyId = 1; // replace with dynamic logic
+    const memories = await fetchFamilyMemberMemories(memberUserId, familyId);
+    if (memories && memories.length > 0) {
+        removePhotoEmptyMessage.classList.add("hidden");
+        addMorePhotos.classList.remove("hidden");
+    }
+    memories.forEach((memory) => {
+        const img = document.createElement("img");
+        img.src = memory.file_url;
+        img.dataset.imageId = memory.cloudinary_id;
+        img.className = "max-w-full h-auto rounded shadow";
+        img.addEventListener("click", async () => {
+            const data = await getImageData(img.dataset.imageId);
+            modal(img, data);
+        });
+        photoGrid.appendChild(img);
+    });
+});
 
 // Uploading image to Cloudinary
 fileInput.addEventListener("change", async (event) => {
