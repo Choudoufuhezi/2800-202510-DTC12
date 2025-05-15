@@ -1,24 +1,35 @@
 document.addEventListener("DOMContentLoaded", () => {
-    let chat = JSON.parse(localStorage.getItem("activeChat"));
+    // WebSocket setup
+    const ws = new WebSocket(`ws://localhost:8000/ws/1`); // placeholder user ID 
+    const chatroomId = 1; //  placeholder chatroom ID
 
-    if (!chat) {
-        chat = {
-            name: "Robinson Family",
-            id: "family123",
-            avatar: "https://via.placeholder.com/40",
-            members: ["Alice Johnson", "Bob Smith", "Charlie Wang", "Diana Patel"],
-            messages: [
-                { from: "Alice Johnson", text: "Hi everyone!" },
-                { from: "You", text: "Hey Alice!" },
-                { from: "Charlie Wang", text: "Are we meeting tonight?" },
-                { from: "You", text: "Yes, 7 PM works." }
-            ]
-        };
-        localStorage.setItem("activeChat", JSON.stringify(chat));
-    }
+    ws.onopen = () => {
+        console.log("Connected to WebSocket");
+        // Join the chatroom
+        ws.send(JSON.stringify({
+            type: "join_chatroom",
+            chatroom_id: chatroomId
+        }));
+    };
 
-    let replyTo = null;
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "chat_message") {
+            const bubble = createMessageBubble(
+                data.sender_id === "1" ? "You" : `User ${data.sender_id}`,
+                data.content,
+                data.message_id
+            );
+            chatBox.appendChild(bubble);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    };
 
+    ws.onclose = () => {
+        console.log("Disconnected from WebSocket");
+    };
+
+    // Initialize chat UI elements
     const groupInfoModal = document.getElementById("group-info");
     const closeGroupInfo = document.getElementById("close-group-info");
     const groupNameSpan = document.getElementById("info-group-name");
@@ -35,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatBox = document.getElementById("chat-box");
 
     let selectedMember = null;
+    let replyTo = null;
 
     function createMessageBubble(from, text, messageId = Date.now(), replyText = null) {
         const bubbleWrapper = document.createElement("div");
@@ -106,15 +118,14 @@ document.addEventListener("DOMContentLoaded", () => {
         return bubbleWrapper;
     }
 
-    // No longer setting group name or avatar since header is removed
-
     document.getElementById("info-btn").addEventListener("click", () => {
-        groupNameSpan.textContent = chat.name;
-        inviteLink.href = `https://example.com/invite/${chat.id}`;
+        groupNameSpan.textContent = "Chatroom " + chatroomId;
+        inviteLink.href = `https://example.com/invite/${chatroomId}`;
         inviteLink.textContent = inviteLink.href;
 
         memberList.innerHTML = "";
-        (chat.members || []).forEach(name => {
+        // For now, just show placeholder members
+        ["User 1", "User 2"].forEach(name => {
             const li = document.createElement("li");
             li.textContent = name;
             li.className = "cursor-pointer text-blue-600 hover:underline";
@@ -143,11 +154,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    chat.messages.forEach(msg => {
-        const bubble = createMessageBubble(msg.from, msg.text);
-        chatBox.appendChild(bubble);
-    });
-
     function sendMessage() {
         const text = input.value.trim();
         if (!text) return;
@@ -156,6 +162,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const oldBubble = document.querySelector(`[data-id="${replyTo.messageId}"] div`);
             if (oldBubble) oldBubble.textContent = text;
         } else {
+            // Send message through WebSocket
+            ws.send(JSON.stringify({
+                type: "chat_message",
+                chatroom_id: chatroomId,
+                content: text
+            }));
+
+            // Create local message bubble
             const replyText = replyTo?.originalText || null;
             const bubble = createMessageBubble("You", text, Date.now(), replyText);
             chatBox.appendChild(bubble);
