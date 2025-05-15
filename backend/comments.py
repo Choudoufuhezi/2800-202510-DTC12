@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
+from typing import List
 from sqlalchemy.orm import Session
 
 from database import Memory, User, Comment, Registered, create_comment, get_db
@@ -20,7 +21,7 @@ class CommentResponse(BaseModel):
 class CommentDeleteResponse(BaseModel):
     message: str
 
-@router.get("/memory/{memory_id}", response_model=list[CommentResponse])
+@router.get("/memory/{memory_id}", response_model=List[CommentResponse])
 async def get_comments_endpoint(
     memory_id: int,
     db: Session = Depends(get_db),
