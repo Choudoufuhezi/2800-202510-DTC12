@@ -1,8 +1,17 @@
 document.addEventListener("DOMContentLoaded", () => {
-    let chat = JSON.parse(localStorage.getItem("activeChat"));
+    // Try reading chat from localStorage
+    let chat = null;
+    try {
+        const savedChat = localStorage.getItem("activeChat");
+        if (savedChat) {
+            chat = JSON.parse(savedChat);
+        }
+    } catch (err) {
+        console.error("Invalid chat data in localStorage:", err);
+    }
 
-    // Mock data
-    if (!chat) {
+    // Fallback mock data if not found or invalid
+    if (!chat || !Array.isArray(chat.members)) {
         chat = {
             name: "Robinson Family",
             id: "family123",
@@ -17,6 +26,9 @@ document.addEventListener("DOMContentLoaded", () => {
         };
         localStorage.setItem("activeChat", JSON.stringify(chat));
     }
+
+    // Reload from storage again to ensure consistent state
+    chat = JSON.parse(localStorage.getItem("activeChat"));
 
     let replyTo = null;
 
@@ -37,27 +49,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let selectedMember = null;
 
-    // Settings Modal Elements
+    // Settings
     const settingsModal = document.getElementById("settings-modal");
     const settingsBtn = document.getElementById("settings-btn");
     const closeSettingsBtn = document.getElementById("close-settings");
 
-    // Notification State (true = notifications on, false = notifications off)
     let notificationsEnabled = true;
 
     // Open Group Info Modal
     document.getElementById("info-btn").addEventListener("click", () => {
-        // Set group name and invite link
         groupNameSpan.textContent = chat.name;
         inviteLink.href = `https://example.com/invite/${chat.id}`;
         inviteLink.textContent = inviteLink.href;
 
-        // Clear previous member list and debug
         memberList.innerHTML = "";
-        console.log("Members in chat:", chat.members);
 
-        // Check if members exist and loop through them
-        if (chat.members && chat.members.length > 0) {
+        if (Array.isArray(chat.members) && chat.members.length > 0) {
             chat.members.forEach(name => {
                 const li = document.createElement("li");
                 li.textContent = name;
@@ -78,48 +85,34 @@ document.addEventListener("DOMContentLoaded", () => {
         groupInfoModal.classList.remove("hidden");
     });
 
-    // Close Group Info Modal
     closeGroupInfo.addEventListener("click", () => {
         groupInfoModal.classList.add("hidden");
     });
 
-    // Open Settings Modal when Settings Button is Clicked
     settingsBtn.addEventListener("click", () => {
         settingsModal.classList.remove("hidden");
     });
 
-    // Close Settings Modal when Close Button is Clicked
     closeSettingsBtn.addEventListener("click", () => {
         settingsModal.classList.add("hidden");
     });
 
-    // Toggle Notification Setting when Bell Icon is Clicked
-    const notificationToggleButton = document.getElementById("notification-toggle");
-
-    notificationToggleButton.addEventListener("click", () => {
+    document.getElementById("notification-toggle").addEventListener("click", () => {
         notificationsEnabled = !notificationsEnabled;
-
-        // Update Bell Icon based on the state
-        if (notificationsEnabled) {
-            notificationToggleButton.innerHTML = '<i class="fas fa-bell"></i>'; // Filled Bell (Notifications On)
-        } else {
-            notificationToggleButton.innerHTML = '<i class="far fa-bell"></i>'; // Empty Bell (Notifications Off)
-        }
+        const icon = notificationsEnabled ? '<i class="fas fa-bell"></i>' : '<i class="far fa-bell"></i>';
+        document.getElementById("notification-toggle").innerHTML = icon;
     });
 
-    // Close Member Detail Modal
     closeMemberDetail.addEventListener("click", () => {
         memberDetailModal.classList.add("hidden");
     });
 
-    // Direct Message button click
     dmButton.addEventListener("click", () => {
         if (selectedMember) {
             window.location.href = `chat.html?user=${encodeURIComponent(selectedMember)}`;
         }
     });
 
-    // Create Message Bubbles
     function createMessageBubble(from, text, messageId = Date.now(), replyText = null) {
         const bubbleWrapper = document.createElement("div");
         bubbleWrapper.className = `flex ${from === "You" ? "justify-end" : "justify-start"} relative`;
@@ -190,13 +183,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return bubbleWrapper;
     }
 
-    // Display Messages
     chat.messages.forEach(msg => {
         const bubble = createMessageBubble(msg.from, msg.text);
         chatBox.appendChild(bubble);
     });
 
-    // Send Message
     function sendMessage() {
         const text = input.value.trim();
         if (!text) return;
