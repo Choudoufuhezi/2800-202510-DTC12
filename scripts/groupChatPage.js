@@ -1,22 +1,64 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    // Get token
+    const token = localStorage.getItem("token");
+    if (!token) {
+        console.error("Not logged in");
+        window.location.href = "/login.html";
+        return;
+    }
+
+    // Get user ID
+    let userId;
+    try {
+        const response = await fetch("http://localhost:8000/user/id", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error("Failed to get user ID");
+        }
+        const data = await response.json();
+        userId = data.user_id.toString();
+        console.log("Got user ID:", userId);
+    } catch (error) {
+        console.error("Error getting user ID:", error);
+        return;
+    }
+
     // WebSocket setup
-    const ws = new WebSocket(`ws://localhost:8000/ws/1`); // placeholder user ID 
-    const chatroomId = 1; //  placeholder chatroom ID
+    const ws = new WebSocket(`ws://localhost:8000/ws/${userId}`);
+    const chatroomId = 1;
+
+    console.log(`User ${userId}: Connected to WebSocket`);
 
     ws.onopen = () => {
-        console.log("Connected to WebSocket");
+        console.log(`User ${userId}: Connected to WebSocket`);
         // Join the chatroom
-        ws.send(JSON.stringify({
+        const joinMessage = {
             type: "join_chatroom",
             chatroom_id: chatroomId
-        }));
+        };
+        console.log(`User ${userId}: Sending join message:`, joinMessage);
+        ws.send(JSON.stringify(joinMessage));
     };
 
     ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (data.type === "chat_message") {
+        console.log(`User ${userId}: Received message:`, data);
+        
+        // Handle join confirmation
+        if (data.status === "success") {
+            console.log(`User ${userId}: ${data.message}`);
+            return;
+        }
+        
+        // Handle chat messages
+        if (data.sender_id && data.content) {
+            console.log(`User ${userId}: Processing chat message from User ${data.sender_id}`);
+            const isOwnMessage = data.sender_id === userId;
             const bubble = createMessageBubble(
-                data.sender_id === "1" ? "You" : `User ${data.sender_id}`,
+                isOwnMessage ? "You" : `User ${data.sender_id}`,
                 data.content,
                 data.message_id
             );
@@ -26,7 +68,11 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     ws.onclose = () => {
-        console.log("Disconnected from WebSocket");
+        console.log(`User ${userId}: Disconnected from WebSocket`);
+    };
+
+    ws.onerror = (error) => {
+        console.error(`User ${userId}: WebSocket error:`, error);
     };
 
     // Initialize chat UI elements
@@ -49,6 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let replyTo = null;
 
     function createMessageBubble(from, text, messageId = Date.now(), replyText = null) {
+        console.log(`User ${userId}: Creating message bubble - From: ${from}, Text: ${text}`);
         const bubbleWrapper = document.createElement("div");
         bubbleWrapper.className = `flex ${from === "You" ? "justify-end" : "justify-start"} relative`;
         bubbleWrapper.dataset.id = messageId;
@@ -163,11 +210,13 @@ document.addEventListener("DOMContentLoaded", () => {
             if (oldBubble) oldBubble.textContent = text;
         } else {
             // Send message through WebSocket
-            ws.send(JSON.stringify({
+            const message = {
                 type: "chat_message",
                 chatroom_id: chatroomId,
                 content: text
-            }));
+            };
+            console.log(`User ${userId}: Sending message:`, message);
+            ws.send(JSON.stringify(message));
 
             // Create local message bubble
             const replyText = replyTo?.originalText || null;
