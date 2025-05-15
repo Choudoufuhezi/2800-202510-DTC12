@@ -192,4 +192,47 @@ async def get_user_id(current_user: User = Depends(get_current_user)):
     Get the current user's ID
     """
     return {"user_id": current_user.id}
+
+@router.get("/chatrooms/family/{family_id}")
+async def get_family_chat(
+    family_id: int = Body(..., embed=True),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get the group chat for a family if it exists
+    """
+    # Verify user is part of the family
+    is_member = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id
+    ).first()
+    
+    if not is_member:
+        raise HTTPException(
+            status_code=403,
+            detail="You must be a member of this family to view its chat"
+        )
+    
+    # Find the family chat by name pattern
+    family_chat = db.query(ChatRoom).filter(
+        ChatRoom.name == "Family Chat"
+    ).join(
+        UserChatRoom,
+        UserChatRoom.chatroom_id == ChatRoom.id
+    ).join(
+        Registered,
+        Registered.user_id == UserChatRoom.user_id
+    ).filter(
+        Registered.family_id == family_id
+    ).first()
+    
+    if not family_chat:
+        return None
+    
+    return {
+        "chatroom_id": family_chat.id,
+        "name": family_chat.name,
+        "created_date": family_chat.created_date.isoformat() if family_chat.created_date else None
+    }
     
