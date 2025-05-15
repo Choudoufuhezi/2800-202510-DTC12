@@ -7,7 +7,8 @@ certifi==2025.4.26
 cffi==1.17.1
 charset-normalizer==3.4.1
 click==8.1.8
-cloudinary
+cloudinary==1.44.0
+colorama==0.4.6
 cryptography==44.0.2
 ecdsa==0.19.1
 fastapi==0.115.12
@@ -15,12 +16,13 @@ google-auth==2.39.0
 google-auth-oauthlib==1.2.2
 h11==0.16.0
 httpcore==1.0.9
+httptools==0.6.4
 httpx==0.28.1
 idna==3.10
 itsdangerous==2.2.0
 oauthlib==3.2.2
 passlib==1.7.4
-pyasn1
+pyasn1==0.6.1
 pyasn1_modules==0.4.2
 pycparser==2.22
 pydantic==2.11.4
@@ -29,6 +31,7 @@ pydantic_core==2.33.2
 PyJWT==2.10.1
 python-dotenv==1.1.0
 python-multipart==0.0.20
+PyYAML==6.0.2
 requests==2.32.3
 requests-oauthlib==2.0.0
 rsa==4.9.1
@@ -40,3 +43,5 @@ typing-inspection==0.4.0
 typing_extensions==4.13.2
 urllib3==2.4.0
 uvicorn==0.34.2
+watchfiles==1.0.5
+websockets==15.0.1
