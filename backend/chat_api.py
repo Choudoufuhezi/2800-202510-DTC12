@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from database import Message, UserChatRoom, create_chatroom, create_userchatroom, get_db, User, ChatRoom
 from datetime import datetime
+from family_management import get_current_user
 
 router = APIRouter()
 
@@ -40,18 +41,25 @@ def get_chatroom_messages(db: Session, chatroom_id: int) -> List[dict]:
     } for msg in messages]
 
 @router.get("/chatrooms/{chatroom_id}/messages")
-async def get_messages(chatroom_id: int, user_id: int, db: Session = Depends(get_db)):
+async def get_messages(
+    chatroom_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Get all messages for a chatroom
     """
     # Verify membership
-    verify_chatroom_membership(db, user_id, chatroom_id)
+    verify_chatroom_membership(db, current_user.id, chatroom_id)
     
     # Get and return messages
     return get_chatroom_messages(db, chatroom_id)
 
-@router.get("/users/{user_id}/chatrooms")
-async def get_user_chatrooms(user_id: int, db: Session = Depends(get_db)):
+@router.get("/users/chatrooms")
+async def get_user_chatrooms(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Get all chatrooms that a user is a member of
     """
@@ -59,7 +67,7 @@ async def get_user_chatrooms(user_id: int, db: Session = Depends(get_db)):
         ChatRoom,
         UserChatRoom.chatroom_id == ChatRoom.id
     ).filter(
-        UserChatRoom.user_id == user_id
+        UserChatRoom.user_id == current_user.id
     ).all()
     
     return [{
@@ -69,12 +77,16 @@ async def get_user_chatrooms(user_id: int, db: Session = Depends(get_db)):
     } for chatroom in chatrooms]
 
 @router.get("/chatrooms/{chatroom_id}/members")
-async def get_chatroom_members(chatroom_id: int, user_id: int, db: Session = Depends(get_db)):
+async def get_chatroom_members(
+    chatroom_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Get all members of a specific chatroom
     """
     # Verify membership
-    verify_chatroom_membership(db, user_id, chatroom_id)
+    verify_chatroom_membership(db, current_user.id, chatroom_id)
     
     # Get all members
     members = db.query(User).join(
@@ -91,7 +103,11 @@ async def get_chatroom_members(chatroom_id: int, user_id: int, db: Session = Dep
     } for member in members]
 
 @router.post("/chatrooms/create")
-async def create_group_chat(user_id: int, target_email: str, db: Session = Depends(get_db)):
+async def create_group_chat(
+    target_email: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Create a new group chat with another user by their email
     """
@@ -111,7 +127,7 @@ async def create_group_chat(user_id: int, target_email: str, db: Session = Depen
     )
     
     # Add both users to the chatroom
-    create_userchatroom(db, user_id, chatroom.id)
+    create_userchatroom(db, current_user.id, chatroom.id)
     create_userchatroom(db, target_user.id, chatroom.id)
     
     return { #TODO: use a response model instead, this is rushed
@@ -119,7 +135,8 @@ async def create_group_chat(user_id: int, target_email: str, db: Session = Depen
         "name": chatroom.name,
         "created_date": chatroom.created_date.isoformat(),
         "members": [
-            {"user_id": user_id}, #TODO: support multiple users, can only do a dm for now
+            {"user_id": current_user.id},
             {"user_id": target_user.id}
         ]
     }
+    
