@@ -1,20 +1,27 @@
 document.addEventListener("DOMContentLoaded", () => {
     let chat = null;
+    let chats = {};
+    let activeChatId = null;
+    let replyTo = null;
+    let selectedMember = null;
+
+    // Try loading chats from localStorage
     try {
-        const savedChat = localStorage.getItem("activeChat");
-        if (savedChat) {
-            chat = JSON.parse(savedChat);
-        }
+        const savedChats = localStorage.getItem("chats");
+        const savedActiveChatId = localStorage.getItem("activeChatId");
+        if (savedChats) chats = JSON.parse(savedChats);
+        if (savedActiveChatId) activeChatId = savedActiveChatId;
     } catch (err) {
-        console.error("Invalid chat data in localStorage:", err);
+        console.error("Invalid chats data in localStorage:", err);
     }
 
-    if (!chat || !Array.isArray(chat.members)) {
-        chat = {
+    // If no saved chats, initialize with group chat
+    if (!chats || Object.keys(chats).length === 0) {
+        const groupChat = {
             name: "Robinson Family",
             id: "family123",
             avatar: "https://via.placeholder.com/40",
-            members: ["Alice Johnson", "Bob Smith", "Charlie Wang", "Diana Patel"],
+            members: ["You", "Alice Johnson", "Bob Smith", "Charlie Wang", "Diana Patel"],
             messages: [
                 { from: "Alice Johnson", text: "Hi everyone!" },
                 { from: "You", text: "Hey Alice!" },
@@ -22,13 +29,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 { from: "You", text: "Yes, 7 PM works." }
             ]
         };
-        localStorage.setItem("activeChat", JSON.stringify(chat));
+        chats[groupChat.id] = groupChat;
+        activeChatId = groupChat.id;
+        localStorage.setItem("chats", JSON.stringify(chats));
+        localStorage.setItem("activeChatId", activeChatId);
     }
 
-    chat = JSON.parse(localStorage.getItem("activeChat"));
-    let replyTo = null;
-    let selectedMember = null;
-
+    // DOM Elements
     const groupInfoModal = document.getElementById("group-info");
     const closeGroupInfo = document.getElementById("close-group-info");
     const groupNameSpan = document.getElementById("info-group-name");
@@ -44,61 +51,49 @@ document.addEventListener("DOMContentLoaded", () => {
     const sendBtn = document.getElementById("send-btn");
     const chatBox = document.getElementById("chat-box");
 
-    const settingsModal = document.getElementById("settings-modal");
-    const settingsBtn = document.getElementById("settings-btn");
-    const closeSettingsBtn = document.getElementById("close-settings");
+    // New: Back button to switch from DM to group chat
+    const backBtn = document.getElementById("back-btn");
+    const chatHeader = document.getElementById("chat-user-name");
 
-    let notificationsEnabled = true;
+    // Helper: Save chats and active chat to localStorage
+    function saveChats() {
+        localStorage.setItem("chats", JSON.stringify(chats));
+        localStorage.setItem("activeChatId", activeChatId);
+    }
 
-    document.getElementById("info-btn").addEventListener("click", () => {
-        groupNameSpan.textContent = chat.name;
-        inviteLink.href = `https://example.com/invite/${chat.id}`;
-        inviteLink.textContent = inviteLink.href;
-        memberList.innerHTML = "";
+    // Render chat header (group or DM)
+    function renderHeader() {
+        const currentChat = chats[activeChatId];
+        if (!currentChat) return;
 
-        chat.members.forEach(name => {
-            const li = document.createElement("li");
-            li.textContent = name;
-            li.className = "cursor-pointer text-blue-600 hover:underline";
-            li.addEventListener("click", () => {
-                selectedMember = name;
-                memberNameSpan.textContent = name;
-                memberDetailModal.classList.remove("hidden");
-            });
-            memberList.appendChild(li);
+        if (currentChat.members.length > 2) {
+            chatHeader.textContent = currentChat.name;
+            backBtn.classList.add("hidden");
+            document.getElementById("info-btn").classList.remove("hidden");
+        } else {
+            // DM chat
+            const other = currentChat.members.find(m => m !== "You") || "Chat";
+            chatHeader.textContent = other;
+            backBtn.classList.remove("hidden");
+            document.getElementById("info-btn").classList.add("hidden");
+        }
+    }
+
+    // Clear chat messages and render current chat messages
+    function renderMessages() {
+        chatBox.innerHTML = "";
+        const currentChat = chats[activeChatId];
+        if (!currentChat) return;
+
+        currentChat.messages.forEach(msg => {
+            const bubble = createMessageBubble(msg.from, msg.text);
+            chatBox.appendChild(bubble);
         });
 
-        groupInfoModal.classList.remove("hidden");
-    });
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-    closeGroupInfo.addEventListener("click", () => {
-        groupInfoModal.classList.add("hidden");
-    });
-
-    settingsBtn.addEventListener("click", () => {
-        settingsModal.classList.remove("hidden");
-    });
-
-    closeSettingsBtn.addEventListener("click", () => {
-        settingsModal.classList.add("hidden");
-    });
-
-    document.getElementById("notification-toggle").addEventListener("click", () => {
-        notificationsEnabled = !notificationsEnabled;
-        const icon = notificationsEnabled ? '<i class="fas fa-bell"></i>' : '<i class="far fa-bell"></i>';
-        document.getElementById("notification-toggle").innerHTML = icon;
-    });
-
-    closeMemberDetail.addEventListener("click", () => {
-        memberDetailModal.classList.add("hidden");
-    });
-
-    dmButton.addEventListener("click", () => {
-        if (selectedMember) {
-            window.location.href = `chat.html?user=${encodeURIComponent(selectedMember)}`;
-        }
-    });
-
+    // Create message bubble (keep your styles unchanged)
     function createMessageBubble(from, text, messageId = Date.now(), replyText = null) {
         const bubbleWrapper = document.createElement("div");
         bubbleWrapper.className = `flex ${from === "You" ? "justify-end" : "justify-start"} relative`;
@@ -162,6 +157,11 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             menuBox.querySelector(".delete-btn").addEventListener("click", () => {
+                // Remove from messages array as well
+                const currentChat = chats[activeChatId];
+                if (!currentChat) return;
+                currentChat.messages = currentChat.messages.filter(m => m.text !== text || m.from !== from);
+                saveChats();
                 bubbleWrapper.remove();
             });
         }
@@ -169,30 +169,112 @@ document.addEventListener("DOMContentLoaded", () => {
         return bubbleWrapper;
     }
 
-    chat.messages.forEach(msg => {
-        const bubble = createMessageBubble(msg.from, msg.text);
-        chatBox.appendChild(bubble);
-    });
-
+    // Send message handler
     function sendMessage() {
         const text = input.value.trim();
         if (!text) return;
 
+        const currentChat = chats[activeChatId];
+        if (!currentChat) return;
+
         if (replyTo?.editMode) {
-            const oldBubble = document.querySelector(`[data-id="${replyTo.messageId}"] div`);
-            if (oldBubble) oldBubble.textContent = text;
+            // Edit existing message
+            const msg = currentChat.messages.find(m => m.id === replyTo.messageId);
+            if (msg) msg.text = text;
+            replyTo = null;
+            saveChats();
+            renderMessages();
         } else {
-            const replyText = replyTo?.originalText || null;
-            const bubble = createMessageBubble("You", text, Date.now(), replyText);
+            // Add new message, with optional reply preview
+            const newMsg = { from: "You", text, id: Date.now() };
+            currentChat.messages.push(newMsg);
+            saveChats();
+            const bubble = createMessageBubble("You", text, newMsg.id, replyTo?.originalText || null);
             chatBox.appendChild(bubble);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            replyTo = null;
         }
 
         input.value = "";
-        replyTo = null;
         document.getElementById("reply-preview").classList.add("hidden");
-        chatBox.scrollTop = chatBox.scrollHeight;
     }
 
+    // Open group info modal and populate members list
+    document.getElementById("info-btn").addEventListener("click", () => {
+        const currentChat = chats[activeChatId];
+        if (!currentChat || currentChat.members.length <= 2) return;
+
+        groupNameSpan.textContent = currentChat.name;
+        inviteLink.href = `https://example.com/invite/${currentChat.id}`;
+        inviteLink.textContent = inviteLink.href;
+
+        memberList.innerHTML = "";
+        currentChat.members.forEach(name => {
+            if (name === "You") return; // Skip yourself
+
+            const li = document.createElement("li");
+            li.textContent = name;
+            li.className = "cursor-pointer text-blue-600 hover:underline";
+            li.addEventListener("click", () => {
+                selectedMember = name;
+                memberNameSpan.textContent = name;
+                memberDetailModal.classList.remove("hidden");
+                groupInfoModal.classList.add("hidden");
+            });
+            memberList.appendChild(li);
+        });
+
+        groupInfoModal.classList.remove("hidden");
+    });
+
+    // Member detail modal close
+    closeMemberDetail.addEventListener("click", () => {
+        memberDetailModal.classList.add("hidden");
+    });
+
+    // Group info modal close
+    closeGroupInfo.addEventListener("click", () => {
+        groupInfoModal.classList.add("hidden");
+    });
+
+    // DM button: open or create DM chat in same UI
+    dmButton.addEventListener("click", () => {
+        if (!selectedMember) return;
+
+        // Generate chat id for DM
+        const dmId = `dm_${selectedMember.replace(/\s+/g, "_").toLowerCase()}`;
+
+        if (!chats[dmId]) {
+            chats[dmId] = {
+                id: dmId,
+                name: null,
+                members: ["You", selectedMember],
+                messages: []
+            };
+        }
+
+        activeChatId = dmId;
+        saveChats();
+        renderHeader();
+        renderMessages();
+        memberDetailModal.classList.add("hidden");
+        groupInfoModal.classList.add("hidden");
+        input.value = "";
+        replyTo = null;
+    });
+
+    // Back button to return to group chat
+    backBtn.addEventListener("click", () => {
+        const groupChatId = Object.values(chats).find(c => c.members.length > 2)?.id;
+        if (groupChatId) {
+            activeChatId = groupChatId;
+            saveChats();
+            renderHeader();
+            renderMessages();
+        }
+    });
+
+    // Send message events
     sendBtn.addEventListener("click", sendMessage);
     input.addEventListener("keypress", e => {
         if (e.key === "Enter") sendMessage();
@@ -202,4 +284,8 @@ document.addEventListener("DOMContentLoaded", () => {
         replyTo = null;
         document.getElementById("reply-preview").classList.add("hidden");
     });
+
+    // Initial render
+    renderHeader();
+    renderMessages();
 });
