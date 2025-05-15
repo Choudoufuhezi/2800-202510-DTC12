@@ -15,20 +15,14 @@ load_dotenv()
 # Import the Cloudinary libraries
 # ==============================
 import cloudinary
-from cloudinary import CloudinaryImage
-import cloudinary.uploader
-import cloudinary.api
-
-# Import to format the JSON responses
-# ==============================
-import json
+from cloudinary.uploader import destroy
 
 # Set configuration parameter:
 # ==============================
-config = cloudinary.config(
+cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.getenv("CLOUDINARY_API_KEY"),
-    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    api_key=os.getenv("CLOUDINARY_CLOUD_KEY"),
+    api_secret=os.getenv("CLOUDINARY_CLOUD_SECRET"),
     secure=False  # Update to True when using HTTPS
 )
 
@@ -106,14 +100,43 @@ async def delete_single_memory_endpoint(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Delete a memory by ID
+    Delete a memory from Cloudinary and then database
     """
     try:
-        success = delete_memory(db, memory_id, current_user.id)
-        if success:
-            return {
-                "message": "Memory deleted successfully",
-            }
+        db_memory = db.query(Memory).filter(Memory.id == memory_id).first()
+
+        if not db_memory:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="Memory not found"
+            )
+        
+        is_owner = db_memory.user_id == current_user.id
+        is_admin = db.query(Registered).filter_by(
+            user_id=current_user.id,
+            family_id=db_memory.family_id,
+            is_admin=True
+        ).first()
+
+        if not is_owner and not is_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only memory owner or family admin can delete"
+            )
+
+        try:
+            destroy(db_memory.cloudinary_id)
+
+        except Exception as cloudinary_error:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Cloudinary deletion failed: {str(cloudinary_error)}"
+            )
+        
+        delete_memory(db, memory_id, current_user.id, db_memory.family_id)
+
+        return {"message": "Memory deleted successfully"}
+    
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
