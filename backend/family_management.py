@@ -39,7 +39,8 @@ class FamilyInfo(BaseModel):
     family_name: str  # Add family_name
 
 class FamilyUpdate(BaseModel):  # Added for updating family name
-    family_name: str
+    family_name: Optional[str] = None
+    family_banner: Optional[str] = None
     
 class CreateInviteRequest(BaseModel):
     family_id: int
@@ -293,6 +294,7 @@ async def get_family_members(
     
     return {
         "family_name": family.family_name,
+        "family_banner": family.family_banner,
         "members": [
             {"user_id": user_id, "email": email, "is_admin": is_admin}
             for user_id, email, is_admin in members
@@ -392,7 +394,7 @@ async def update_family(
     if not is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only family admin can update the family name",
+            detail = "Only family admin can update the family name",
         )
 
     db_family = db.query(Family).filter(Family.id == family_id).first()
@@ -403,7 +405,10 @@ async def update_family(
         )
 
     try:
-        db_family.family_name = update_data.family_name
+        if update_data.family_name is not None:
+            db_family.family_name = update_data.family_name
+        if update_data.family_banner is not None:
+            db_family.family_banner = update_data.family_banner
         db.commit()
         db.refresh(db_family)
 
@@ -422,7 +427,8 @@ async def update_family(
             "id": db_family.id,
             "admin": admin[0] if admin else None,
             "members": [MemberInfo(user_id=user_id, email=email, is_admin=is_admin) for user_id, email, is_admin in members],
-            "family_name": db_family.family_name
+            "family_name": db_family.family_name,
+            "family_banner": db_family.family_banner
         }
     except Exception as e:
         db.rollback()
