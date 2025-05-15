@@ -228,6 +228,12 @@ def create_memory(db, location: dict, tags: str, file_url: str, cloudinary_id: s
     db.refresh(db_memory)
     return db_memory
 
+def get_memory_by_family(db, user_id: int, family_id: int):
+    return db.query(Memory).filter (
+        Memory.user_id == user_id,
+        Memory.family_id == family_id
+    ).all()
+
 def delete_memory(db, memory_id: int, requesting_user_id: int, family_id: int):
     db_memory = db.query(Memory).filter(Memory.id == memory_id).first()
     if not db_memory:
