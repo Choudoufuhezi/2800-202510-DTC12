@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -26,13 +25,20 @@
     <!--Main Content-->
     <div class="h-[calc(100vh-140px)] w-full flex items-center justify-center">
         <div class="w-full max-w-full h-full flex flex-col">
-
+        
             <!-- Info icon at top-right -->
             <div class="flex justify-end px-4 pt-4">
                 <button id="info-btn" class="text-blue-600 hover:text-blue-800 text-2xl">
                     <i class="fas fa-info-circle"></i>
                 </button>
             </div>
+
+
+            <!-- Header -->
+            <header class="bg-white shadow p-4 flex items-center">
+                <i class="fas fa-arrow-left text-xl text-blue-600 mr-4 cursor-pointer" id="back-btn"></i>
+                <h1 class="text-xl font-semibold" id="chat-user-name">Chat</h1>
+            </header>
 
 
             <!-- Chat Box -->
@@ -56,11 +62,10 @@
             </div>
 
             <!-- Group Info Modal -->
-            <div id="group-info"
-                class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+            <div id="group-info" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
                 <div
                     class="bg-white w-full max-w-sm sm:max-w-md md:max-w-lg p-6 rounded-lg shadow-lg relative overflow-y-auto max-h-[90vh]">
-
+            
                     <!-- Close and Settings Button -->
                     <div class="absolute top-2 right-2 flex items-center gap-4">
                         <button id="settings-btn" class="text-gray-600 hover:text-gray-800 text-xl">
@@ -70,7 +75,7 @@
                             &times; <!-- Close Icon -->
                         </button>
                     </div>
-
+            
                     <!-- Modal Content -->
                     <h3 class="text-xl font-semibold mb-3">Info</h3>
                     <p><strong>Group Name:</strong> <span id="info-group-name"></span></p>
@@ -86,17 +91,16 @@
 
 
             <!-- Settings Modal -->
-            <div id="settings-modal"
-                class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+            <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
                 <div class="bg-white w-full max-w-sm sm:max-w-md md:max-w-lg p-6 rounded-lg shadow-lg relative">
-
+            
                     <!-- Close Button -->
                     <button id="close-settings"
                         class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
-
+            
                     <!-- Settings Content -->
                     <h3 class="text-xl font-semibold mb-3">Settings</h3>
-
+            
                     <div class="space-y-4">
                         <!-- Notification Setting -->
                         <div class="flex items-center justify-between mb-4">
@@ -105,12 +109,12 @@
                                 <i class="fas fa-bell"></i>
                             </button>
                         </div>
-
+            
                         <div class="flex justify-between items-center">
                             <span class="font-semibold">Dark Mode</span>
                             <input type="checkbox" class="text-blue-500" id="dark-mode-toggle">
                         </div>
-
+            
                         <div class="flex justify-between items-center">
                             <span class="font-semibold">Custom Sounds</span>
                             <input type="checkbox" class="text-blue-500" id="custom-sounds-toggle">
@@ -148,5 +152,4 @@
     <script src="../scripts/add_nav.js"></script>
     <script src="../scripts/load_family_icon.js"></script>
 </body>
-
 </html>

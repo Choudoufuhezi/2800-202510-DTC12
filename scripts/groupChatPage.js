@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Try reading chat from localStorage
     let chat = null;
     try {
         const savedChat = localStorage.getItem("activeChat");
@@ -10,7 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Invalid chat data in localStorage:", err);
     }
 
-    // Fallback mock data if not found or invalid
     if (!chat || !Array.isArray(chat.members)) {
         chat = {
             name: "Robinson Family",
@@ -27,10 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("activeChat", JSON.stringify(chat));
     }
 
-    // Reload from storage again to ensure consistent state
     chat = JSON.parse(localStorage.getItem("activeChat"));
-
     let replyTo = null;
+    let selectedMember = null;
 
     const groupInfoModal = document.getElementById("group-info");
     const closeGroupInfo = document.getElementById("close-group-info");
@@ -47,40 +44,29 @@ document.addEventListener("DOMContentLoaded", () => {
     const sendBtn = document.getElementById("send-btn");
     const chatBox = document.getElementById("chat-box");
 
-    let selectedMember = null;
-
-    // Settings
     const settingsModal = document.getElementById("settings-modal");
     const settingsBtn = document.getElementById("settings-btn");
     const closeSettingsBtn = document.getElementById("close-settings");
 
     let notificationsEnabled = true;
 
-    // Open Group Info Modal
     document.getElementById("info-btn").addEventListener("click", () => {
         groupNameSpan.textContent = chat.name;
         inviteLink.href = `https://example.com/invite/${chat.id}`;
         inviteLink.textContent = inviteLink.href;
-
         memberList.innerHTML = "";
 
-        if (Array.isArray(chat.members) && chat.members.length > 0) {
-            chat.members.forEach(name => {
-                const li = document.createElement("li");
-                li.textContent = name;
-                li.className = "cursor-pointer text-blue-600 hover:underline";
-                li.addEventListener("click", () => {
-                    selectedMember = name;
-                    memberNameSpan.textContent = name;
-                    memberDetailModal.classList.remove("hidden");
-                });
-                memberList.appendChild(li);
-            });
-        } else {
+        chat.members.forEach(name => {
             const li = document.createElement("li");
-            li.textContent = "No members found.";
+            li.textContent = name;
+            li.className = "cursor-pointer text-blue-600 hover:underline";
+            li.addEventListener("click", () => {
+                selectedMember = name;
+                memberNameSpan.textContent = name;
+                memberDetailModal.classList.remove("hidden");
+            });
             memberList.appendChild(li);
-        }
+        });
 
         groupInfoModal.classList.remove("hidden");
     });
