@@ -1,32 +1,41 @@
-document.addEventListener("DOMContentLoaded", async () => {
-    // Get token
-    const token = localStorage.getItem("token");
-    if (!token) {
-        console.error("Not logged in");
-        window.location.href = "/login.html";
-        return;
-    }
+document.addEventListener("DOMContentLoaded", () => {
+    let chat = null;
+    let chats = {};
+    let activeChatId = null;
+    let replyTo = null;
+    let selectedMember = null;
 
-    // Get user ID
-    let userId;
+    // Try loading chats from localStorage
     try {
-        const response = await fetch("http://localhost:8000/user/id", {
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        });
-        if (!response.ok) {
-            throw new Error("Failed to get user ID");
-        }
-        const data = await response.json();
-        userId = data.user_id.toString();
-        console.log("Got user ID:", userId);
-    } catch (error) {
-        console.error("Error getting user ID:", error);
-        return;
+        const savedChats = localStorage.getItem("chats");
+        const savedActiveChatId = localStorage.getItem("activeChatId");
+        if (savedChats) chats = JSON.parse(savedChats);
+        if (savedActiveChatId) activeChatId = savedActiveChatId;
+    } catch (err) {
+        console.error("Invalid chats data in localStorage:", err);
     }
 
-    // Initialize chat UI elements
+    // If no saved chats, initialize with group chat
+    if (!chats || Object.keys(chats).length === 0) {
+        const groupChat = {
+            name: "Robinson Family",
+            id: "family123",
+            avatar: "https://via.placeholder.com/40",
+            members: ["You", "Alice Johnson", "Bob Smith", "Charlie Wang", "Diana Patel"],
+            messages: [
+                { from: "Alice Johnson", text: "Hi everyone!" },
+                { from: "You", text: "Hey Alice!" },
+                { from: "Charlie Wang", text: "Are we meeting tonight?" },
+                { from: "You", text: "Yes, 7 PM works." }
+            ]
+        };
+        chats[groupChat.id] = groupChat;
+        activeChatId = groupChat.id;
+        localStorage.setItem("chats", JSON.stringify(chats));
+        localStorage.setItem("activeChatId", activeChatId);
+    }
+
+    // DOM Elements
     const groupInfoModal = document.getElementById("group-info");
     const closeGroupInfo = document.getElementById("close-group-info");
     const groupNameSpan = document.getElementById("info-group-name");
@@ -42,88 +51,50 @@ document.addEventListener("DOMContentLoaded", async () => {
     const sendBtn = document.getElementById("send-btn");
     const chatBox = document.getElementById("chat-box");
 
-    let selectedMember = null;
-    let replyTo = null;
-    const chatroomId = 1;
+    // New: Back button to switch from DM to group chat
+    const backBtn = document.getElementById("back-btn");
+    const chatHeader = document.getElementById("chat-user-name");
 
-    // Fetch message history
-    try {
-        const response = await fetch(`http://localhost:8000/chatrooms/${chatroomId}/messages`, {
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        });
-        if (!response.ok) {
-            throw new Error("Failed to fetch message history");
-        }
-        const messages = await response.json();
-        console.log("Fetched message history:", messages);
-
-        // Display message history
-        messages.forEach(msg => {
-            const isOwnMessage = msg.sender_id.toString() === userId;
-            const bubble = createMessageBubble(
-                isOwnMessage ? "You" : `User ${msg.sender_id}`,
-                msg.content,
-                msg.id
-            );
-            chatBox.appendChild(bubble);
-        });
-        chatBox.scrollTop = chatBox.scrollHeight;
-    } catch (error) {
-        console.error("Error fetching message history:", error);
+    // Helper: Save chats and active chat to localStorage
+    function saveChats() {
+        localStorage.setItem("chats", JSON.stringify(chats));
+        localStorage.setItem("activeChatId", activeChatId);
     }
 
-    // WebSocket setup
-    const ws = new WebSocket(`ws://localhost:8000/ws/${userId}`);
+    // Render chat header (group or DM)
+    function renderHeader() {
+        const currentChat = chats[activeChatId];
+        if (!currentChat) return;
 
-    console.log(`User ${userId}: Connected to WebSocket`);
-
-    ws.onopen = () => {
-        console.log(`User ${userId}: Connected to WebSocket`);
-        // Join the chatroom
-        const joinMessage = {
-            type: "join_chatroom",
-            chatroom_id: chatroomId
-        };
-        console.log(`User ${userId}: Sending join message:`, joinMessage);
-        ws.send(JSON.stringify(joinMessage));
-    };
-
-    ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        console.log(`User ${userId}: Received message:`, data);
-        
-        // Handle join confirmation
-        if (data.status === "success") {
-            console.log(`User ${userId}: ${data.message}`);
-            return;
+        if (currentChat.members.length > 2) {
+            chatHeader.textContent = currentChat.name;
+            backBtn.classList.add("hidden");
+            document.getElementById("info-btn").classList.remove("hidden");
+        } else {
+            // DM chat
+            const other = currentChat.members.find(m => m !== "You") || "Chat";
+            chatHeader.textContent = other;
+            backBtn.classList.remove("hidden");
+            document.getElementById("info-btn").classList.add("hidden");
         }
-        
-        // Handle chat messages
-        if (data.sender_id && data.content) {
-            console.log(`User ${userId}: Processing chat message from User ${data.sender_id}`);
-            const isOwnMessage = data.sender_id === userId;
-            const bubble = createMessageBubble(
-                isOwnMessage ? "You" : `User ${data.sender_id}`,
-                data.content,
-                data.message_id
-            );
+    }
+
+    // Clear chat messages and render current chat messages
+    function renderMessages() {
+        chatBox.innerHTML = "";
+        const currentChat = chats[activeChatId];
+        if (!currentChat) return;
+
+        currentChat.messages.forEach(msg => {
+            const bubble = createMessageBubble(msg.from, msg.text);
             chatBox.appendChild(bubble);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-    };
+        });
 
-    ws.onclose = () => {
-        console.log(`User ${userId}: Disconnected from WebSocket`);
-    };
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-    ws.onerror = (error) => {
-        console.error(`User ${userId}: WebSocket error:`, error);
-    };
-
+    // Create message bubble (keep your styles unchanged)
     function createMessageBubble(from, text, messageId = Date.now(), replyText = null) {
-        console.log(`User ${userId}: Creating message bubble - From: ${from}, Text: ${text}`);
         const bubbleWrapper = document.createElement("div");
         bubbleWrapper.className = `flex ${from === "You" ? "justify-end" : "justify-start"} relative`;
         bubbleWrapper.dataset.id = messageId;
@@ -186,6 +157,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
 
             menuBox.querySelector(".delete-btn").addEventListener("click", () => {
+                // Remove from messages array as well
+                const currentChat = chats[activeChatId];
+                if (!currentChat) return;
+                currentChat.messages = currentChat.messages.filter(m => m.text !== text || m.from !== from);
+                saveChats();
                 bubbleWrapper.remove();
             });
         }
@@ -193,14 +169,49 @@ document.addEventListener("DOMContentLoaded", async () => {
         return bubbleWrapper;
     }
 
+    // Send message handler
+    function sendMessage() {
+        const text = input.value.trim();
+        if (!text) return;
+
+        const currentChat = chats[activeChatId];
+        if (!currentChat) return;
+
+        if (replyTo?.editMode) {
+            // Edit existing message
+            const msg = currentChat.messages.find(m => m.id === replyTo.messageId);
+            if (msg) msg.text = text;
+            replyTo = null;
+            saveChats();
+            renderMessages();
+        } else {
+            // Add new message, with optional reply preview
+            const newMsg = { from: "You", text, id: Date.now() };
+            currentChat.messages.push(newMsg);
+            saveChats();
+            const bubble = createMessageBubble("You", text, newMsg.id, replyTo?.originalText || null);
+            chatBox.appendChild(bubble);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            replyTo = null;
+        }
+
+        input.value = "";
+        document.getElementById("reply-preview").classList.add("hidden");
+    }
+
+    // Open group info modal and populate members list
     document.getElementById("info-btn").addEventListener("click", () => {
-        groupNameSpan.textContent = "Chatroom " + chatroomId;
-        inviteLink.href = `https://example.com/invite/${chatroomId}`;
+        const currentChat = chats[activeChatId];
+        if (!currentChat || currentChat.members.length <= 2) return;
+
+        groupNameSpan.textContent = currentChat.name;
+        inviteLink.href = `https://example.com/invite/${currentChat.id}`;
         inviteLink.textContent = inviteLink.href;
 
         memberList.innerHTML = "";
-        // For now, just show placeholder members
-        ["User 1", "User 2"].forEach(name => {
+        currentChat.members.forEach(name => {
+            if (name === "You") return; // Skip yourself
+
             const li = document.createElement("li");
             li.textContent = name;
             li.className = "cursor-pointer text-blue-600 hover:underline";
@@ -208,6 +219,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 selectedMember = name;
                 memberNameSpan.textContent = name;
                 memberDetailModal.classList.remove("hidden");
+                groupInfoModal.classList.add("hidden");
             });
             memberList.appendChild(li);
         });
@@ -215,49 +227,54 @@ document.addEventListener("DOMContentLoaded", async () => {
         groupInfoModal.classList.remove("hidden");
     });
 
-    closeGroupInfo.addEventListener("click", () => {
-        groupInfoModal.classList.add("hidden");
-    });
-
+    // Member detail modal close
     closeMemberDetail.addEventListener("click", () => {
         memberDetailModal.classList.add("hidden");
     });
 
+    // Group info modal close
+    closeGroupInfo.addEventListener("click", () => {
+        groupInfoModal.classList.add("hidden");
+    });
+
+    // DM button: open or create DM chat in same UI
     dmButton.addEventListener("click", () => {
-        if (selectedMember) {
-            window.location.href = `chat.html?user=${encodeURIComponent(selectedMember)}`;
+        if (!selectedMember) return;
+
+        // Generate chat id for DM
+        const dmId = `dm_${selectedMember.replace(/\s+/g, "_").toLowerCase()}`;
+
+        if (!chats[dmId]) {
+            chats[dmId] = {
+                id: dmId,
+                name: null,
+                members: ["You", selectedMember],
+                messages: []
+            };
+        }
+
+        activeChatId = dmId;
+        saveChats();
+        renderHeader();
+        renderMessages();
+        memberDetailModal.classList.add("hidden");
+        groupInfoModal.classList.add("hidden");
+        input.value = "";
+        replyTo = null;
+    });
+
+    // Back button to return to group chat
+    backBtn.addEventListener("click", () => {
+        const groupChatId = Object.values(chats).find(c => c.members.length > 2)?.id;
+        if (groupChatId) {
+            activeChatId = groupChatId;
+            saveChats();
+            renderHeader();
+            renderMessages();
         }
     });
 
-    function sendMessage() {
-        const text = input.value.trim();
-        if (!text) return;
-
-        if (replyTo?.editMode) {
-            const oldBubble = document.querySelector(`[data-id="${replyTo.messageId}"] div`);
-            if (oldBubble) oldBubble.textContent = text;
-        } else {
-            // Send message through WebSocket
-            const message = {
-                type: "chat_message",
-                chatroom_id: chatroomId,
-                content: text
-            };
-            console.log(`User ${userId}: Sending message:`, message);
-            ws.send(JSON.stringify(message));
-
-            // Create local message bubble
-            const replyText = replyTo?.originalText || null;
-            const bubble = createMessageBubble("You", text, Date.now(), replyText);
-            chatBox.appendChild(bubble);
-        }
-
-        input.value = "";
-        replyTo = null;
-        document.getElementById("reply-preview").classList.add("hidden");
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
+    // Send message events
     sendBtn.addEventListener("click", sendMessage);
     input.addEventListener("keypress", e => {
         if (e.key === "Enter") sendMessage();
@@ -267,4 +284,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         replyTo = null;
         document.getElementById("reply-preview").classList.add("hidden");
     });
+
+    // Initial render
+    renderHeader();
+    renderMessages();
 });
