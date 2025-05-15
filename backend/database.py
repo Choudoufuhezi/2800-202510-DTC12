@@ -243,9 +243,10 @@ def delete_memory(db, memory_id: int, requesting_user_id: int, family_id: int):
     
     # only poster and admins can delete
     is_owner = db_memory.user_id == requesting_user_id
-    is_admin = db.query(Family).filter(
-        Family.id == db_memory.family_id,
-        Family.admin == requesting_user_id
+    is_admin = db.query(Registered).filter_by(
+        user_id=requesting_user_id,
+        family_id=db_memory.family_id,
+        is_admin=True
     ).first()
     
     if not is_owner and not is_admin:
