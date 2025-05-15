@@ -1,27 +1,54 @@
+import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-
-from database import Registered, User, create_memory, delete_memory, get_db
+from database import Registered, User, Memory, create_memory, delete_memory, get_db
 from family_management import get_current_user
+
+# Set your Cloudinary credentials
+# ==============================
+from dotenv import load_dotenv
+load_dotenv()
+
+# Import the Cloudinary libraries
+# ==============================
+import cloudinary
+from cloudinary import CloudinaryImage
+import cloudinary.uploader
+import cloudinary.api
+
+# Import to format the JSON responses
+# ==============================
+import json
+
+# Set configuration parameter:
+# ==============================
+config = cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    secure=False  # Update to True when using HTTPS
+)
 
 router = APIRouter(prefix="/memories")
 
 class MemoryCreateRequest(BaseModel):
     location: dict
     tags: str
-    file_location: str
-    time_stamp: Optional[datetime] = None
+    file_url: str
+    cloudinary_id: str
+    date_for_notification: Optional[datetime] = None
     family_id: int
 
 class MemoryResponse(BaseModel):
     id: int
     location: dict
     tags: str
-    file_location: str
-    time_stamp: datetime
+    file_url: str
+    cloudinary_id: str
+    date_for_notification: datetime
     user_id: int
     family_id: int
     
@@ -51,14 +78,15 @@ async def create_memory_endpoint(
             )
 
         # Set current time if timestamp not provided
-        timestamp = memory_data.time_stamp if memory_data.time_stamp else datetime.utcnow()
+        date_for_notification = memory_data.date_for_notification if memory_data.date_for_notification else datetime.utcnow()
 
         db_memory = create_memory(
             db=db,
             location=memory_data.location,
             tags=memory_data.tags,
-            file_location=memory_data.file_location,
-            time_stamp=timestamp,
+            file_url=memory_data.file_url,
+            cloudinary_id=memory_data.cloudinary_id,
+            date_for_notification=date_for_notification,
             user_id=current_user.id,
             family_id=memory_data.family_id
         )
@@ -100,4 +128,41 @@ async def delete_single_memory_endpoint(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete memory: {str(e)}"
+        )
+        
+@router.get("/member/{member_user_id}/family/{family_id}", response_model=List[MemoryResponse])
+async def get_memories_endpoint(
+    member_user_id: int,
+    family_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all memories for a specific family member
+    """
+    try:
+        # Check if user is part of the family group
+        membership = db.query(Registered).filter_by(
+            user_id=current_user.id,
+            family_id=family_id
+            ).first()
+
+        if not membership:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User is not registered in this family"
+            )
+        
+        # Get memories for the specified family member
+        memories = db.query(Memory).filter(
+            Memory.user_id == member_user_id,
+            Memory.family_id == family_id
+        ).all()
+
+        return memories
+                
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to load memories: {str(e)}"
         )
