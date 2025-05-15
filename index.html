@@ -1,50 +1,63 @@
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <title>Digital Family Vault</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
 </head>
 
-<body class="bg-[#f5f3eb98]">
+<body class="bg-[#f5f3eb98] text-gray-800">
     <!--Top Nav-->
-    <nav id="topNav" class="sticky top-0"></nav>
-    <div class="flex justify-center py-20">
-        <p class="font-semibold text-5xl text-left">Digital Family Vault</p>
-    </div>
-    <div class="flex text-center justify-center py-10 flex-row md:flex-col lg:flex-row">
-        <div class="w-full md:w-4/5 lg:w-1/5 text-container">
-            <div>
-                <h1 class="m-6 font-semibold text-left">Build Your Family's Legacy, One Memory at a Time</h1>
-                <p class="m-6 text-left">Securely preserve your cherished stories, photos, recipes, and wisdom in a
-                    private, encrypted vault. The app is more
-                    than just storage, it's a digital heirloom designed to connect generations and ensure your family's
-                    unique history
-                    lives on.</p>
-            </div>
-            <div>
-                <h1 class="m-6 font-semibold text-left">Connect Generations Through Shared Memories</h1>
-                <p class="m-6 text-left">Ring your family closer with the app, the private space to relive precious
-                    moments together. Share stories, photos,
-                    traditions, and even chat directly about memories, bridging distances and strengthening bonds across
+    <nav id="topNav" class="sticky top-0 z-50 bg-white shadow-md"></nav>
+
+    <section class="container max-w-7xl mx-auto px-6 py-16 text-center">
+        <h1 class="text-5xl font-bold mb-6 leading-tight">Digital Family Vault</h1>
+        <p class="text-lg text-gray-600">Preserving your family's memories, securely and beautifully.</p>
+    </section>
+
+    <!-- Main Content -->
+    <section class="container max-w-7xl mx-auto px-6 py-10 flex flex-col-reverse lg:flex-row gap-12">
+        <div class="flex-1 space-y-8">
+            <div class="bg-white p-6 rounded-2xl shadow-lg">
+                <h2 class="text-xl font-semibold mb-2">Build Your Family's Legacy, One Memory at a Time</h2>
+                <p class="text-gray-600">Securely preserve your cherished stories, photos, recipes, and wisdom in a
+                    private, encrypted vault. More than just storage, it’s a digital heirloom designed to connect
                     generations.</p>
             </div>
-            <div>
-                <h1 class="m-6 font-semibold text-left">Turn Memories into a Living Family Storybook</h1>
-                <p class="m-6 text-left">Experience your family's history in a richer, more engaging way. The app allows
-                    you to structure memories as
-                    captivating stories, complete with context and connection, creating a meaningful heirloom to pass
-                    down.</p>
+            <div class="bg-white p-6 rounded-2xl shadow-lg">
+                <h2 class="text-xl font-semibold mb-2">Connect Generations Through Shared Memories</h2>
+                <p class="text-gray-600">Bring your family closer in a private space to relive precious moments. Share
+                    stories, photos, traditions, and chat about memories, bridging distances and strengthening bonds.
+                </p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-lg">
+                <h2 class="text-xl font-semibold mb-2">Turn Memories into a Living Family Storybook</h2>
+                <p class="text-gray-600">Experience your family's history in a rich, engaging way. Structure memories as
+                    stories with context and emotion—creating a meaningful heirloom to pass down.</p>
             </div>
         </div>
-        <div class="grid grid-cols-2 grid-rows-2 space-x-3 space-y-3 mt-6 md:mt-6 lg:mt-0 image-grid">
-            <img class="shadow-2xl" src="images/family.webp" width="500" height="500">
-            <img class="shadow-2xl" src="images/family2.webp" width="500" height="500">
-            <img class="shadow-2xl" src="images/family3.jpg" width="500" height="500">
-            <img class="shadow-2xl" src="images/family4.jpg" width="500" height="500">
+        
+        <div class="flex-1 grid grid-cols-2 gap-4">
+            <div class="aspect-[4/3] overflow-hidden rounded-xl shadow-lg">
+                <img src="images/family.webp" alt="Family 1" class="w-full h-full object-cover">
+            </div>
+            <div class="aspect-[4/3] overflow-hidden rounded-xl shadow-lg">
+                <img src="images/family2.webp" alt="Family 2" class="w-full h-full object-cover">
+            </div>
+            <div class="aspect-[4/3] overflow-hidden rounded-xl shadow-lg">
+                <img src="images/family3.jpg" alt="Family 3" class="w-full h-full object-cover">
+            </div>
+            <div class="aspect-[4/3] overflow-hidden rounded-xl shadow-lg">
+                <img src="images/family4.jpg" alt="Family 4" class="w-full h-full object-cover">
+            </div>
         </div>
-    </div>
+    </section>
+
     <!--Bottom Nav-->
-    <nav id="bottomNav" class="sticky bottom-0"></nav>
+    <nav id="bottomNav" class="sticky bottom-0 z-50 bg-white shadow-inner"></nav>
+
     <script src="../scripts/load_family_icon.js"></script>
     <script src="../scripts/add_nav.js"></script>
 </body>
