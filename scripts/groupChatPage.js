@@ -58,6 +58,65 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const inputContainer = input.parentElement;
     inputContainer.insertBefore(translationSelect, input);
+
+    // Store og messages so always translating original
+    const originalMessages = new Map();
+
+    async function translateMessage(text, targetLanguage) {
+        try {
+            const response = await fetch("http://localhost:8000/translate/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    text: text,
+                    target_language: targetLanguage
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error("Translation failed");
+            }
+
+            return await response.text();
+        } catch (error) {
+            console.error("Translation error:", error);
+            return text; // Return original text if translation fails
+        }
+    }
+
+    // Update translation function was enhanced by deepseek to be more efficient and readable
+    async function updateTranslations(targetLanguage) {
+        const messageElements = chatBox.querySelectorAll("[data-id]");
+        
+        for (const element of messageElements) {
+            const messageId = element.dataset.id;
+            const messageText = element.querySelector("div > div:last-child");
+            
+            if (!messageText) continue;
+
+            if (!originalMessages.has(messageId)) {
+                originalMessages.set(messageId, messageText.textContent);
+            }
+
+            const originalText = originalMessages.get(messageId);
+            
+            if (targetLanguage) {
+                const translatedText = await translateMessage(originalText, targetLanguage);
+                messageText.textContent = translatedText;
+            } else {
+                messageText.textContent = originalText;
+            }
+        }
+    }
+
+    // Add translation change handler
+    translationSelect.addEventListener("change", async () => {
+        const targetLanguage = translationSelect.value;
+        await updateTranslations(targetLanguage);
+    });
+
     let selectedMember = null;
     let replyTo = null;
     const chatroomId = 1;
