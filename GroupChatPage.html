@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -35,6 +34,13 @@
             </div>
 
 
+            <!-- Header -->
+            <header class="bg-white shadow p-4 flex items-center">
+                <i class="fas fa-arrow-left text-xl text-blue-600 mr-4 cursor-pointer" id="back-btn"></i>
+                <h1 class="text-xl font-semibold" id="chat-user-name">Chat</h1>
+            </header>
+
+
             <!-- Chat Box -->
             <div id="chat-box" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 bg-gray-50">
                 <!-- Messages will go here -->
@@ -56,12 +62,21 @@
             </div>
 
             <!-- Group Info Modal -->
-            <div id="group-info"
-                class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+            <div id="group-info" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
                 <div
                     class="bg-white w-full max-w-sm sm:max-w-md md:max-w-lg p-6 rounded-lg shadow-lg relative overflow-y-auto max-h-[90vh]">
-                    <button id="close-group-info"
-                        class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
+            
+                    <!-- Close and Settings Button -->
+                    <div class="absolute top-2 right-2 flex items-center gap-4">
+                        <button id="settings-btn" class="text-gray-600 hover:text-gray-800 text-xl">
+                            <i class="fas fa-cog"></i> <!-- Settings Icon -->
+                        </button>
+                        <button id="close-group-info" class="text-gray-500 top-4 hover:text-black text-xl">
+                            &times; <!-- Close Icon -->
+                        </button>
+                    </div>
+            
+                    <!-- Modal Content -->
                     <h3 class="text-xl font-semibold mb-3">Info</h3>
                     <p><strong>Group Name:</strong> <span id="info-group-name"></span></p>
                     <p class="mt-2"><strong>Invite Link:</strong>
@@ -73,6 +88,42 @@
                     </div>
                 </div>
             </div>
+
+
+            <!-- Settings Modal -->
+            <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+                <div class="bg-white w-full max-w-sm sm:max-w-md md:max-w-lg p-6 rounded-lg shadow-lg relative">
+            
+                    <!-- Close Button -->
+                    <button id="close-settings"
+                        class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
+            
+                    <!-- Settings Content -->
+                    <h3 class="text-xl font-semibold mb-3">Settings</h3>
+            
+                    <div class="space-y-4">
+                        <!-- Notification Setting -->
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="font-semibold">Notifications</span>
+                            <button id="notification-toggle" class="text-gray-500 hover:text-gray-700 text-2xl">
+                                <i class="fas fa-bell"></i>
+                            </button>
+                        </div>
+            
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold">Dark Mode</span>
+                            <input type="checkbox" class="text-blue-500" id="dark-mode-toggle">
+                        </div>
+            
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold">Custom Sounds</span>
+                            <input type="checkbox" class="text-blue-500" id="custom-sounds-toggle">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
 
             <!-- Member Detail Modal -->
             <div id="member-detail-modal"
@@ -101,5 +152,4 @@
     <script src="../scripts/add_nav.js"></script>
     <script src="../scripts/load_family_icon.js"></script>
 </body>
-
 </html>
