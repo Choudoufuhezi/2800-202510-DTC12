@@ -1,10 +1,10 @@
 import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from database import Registered, User, create_memory, delete_memory, get_db
+from database import Registered, User, Memory, create_memory, delete_memory, get_db
 from family_management import get_current_user
 
 # Set your Cloudinary credentials
@@ -47,6 +47,7 @@ class MemoryResponse(BaseModel):
     location: dict
     tags: str
     file_url: str
+    cloudinary_id: str
     date_for_notification: datetime
     user_id: int
     family_id: int
@@ -127,4 +128,41 @@ async def delete_single_memory_endpoint(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete memory: {str(e)}"
+        )
+        
+@router.get("/member/{member_user_id}/family/{family_id}", response_model=List[MemoryResponse])
+async def get_memories_endpoint(
+    member_user_id: int,
+    family_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all memories for a specific family member
+    """
+    try:
+        # Check if user is part of the family group
+        membership = db.query(Registered).filter_by(
+            user_id=current_user.id,
+            family_id=family_id
+            ).first()
+
+        if not membership:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User is not registered in this family"
+            )
+        
+        # Get memories for the specified family member
+        memories = db.query(Memory).filter(
+            Memory.user_id == member_user_id,
+            Memory.family_id == family_id
+        ).all()
+
+        return memories
+                
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to load memories: {str(e)}"
         )
