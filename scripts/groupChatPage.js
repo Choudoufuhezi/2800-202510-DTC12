@@ -301,7 +301,20 @@ document.addEventListener("DOMContentLoaded", () => {
         settingsModal.classList.add("hidden");
     });
 
-    
+
+    const notificationToggle = document.getElementById("notification-toggle");
+
+    if (notificationToggle) {
+        notificationToggle.addEventListener("click", () => {
+            const icon = notificationToggle.querySelector("i");
+            if (!icon) return;
+
+            icon.classList.toggle("fa-bell");
+            icon.classList.toggle("fa-bell-slash");
+        });
+    }
+
+
     // Initial render
     renderHeader();
     renderMessages();
