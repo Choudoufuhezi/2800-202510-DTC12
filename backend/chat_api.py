@@ -195,7 +195,7 @@ async def get_user_id(current_user: User = Depends(get_current_user)):
 
 @router.get("/chatrooms/family/{family_id}")
 async def get_family_chat(
-    family_id: int = Body(..., embed=True),
+    family_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
