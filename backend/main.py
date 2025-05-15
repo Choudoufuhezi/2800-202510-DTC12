@@ -40,12 +40,14 @@ from profile import router as profile_router
 from memory import router as memory_router
 from comments import router as comments_router
 from chat_api import router as chat_api_router
+from translate import router as translate_router
 app.include_router(auth_router)
 app.include_router(family_router)
 app.include_router(memory_router)
 app.include_router(comments_router)
 app.include_router(profile_router) 
 app.include_router(chat_api_router)
+app.include_router(translate_router)
 
 from chat_server import router as chat_router
 app.include_router(chat_router)

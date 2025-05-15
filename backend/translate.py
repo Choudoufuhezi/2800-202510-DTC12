@@ -1,4 +1,5 @@
 from openai import OpenAI
+from pydantic import BaseModel
 from config import settings
 from fastapi import APIRouter
 client = OpenAI(api_key=settings.deepseek_api_key, base_url="https://api.deepseek.com")
@@ -14,9 +15,13 @@ def translate_text(text, target_language):
 
 router = APIRouter(prefix="/translate")
 
+class TranslationRequest(BaseModel):
+    text: str
+    target_language: str
+
 @router.post("/")
-async def translate(text: str, target_language: str):
-    return translate_text(text, target_language)
+async def translate(request: TranslationRequest):
+    return translate_text(request.text, request.target_language)
 
 if __name__ == "__main__":
     print(translate_text("无法翻译", "English"))

@@ -42,9 +42,91 @@ document.addEventListener("DOMContentLoaded", async () => {
     const sendBtn = document.getElementById("send-btn");
     const chatBox = document.getElementById("chat-box");
 
+    // Get chatroom ID from window object
+    const chatroomId = window.chatroomId;
+    if (!chatroomId) {
+        console.error("No chatroom ID provided");
+        window.location.href = "/family-members.html";
+        return;
+    }
+
+    // TODO: Move this to another aspect, rn it could be confusing
+    const translationSelect = document.createElement("select");
+    translationSelect.className = "p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-300";
+    translationSelect.innerHTML = `
+        <option value="">Original Language</option>
+        <option value="English">English</option>
+        <option value="Spanish">Spanish</option>
+        <option value="French">French</option>
+        <option value="German">German</option>
+        <option value="Chinese">Chinese</option>
+        <option value="Japanese">Japanese</option>
+        <option value="Korean">Korean</option>
+    `;
+
+    const inputContainer = input.parentElement;
+    inputContainer.insertBefore(translationSelect, input);
+
+    // Store og messages so always translating original
+    const originalMessages = new Map();
+
+    async function translateMessage(text, targetLanguage) {
+        try {
+            const response = await fetch("http://localhost:8000/translate/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    text: text,
+                    target_language: targetLanguage
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error("Translation failed");
+            }
+
+            return await response.text();
+        } catch (error) {
+            console.error("Translation error:", error);
+            return text; // Return original text if translation fails
+        }
+    }
+
+    // Update translation function was enhanced by deepseek to be more efficient and readable
+    async function updateTranslations(targetLanguage) {
+        const messageElements = chatBox.querySelectorAll("[data-id]");
+        
+        for (const element of messageElements) {
+            const messageId = element.dataset.id;
+            const messageText = element.querySelector("div > div:last-child");
+            
+            if (!messageText) continue;
+
+            if (!originalMessages.has(messageId)) {
+                originalMessages.set(messageId, messageText.textContent);
+            }
+
+            const originalText = originalMessages.get(messageId);
+            
+            if (targetLanguage) {
+                const translatedText = await translateMessage(originalText, targetLanguage);
+                messageText.textContent = translatedText;
+            } else {
+                messageText.textContent = originalText;
+            }
+        }
+    }
+
+    // Add translation change handler
+    translationSelect.addEventListener("change", async () => {
+        const targetLanguage = translationSelect.value;
+        await updateTranslations(targetLanguage);
+    });
+
     let selectedMember = null;
     let replyTo = null;
-    const chatroomId = 1;
 
     // Fetch message history
     try {

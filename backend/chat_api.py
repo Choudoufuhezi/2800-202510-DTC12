@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from database import Message, UserChatRoom, create_chatroom, create_userchatroom, get_db, User, ChatRoom
+from database import Message, Registered, UserChatRoom, create_chatroom, create_userchatroom, get_db, User, ChatRoom
 from datetime import datetime
 from family_management import get_current_user
 
@@ -130,7 +130,7 @@ async def create_group_chat(
     create_userchatroom(db, current_user.id, chatroom.id)
     create_userchatroom(db, target_user.id, chatroom.id)
     
-    return { #TODO: use a response model instead, this is rushed
+    return {
         "chatroom_id": chatroom.id,
         "name": chatroom.name,
         "created_date": chatroom.created_date.isoformat(),
@@ -140,10 +140,99 @@ async def create_group_chat(
         ]
     }
 
+@router.post("/chatrooms/create-family-chat")
+async def create_family_chat(
+    family_id: int = Body(..., embed=True), # Hacky way to avoid using a basemodel
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Create a new group chat for all members of a family
+    """
+    # Verify user is part of the family
+    is_member = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id
+    ).first()
+    
+    if not is_member:
+        raise HTTPException(
+            status_code=403,
+            detail="You must be a member of this family to create a group chat"
+        )
+    
+    # Get all family members
+    members = db.query(User).join(
+        Registered, Registered.user_id == User.id
+    ).filter(
+        Registered.family_id == family_id
+    ).all()
+    
+    # Create a new chatroom
+    chatroom = create_chatroom(
+        db,
+        name=f"Family Chat",
+        date=datetime.now()
+    )
+    
+    # Add all family members to the chatroom
+    for member in members:
+        create_userchatroom(db, member.id, chatroom.id)
+    
+    return {
+        "chatroom_id": chatroom.id,
+        "name": chatroom.name,
+        "created_date": chatroom.created_date.isoformat(),
+        "members": [{"user_id": member.id} for member in members]
+    }
+
 @router.get("/user/id")
 async def get_user_id(current_user: User = Depends(get_current_user)):
     """
     Get the current user's ID
     """
     return {"user_id": current_user.id}
+
+@router.get("/chatrooms/family/{family_id}")
+async def get_family_chat(
+    family_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get the group chat for a family if it exists
+    """
+    # Verify user is part of the family
+    is_member = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id
+    ).first()
+    
+    if not is_member:
+        raise HTTPException(
+            status_code=403,
+            detail="You must be a member of this family to view its chat"
+        )
+    
+    # Find the family chat by name pattern
+    family_chat = db.query(ChatRoom).filter(
+        ChatRoom.name == "Family Chat"
+    ).join(
+        UserChatRoom,
+        UserChatRoom.chatroom_id == ChatRoom.id
+    ).join(
+        Registered,
+        Registered.user_id == UserChatRoom.user_id
+    ).filter(
+        Registered.family_id == family_id
+    ).first()
+    
+    if not family_chat:
+        return None
+    
+    return {
+        "chatroom_id": family_chat.id,
+        "name": family_chat.name,
+        "created_date": family_chat.created_date.isoformat() if family_chat.created_date else None
+    }
     
