@@ -24,6 +24,7 @@ async def get_current_user(db: Session = Depends(get_db), email: str = Depends(g
     return db_user
 
 class MemberInfo(BaseModel):
+    user_id: int # user_id of the member
     email: str
     is_admin: bool
 
@@ -36,6 +37,9 @@ class FamilyInfo(BaseModel):
     admin: int  # user_id of the admin
     members: List[MemberInfo]
     family_name: str  # Add family_name
+
+class FamilyUpdate(BaseModel):  # Added for updating family name
+    family_name: str
     
 class CreateInviteRequest(BaseModel):
     family_id: int
@@ -47,12 +51,14 @@ class InviteResponse(BaseModel):
     expires_at: datetime
     max_uses: int
     family_id: int
+    invite_link : str
     
 class JoinFamilyRequest(BaseModel):
     code: str
     
 @router.post("/create", response_model=FamilyInfo)
 async def create_family(
+    family_data: FamilyCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -64,8 +70,8 @@ async def create_family(
     try:
         # Create the family
         db_family = Family(
-            family_name = Request.family_name,
-            family_banner = None
+            family_name=family_data.family_name,
+            family_banner=family_data.family_banner,  # Include family banner if provided
         )
         db.add(db_family)
         db.commit()
@@ -83,6 +89,7 @@ async def create_family(
         # Get all members
         members = [
             {
+                "user_id": current_user.id,
                 "email": current_user.email,
                 "is_admin": True
             }
@@ -125,7 +132,7 @@ async def create_invite(
             detail="Only family admin can create invites",
         )
 
-    code = ''.join(random.choices('0123456789', k=6)) # generate random 6 number string
+    code = ''.join(random.choices(settings.invite_code_chars, k=settings.invite_code_length))
     expires_at = datetime.utcnow() + timedelta(hours=request.expires_in_hours)
 
     db_invite = FamilyInvite(
@@ -143,7 +150,8 @@ async def create_invite(
         "code": code,
         "expires_at": expires_at,
         "max_uses": request.max_uses,
-        "family_id": request.family_id
+        "family_id": request.family_id,
+        "invite_link": f"{settings.frontend_url}/invite.html?code={code}" 
     }
     
 @router.post("/join", response_model=FamilyInfo)
@@ -195,7 +203,7 @@ async def join_family(
     db.commit()
 
     # Get all members with their admin status
-    members = db.query(User.email, Registered.is_admin).join(
+    members = db.query(User.id, User.email, Registered.is_admin).join(
         Registered, Registered.user_id == User.id
     ).filter(
         Registered.family_id == db_invite.family_id
@@ -285,7 +293,10 @@ async def get_family_members(
     
     return {
         "family_name": family.family_name,
-        "members": [MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members]
+        "members": [
+            {"user_id": user_id, "email": email, "is_admin": is_admin}
+            for user_id, email, is_admin in members
+        ]
     }
 
 @router.get("/my-families", response_model=List[int])
@@ -361,6 +372,64 @@ async def get_family_invites(
         }
         for invite in invites
     ]
+
+@router.put("/{family_id}/update", response_model=FamilyInfo)
+async def update_family(
+    family_id: int,
+    update_data: FamilyUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update a family's name
+    """
+    is_admin = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id,
+        Registered.is_admin == True
+    ).first()
+
+    if not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only family admin can update the family name",
+        )
+
+    db_family = db.query(Family).filter(Family.id == family_id).first()
+    if not db_family:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Family not found",
+        )
+
+    try:
+        db_family.family_name = update_data.family_name
+        db.commit()
+        db.refresh(db_family)
+
+        members = db.query(User.id, User.email, Registered.is_admin).join(
+            Registered, Registered.user_id == User.id
+        ).filter(
+            Registered.family_id == family_id
+        ).all()
+
+        admin = db.query(Registered.user_id).filter(
+            Registered.family_id == family_id,
+            Registered.is_admin == True
+        ).first()
+
+        return {
+            "id": db_family.id,
+            "admin": admin[0] if admin else None,
+            "members": [MemberInfo(user_id=user_id, email=email, is_admin=is_admin) for user_id, email, is_admin in members],
+            "family_name": db_family.family_name
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update family: {str(e)}"
+        )
 
 class SendMessageRequest(BaseModel):
     text: str

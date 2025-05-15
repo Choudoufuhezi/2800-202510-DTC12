@@ -1,4 +1,4 @@
-import { API_URL } from './config.js';
+import { API_URL, BASE_URL } from './config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('join-form');
@@ -43,19 +43,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     linkButton.addEventListener('click', () => {
-        window.location.href = '/invite.html';
+        window.location.href = `${BASE_URL}/invite.html`;
     });
 
     form.addEventListener('submit', async e => {
         e.preventDefault();
         if (!localStorage.getItem('token')) {
-            window.location.href = '/login.html';
+            window.location.href = `${BASE_URL}/login.html`;
             return;
         }
 
         const code = codeInput.value.trim();
         if (!/^\d{6}$/.test(code)) {
-            errorMessage.textContent = 'Please enter a valid 6-digit code';
+            errorMessage.textContent = 'Please enter a valid 6-digit numeric code';
             errorMessage.classList.remove('hidden');
             return;
         }
@@ -71,13 +71,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                if (response.status === 401) window.location.href = '/login.html';
+                if (response.status === 401) window.location.href = `${BASE_URL}/login.html`;
                 const errorData = await response.json();
                 throw new Error(errorData.detail || 'Failed to join family');
             }
 
             const data = await response.json();
-            window.location.href = `family-members.html?familyId=${data.id}`;
+            window.location.href = `${BASE_URL}/family-members.html?familyId=${data.id}`;
         } catch (error) {
             console.error('Error joining family:', error);
             errorMessage.textContent = error.message;

@@ -1,11 +1,11 @@
-import { API_URL } from './config.js';
+import { API_URL, BASE_URL } from './config.js';
 
 const familiesContainer = document.getElementById('families-container');
 const errorMessage = document.getElementById('error-message');
 
 async function loadFamilies() {
     if (!localStorage.getItem('token')) {
-        window.location.href = '/login.html';
+        window.location.href = `${BASE_URL}/login.html`;
         return;
     }
 
@@ -19,7 +19,7 @@ async function loadFamilies() {
 
         if (!response.ok) {
             if (response.status === 401) {
-                window.location.href = '/login.html';
+                window.location.href = `${BASE_URL}/login.html`;
                 throw new Error('Unauthorized');
             }
             throw new Error('Failed to fetch families');
@@ -41,7 +41,7 @@ async function loadFamilies() {
             const family = await familyResponse.json();
             if (!family.family_name) {
                 console.warn(`Family ${familyId} has no name`);
-                continue; 
+                continue;
             }
             const familyCard = document.createElement('div');
             familyCard.className = 'block bg-white p-4 rounded-xl shadow hover:shadow-md transition';
@@ -77,7 +77,7 @@ async function loadFamilies() {
                             body: JSON.stringify({ family_name: newName.trim() }),
                         });
                         if (!response.ok) {
-                            if (response.status === 401) window.location.href = '/login.html';
+                            if (response.status === 401) window.location.href = `${BASE_URL}/login.html`;
                             if (response.status === 403) throw new Error('Only admins can update family name');
                             throw new Error('Failed to update family name');
                         }
