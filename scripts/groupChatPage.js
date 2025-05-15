@@ -42,6 +42,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const sendBtn = document.getElementById("send-btn");
     const chatBox = document.getElementById("chat-box");
 
+    // Get chatroom ID from window object
+    const chatroomId = window.chatroomId;
+    if (!chatroomId) {
+        console.error("No chatroom ID provided");
+        window.location.href = "/family-members.html";
+        return;
+    }
+
     // TODO: Move this to another aspect, rn it could be confusing
     const translationSelect = document.createElement("select");
     translationSelect.className = "p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-300";
@@ -119,7 +127,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let selectedMember = null;
     let replyTo = null;
-    const chatroomId = 1;
 
     // Fetch message history
     try {
