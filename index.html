@@ -1,50 +1,100 @@
-<html>
+<html lang="en">
 
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <meta charset="UTF-8" />
+    <title>Digital Family Vault</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            background: linear-gradient(to right, #f5f3eb, #fcefe3);
+        }
+
+        .noise-bg {
+            background-image: url("https://www.transparenttextures.com/patterns/paper-fibers.png");
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .fade-in {
+            animation: fadeIn 1.2s ease-in-out both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 
-<body class="bg-[#f5f3eb98]">
-    <!--Top Nav-->
-    <nav id="topNav" class="sticky top-0"></nav>
-    <div class="flex justify-center py-20">
-        <p class="font-semibold text-5xl text-left">Digital Family Vault</p>
-    </div>
-    <div class="flex text-center justify-center py-10 flex-row md:flex-col lg:flex-row">
-        <div class="w-full md:w-4/5 lg:w-1/5 text-container">
-            <div>
-                <h1 class="m-6 font-semibold text-left">Build Your Family's Legacy, One Memory at a Time</h1>
-                <p class="m-6 text-left">Securely preserve your cherished stories, photos, recipes, and wisdom in a
-                    private, encrypted vault. The app is more
-                    than just storage, it's a digital heirloom designed to connect generations and ensure your family's
-                    unique history
-                    lives on.</p>
+<body class="noise-bg text-gray-800">
+    <!-- Top Navbar -->
+    <nav id="topNav" class="sticky top-0 z-50 bg-white/70 backdrop-blur-md shadow-md"></nav>
+
+    <section class="text-center py-20 px-6 fade-in">
+        <h1
+            class="text-6xl font-extrabold bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent drop-shadow-lg">
+            Digital Family Vault
+        </h1>
+        <p class="mt-4 text-lg text-gray-600 max-w-xl mx-auto">
+            A beautiful home for your family’s past, present, and future.
+        </p>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-6 py-10 flex flex-col lg:flex-row gap-12 items-center fade-in">
+        <!-- Glass Cards -->
+        <div class="flex-1 space-y-6">
+            <div class="p-6 rounded-3xl glass shadow-xl transition hover:scale-105">
+                <h2 class="text-2xl font-semibold mb-2 text-rose-600">Build Your Family's Legacy</h2>
+                <p class="text-gray-700">Securely preserve stories, recipes, and wisdom in a private encrypted vault
+                    that lasts generations.</p>
             </div>
-            <div>
-                <h1 class="m-6 font-semibold text-left">Connect Generations Through Shared Memories</h1>
-                <p class="m-6 text-left">Ring your family closer with the app, the private space to relive precious
-                    moments together. Share stories, photos,
-                    traditions, and even chat directly about memories, bridging distances and strengthening bonds across
-                    generations.</p>
+            <div class="p-6 rounded-3xl glass shadow-xl transition hover:scale-105">
+                <h2 class="text-2xl font-semibold mb-2 text-pink-600">Connect Across Generations</h2>
+                <p class="text-gray-700">Relive precious memories, share traditions, and keep your family emotionally
+                    closer.</p>
             </div>
-            <div>
-                <h1 class="m-6 font-semibold text-left">Turn Memories into a Living Family Storybook</h1>
-                <p class="m-6 text-left">Experience your family's history in a richer, more engaging way. The app allows
-                    you to structure memories as
-                    captivating stories, complete with context and connection, creating a meaningful heirloom to pass
-                    down.</p>
+            <div class="p-6 rounded-3xl glass shadow-xl transition hover:scale-105">
+                <h2 class="text-2xl font-semibold mb-2 text-purple-600">Turn Memories into a Storybook</h2>
+                <p class="text-gray-700">Structure moments into beautiful narratives—your family’s very own digital
+                    heirloom.</p>
             </div>
         </div>
-        <div class="grid grid-cols-2 grid-rows-2 space-x-3 space-y-3 mt-6 md:mt-6 lg:mt-0 image-grid">
-            <img class="shadow-2xl" src="images/family.webp" width="500" height="500">
-            <img class="shadow-2xl" src="images/family2.webp" width="500" height="500">
-            <img class="shadow-2xl" src="images/family3.jpg" width="500" height="500">
-            <img class="shadow-2xl" src="images/family4.jpg" width="500" height="500">
+
+        <div class="flex-1 grid grid-cols-2 gap-4">
+            <div class="rounded-xl overflow-hidden shadow-xl transform transition hover:scale-105 hover:rotate-1">
+                <img src="images/family.webp" class="object-cover w-full h-full" alt="Family 1">
+            </div>
+            <div class="rounded-xl overflow-hidden shadow-xl transform transition hover:scale-105 hover:-rotate-1">
+                <img src="images/family2.webp" class="object-cover w-full h-full" alt="Family 2">
+            </div>
+            <div class="rounded-xl overflow-hidden shadow-xl transform transition hover:scale-105 hover:rotate-2">
+                <img src="images/family3.jpg" class="object-cover w-full h-full" alt="Family 3">
+            </div>
+            <div class="rounded-xl overflow-hidden shadow-xl transform transition hover:scale-105 hover:-rotate-2">
+                <img src="images/family4.jpg" class="object-cover w-full h-full" alt="Family 4">
+            </div>
         </div>
-    </div>
-    <!--Bottom Nav-->
-    <nav id="bottomNav" class="sticky bottom-0"></nav>
+    </section>
+
+    <!-- Bottom Navbar -->
+    <nav id="bottomNav" class="sticky bottom-0 z-50 bg-white/70 backdrop-blur-md shadow-inner"></nav>
+
+    <!-- Scripts -->
     <script src="../scripts/load_family_icon.js"></script>
     <script src="../scripts/add_nav.js"></script>
 </body>
