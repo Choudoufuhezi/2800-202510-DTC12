@@ -285,6 +285,23 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("reply-preview").classList.add("hidden");
     });
 
+
+    const settingsBtn = document.getElementById("settings-btn");
+    const settingsModal = document.getElementById("settings-modal");
+    const closeSettings = document.getElementById("close-settings");
+
+    // Open Settings Modal
+    settingsBtn.addEventListener("click", () => {
+        groupInfoModal.classList.add("hidden"); // Optional: hide group info modal
+        settingsModal.classList.remove("hidden");
+    });
+
+    // Close Settings Modal
+    closeSettings.addEventListener("click", () => {
+        settingsModal.classList.add("hidden");
+    });
+
+    
     // Initial render
     renderHeader();
     renderMessages();
