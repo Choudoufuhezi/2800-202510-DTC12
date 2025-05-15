@@ -139,4 +139,11 @@ async def create_group_chat(
             {"user_id": target_user.id}
         ]
     }
+
+@router.get("/user/id")
+async def get_user_id(current_user: User = Depends(get_current_user)):
+    """
+    Get the current user's ID
+    """
+    return {"user_id": current_user.id}
     
