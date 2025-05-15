@@ -42,6 +42,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     const sendBtn = document.getElementById("send-btn");
     const chatBox = document.getElementById("chat-box");
 
+    // TODO: Move this to another aspect, rn it could be confusing
+    const translationSelect = document.createElement("select");
+    translationSelect.className = "p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-300";
+    translationSelect.innerHTML = `
+        <option value="">Original Language</option>
+        <option value="English">English</option>
+        <option value="Spanish">Spanish</option>
+        <option value="French">French</option>
+        <option value="German">German</option>
+        <option value="Chinese">Chinese</option>
+        <option value="Japanese">Japanese</option>
+        <option value="Korean">Korean</option>
+    `;
+
+    const inputContainer = input.parentElement;
+    inputContainer.insertBefore(translationSelect, input);
     let selectedMember = null;
     let replyTo = null;
     const chatroomId = 1;
