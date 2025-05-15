@@ -94,6 +94,29 @@ async function fetchFamilyMemberMemories(memberUserId, familyId) {
     }
 }
 
+async function deleteMemory(memoryId) {
+    const token = localStorage.getItem("token");
+
+    try {
+        const response = await fetch(`http://localhost:8000/memories/${memoryId}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            console.error("Failed to delete memory:", error);
+            return false;
+        }
+        return true;
+    }
+    catch (error) {
+        console.error("Error deleting memory:", error);
+        return false;
+    }
+}
+
 function modal(img, data) {
     const modal = document.createElement('div');
     modal.className = "fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50";
@@ -112,13 +135,19 @@ function modal(img, data) {
     const deleteButtonModal = document.createElement('button');
     deleteButtonModal.innerHTML = '<i class="fas fa-trash"></i>';
     deleteButtonModal.className = "text-red-500 hover:text-red-700 p-4 text-xl";
-    deleteButtonModal.addEventListener('click', () => {
+    deleteButtonModal.addEventListener('click', async () => {
         if (confirm("Are you sure you want to delete this photo?")) {
-            img.remove();
-            modal.remove();
-            if (photoGrid.children.length === 0) {
-                removePhotoEmptyMessage.classList.remove('hidden');
-                addMorePhotos.classList.add('hidden');
+            const memoryId = img.dataset.memoryId;
+            const deleted = await deleteMemory(memoryId);
+            if (deleted) {
+                img.remove();
+                modal.remove();
+                if (photoGrid.children.length === 0) {
+                    removePhotoEmptyMessage.classList.remove('hidden');
+                    addMorePhotos.classList.add('hidden');
+            }
+        } else {
+                alert("Failed to delete memory.");
             }
         }
     });
@@ -235,6 +264,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         const img = document.createElement("img");
         img.src = memory.file_url;
         img.dataset.imageId = memory.cloudinary_id;
+        img.dataset.memoryId = memory.id; 
         img.className = "max-w-full h-auto rounded shadow";
         img.addEventListener("click", async () => {
             const data = await getImageData(img.dataset.imageId);
