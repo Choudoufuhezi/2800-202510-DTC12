@@ -30,6 +30,8 @@ class User(Base):
     address = Column(String, nullable=True)
     profile_picture = Column(String, nullable=True)
     profile_background_picture = Column(String, nullable=True)
+    cloudinary_profile_picture_id = Column(String, nullable=True)
+    cloudinary_profile_background_picture_id = Column(String, nullable=True)
     hashed_password = Column(String)
     email_verified = Column(Boolean, default=False)
     verification_token = Column(String, nullable=True)
@@ -104,6 +106,7 @@ class Memory(Base):
     date_for_notification = Column(DateTime, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"))
     family_id = Column(Integer, ForeignKey("family.id"))
+    resource_type = Column(String, default="image")
 
 class Comment(Base):
     __tablename__ = "comment"
@@ -139,6 +142,8 @@ def create_user(db, email: str, hashed_password: str, verification_token: str = 
         address=None,
         profile_picture=None,
         profile_background_picture=None,
+        cloudinary_profile_picture_id=None,
+        cloudinary_profile_background_picture_id=None,
         email_verified=False,
         verification_token=verification_token
     )
@@ -215,6 +220,8 @@ def create_family_invite(db, family_id: int, code: int, created_by: int, expires
     return db_invite
 
 def create_memory(db, location: dict, tags: str, file_url: str, cloudinary_id: str, date_for_notification: datetime, user_id: int, family_id: int):
+    resource_type = "raw" if file_url.lower().endswith(".pdf") else "image"
+    
     db_memory = Memory(
         location=location,
         tags=tags,
@@ -222,12 +229,19 @@ def create_memory(db, location: dict, tags: str, file_url: str, cloudinary_id: s
         cloudinary_id=cloudinary_id,
         date_for_notification=date_for_notification,
         user_id=user_id,
-        family_id=family_id
-    )
+        family_id=family_id,
+        resource_type=resource_type
+        )
     db.add(db_memory)
     db.commit()
     db.refresh(db_memory)
     return db_memory
+
+def get_memory_by_family(db, user_id: int, family_id: int):
+    return db.query(Memory).filter (
+        Memory.user_id == user_id,
+        Memory.family_id == family_id
+    ).all()
 
 def delete_memory(db, memory_id: int, requesting_user_id: int, family_id: int):
     db_memory = db.query(Memory).filter(Memory.id == memory_id).first()
@@ -238,9 +252,10 @@ def delete_memory(db, memory_id: int, requesting_user_id: int, family_id: int):
     
     # only poster and admins can delete
     is_owner = db_memory.user_id == requesting_user_id
-    is_admin = db.query(Family).filter(
-        Family.id == db_memory.family_id,
-        Family.admin == requesting_user_id
+    is_admin = db.query(Registered).filter_by(
+        user_id=requesting_user_id,
+        family_id=db_memory.family_id,
+        is_admin=True
     ).first()
     
     if not is_owner and not is_admin:

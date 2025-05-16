@@ -11,9 +11,6 @@
 
     <!-- Font Awesome for icons -->
     <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
-
-    <!-- Group Chat Page JS -->
-    <script defer src="scripts/groupChatPage.js"></script>
 </head>
 
 <body class="bg-[#f5f3eb98]">
@@ -100,6 +97,15 @@
     <!--JavaScript-->
     <script src="../scripts/add_nav.js"></script>
     <script src="../scripts/load_family_icon.js"></script>
+    <script type="module" src="../scripts/groupChatPage.js"></script>
+    <script>
+        // Get chatroom ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const chatroomId = urlParams.get('chatroomId');
+        if (chatroomId) {
+            window.chatroomId = parseInt(chatroomId);
+        }
+    </script>
 </body>
 
 </html>

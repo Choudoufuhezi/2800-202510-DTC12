@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     # frontend_url: str = "http://localhost:3000"  # Local development URL
     frontend_url: str = "https://dev--digitalfamilyvault.netlify.app"
     backend_url: str = "https://two800-202510-dtc12-0d55.onrender.com"
-
+    
     # Google OAuth
     google_client_id: str
     google_client_secret: str
@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     smtp_port: int
     smtp_username: str
     smtp_password: str
+    
+    # Deepseek settings
+    deepseek_api_key: str
     
     class Config:
         env_file = ".env"
