@@ -58,6 +58,7 @@ async function uploadMemory({ location, file_url, cloudinary_id, tags, family_id
             })
         });
 
+
         if (!response.ok) {
             const error = await response.json();
             console.error("Failed to upload memory:", error);
@@ -145,8 +146,8 @@ function modal(img, data) {
                 if (photoGrid.children.length === 0) {
                     removePhotoEmptyMessage.classList.remove('hidden');
                     addMorePhotos.classList.add('hidden');
-            }
-        } else {
+                }
+            } else {
                 alert("Failed to delete memory.");
             }
         }
@@ -264,7 +265,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         const img = document.createElement("img");
         img.src = memory.file_url;
         img.dataset.imageId = memory.cloudinary_id;
-        img.dataset.memoryId = memory.id; 
+        img.dataset.memoryId = memory.id;
         img.className = "max-w-full h-auto rounded shadow";
         img.addEventListener("click", async () => {
             const data = await getImageData(img.dataset.imageId);
@@ -278,6 +279,13 @@ window.addEventListener("DOMContentLoaded", async () => {
 fileInput.addEventListener("change", async (event) => {
     const file = event.target.files[0];
     if (!file) return;
+
+    const maxSizeMB = 50;
+    if (file.size > maxSizeMB * 1024 * 1024) {
+        alert(`video size cannot be larger than${maxSizeMB}MB`);
+        fileInput.value = "";
+        return;
+    }
 
     const formData = new FormData();
     formData.append("file", file);
