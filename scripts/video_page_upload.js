@@ -1,74 +1,52 @@
 import { getLocation } from './geolocation.js';
 import { API_URL } from './config.js';
 
-const removePhotoEmptyMessage = document.getElementById("photoEmptyMessage");
+const removeVideoEmptyMessage = document.getElementById("videoEmptyMessage");
 const uploadButton = document.getElementById("uploadButton");
 const fileInput = document.getElementById("fileInput");
-const photoGrid = document.getElementById("photoGrid");
-const addMorePhotos = document.getElementById("addMorePhotosButton");
+const videoGrid = document.getElementById("videoGrid");
+const addMoreVideos = document.getElementById("addMoreVideosButton");
 
 uploadButton.addEventListener("click", () => {
     fileInput.click();
 });
 
-addMorePhotos.addEventListener('click', () => {
+addMoreVideos.addEventListener('click', () => {
     fileInput.click();
 });
 
-//  Comment fetch APIs 
-async function getComments(imageId) {
+
+async function getComments(videoId) {
     return [
         { user: "Alice", text: "Nice shot!" },
         { user: "Bob", text: "Great view." }
     ];
 }
 
-// Image Data API 
-async function getImageData(memory) {
-    const element = document.querySelector(`[data-image-id="${memory.cloudinary_id}"]`);
-    const src = element?.getAttribute("src") || element?.src || memory.file_url;
-
+async function getVideoData(videoId) {
     const location = await getLocation();
+    const video = document.querySelector(`video[data-video-id="${videoId}"]`);
     return {
-        src,
-        description: "This is a sample description for the image.",
-        tags: memory.tags,
+        src: video ? video.src : "",
+        description: "This is a sample description for the video.",
+        tags: "sample, test",
         geolocation: { location }
     };
 }
 
-// Comment posting API
-async function postComment(imageId, text) {
-    console.log(`(faked) POST comment "${text}" for image ${imageId}`);
-    return { success: true };
-}
-
 async function uploadMemory({ location, file_url, cloudinary_id, tags, family_id }) {
     const token = localStorage.getItem("token");
-
     try {
-        const response = await fetch(`${API_URL}/memories/`, {
+        const response = await fetch(`${API_URL}/memories`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                location,
-                tags,
-                file_url,
-                cloudinary_id,
-                family_id
-            })
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ location, tags, file_url, cloudinary_id, family_id })
         });
-
-
         if (!response.ok) {
-            const errorText = await response.json();
-            console.error("Failed to upload memory:", errorText);
+            const error = await response.json();
+            console.error("Failed to upload memory:", error);
             return null;
         }
-
         return await response.json();
     } catch (error) {
         console.error(error);
@@ -101,13 +79,10 @@ async function fetchFamilyMemberMemories(memberUserId, familyId) {
 
 async function deleteMemory(memoryId) {
     const token = localStorage.getItem("token");
-
     try {
         const response = await fetch(`${API_URL}/memories/${memoryId}`, {
             method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
+            headers: { Authorization: `Bearer ${token}` }
         });
         if (!response.ok) {
             const error = await response.json();
@@ -115,21 +90,16 @@ async function deleteMemory(memoryId) {
             return false;
         }
         return true;
-    }
-    catch (error) {
+    } catch (error) {
         console.error("Error deleting memory:", error);
         return false;
     }
 }
 
-function modal(img, data) {
+function modal(video, data) {
     const modal = document.createElement('div');
     modal.className = "fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50";
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.remove();
-        }
-    });
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
 
     const modalContent = document.createElement('div');
     modalContent.className = "bg-white pt-2 pb-6 px-6 rounded shadow-lg max-w-md w-full";
@@ -141,15 +111,15 @@ function modal(img, data) {
     deleteButtonModal.innerHTML = '<i class="fas fa-trash"></i>';
     deleteButtonModal.className = "text-red-500 hover:text-red-700 p-4 text-xl";
     deleteButtonModal.addEventListener('click', async () => {
-        if (confirm("Are you sure you want to delete this photo?")) {
-            const memoryId = img.dataset.memoryId;
+        if (confirm("Are you sure you want to delete this video?")) {
+            const memoryId = video.dataset.memoryId;
             const deleted = await deleteMemory(memoryId);
             if (deleted) {
-                img.remove();
+                video.remove();
                 modal.remove();
-                if (photoGrid.children.length === 0) {
-                    removePhotoEmptyMessage.classList.remove('hidden');
-                    addMorePhotos.classList.add('hidden');
+                if (videoGrid.children.length === 0) {
+                    removeVideoEmptyMessage.classList.remove('hidden');
+                    addMoreVideos.classList.add('hidden');
                 }
             } else {
                 alert("Failed to delete memory.");
@@ -166,26 +136,11 @@ function modal(img, data) {
 
     modalContent.appendChild(header);
 
-    let contentElement;
-    const isPdf = data.src.toLowerCase().endsWith('.pdf');
-
-    if (isPdf) {
-        contentElement = document.createElement('iframe');
-        contentElement.src = data.src;
-        contentElement.type = "application/pdf";
-        contentElement.className = "w-full rounded mb-4";
-        contentElement.style.height = "500px";
-        contentElement.style.minHeight = "500px";
-        contentElement.style.width = "100%";
-        contentElement.setAttribute("frameborder", "0");
-        contentElement.setAttribute("allowfullscreen", "true");
-
-    } else {
-        contentElement = document.createElement('img');
-        contentElement.src = data.src;
-        contentElement.className = "w-full h-auto rounded mb-4";
-    }
-    modalContent.appendChild(contentElement);
+    const modalVideo = document.createElement('video');
+    modalVideo.src = data.src;
+    modalVideo.controls = true;
+    modalVideo.className = "w-full h-auto rounded mb-4";
+    modalContent.appendChild(modalVideo);
 
     const description = document.createElement('p');
     description.innerText = data.description;
@@ -196,11 +151,6 @@ function modal(img, data) {
     tags.innerText = `Tags: ${data.tags}`;
     tags.className = "text-gray-700 mb-4";
     modalContent.appendChild(tags);
-
-    const editButton = document.createElement('button');
-    editButton.innerHTML = '<i class="fas fa-edit"></i>';
-    editButton.className = "bg-sky-400 text-white px-2 py-1 hover:bg-sky-300 rounded mr-2 mb-4";
-    modalContent.appendChild(editButton);
 
     const geolocation = document.createElement('p');
     geolocation.innerText = `Location: ${data.geolocation.location.address.city}, ${data.geolocation.location.address.country}`;
@@ -255,7 +205,6 @@ function modal(img, data) {
                 await loadComments();
             });
             commentItem.appendChild(deleteButton);
-
             commentsList.appendChild(commentItem);
         });
     }
@@ -271,75 +220,48 @@ function modal(img, data) {
     loadComments();
     modal.appendChild(modalContent);
     document.body.appendChild(modal);
-};
+}
 
 window.addEventListener("DOMContentLoaded", async () => {
-    const memberUserId = 1; // replace with dynamic logic
-    const familyId = 1; // replace with dynamic logic
+    const memberUserId = 1;
+    const familyId = 1;
     const memories = await fetchFamilyMemberMemories(memberUserId, familyId);
     if (memories && memories.length > 0) {
-        removePhotoEmptyMessage.classList.add("hidden");
-        addMorePhotos.classList.remove("hidden");
+        removeVideoEmptyMessage.classList.add("hidden");
+        addMoreVideos.classList.remove("hidden");
     }
-    if (!memories || memories.length === 0) return;
     memories.forEach((memory) => {
-        const isPdf = memory.file_url.toLowerCase().endsWith(".pdf");
-
-        const wrapper = document.createElement("div");
-        wrapper.className = isPdf ? "relative w-full rounded" : "";
-
-        const element = isPdf
-            ? document.createElement("iframe")
-            : document.createElement("img");
-
-        element.src = memory.file_url;
-        element.dataset.imageId = memory.cloudinary_id;
-        element.dataset.memoryId = memory.id;
-        element.className = isPdf ? "w-full h-auto rounded" : "w-full h-auto";
-        element.style.border = "none";
-
-        if (isPdf) {
-            element.style.height = "250px";
-
-            const overlay = document.createElement("div");
-            overlay.className = "absolute inset-0 z-10 cursor-pointer";
-            overlay.style.background = "transparent";
-
-            overlay.addEventListener("click", async () => {
-                const data = await getImageData(memory);
-                modal(element, data);
-            });
-
-            wrapper.appendChild(element);
-            wrapper.appendChild(overlay);
-            photoGrid.appendChild(wrapper);
-        } else {
-            element.classList.add("w-full", "h-auto", "rounded", "cursor-pointer");
-            element.addEventListener("click", async () => {
-                const data = await getImageData(memory);
-                modal(element, data);
-            });
-
-            photoGrid.appendChild(element);
-        }
+        const video = document.createElement("video");
+        video.src = memory.file_url;
+        video.dataset.videoId = memory.cloudinary_id;
+        video.dataset.memoryId = memory.id;
+        video.controls = true;
+        video.className = "max-w-full h-auto rounded shadow cursor-pointer";
+        video.addEventListener("click", async () => {
+            const data = await getVideoData(video.dataset.videoId);
+            modal(video, data);
+        });
+        videoGrid.appendChild(video);
     });
 });
 
-// Uploading image to Cloudinary
 fileInput.addEventListener("change", async (event) => {
     const file = event.target.files[0];
     if (!file) return;
+
+    const maxSizeMB = 50;
+    if (file.size > maxSizeMB * 1024 * 1024) {
+        alert(`video size cannot be larger than${maxSizeMB}MB`);
+        fileInput.value = "";
+        return;
+    }
 
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", "digital_family_vault");
 
     try {
-        const uploadUrl = file.type === "application/pdf"
-            ? "https://api.cloudinary.com/v1_1/dz7lbivvf/raw/upload"
-            : "https://api.cloudinary.com/v1_1/dz7lbivvf/image/upload";
-
-        const upload_cloudinary = await fetch(uploadUrl, {
+        const upload_cloudinary = await fetch(`https://api.cloudinary.com/v1_1/dz7lbivvf/video/upload`, {
             method: "POST",
             body: formData
         });
@@ -347,70 +269,40 @@ fileInput.addEventListener("change", async (event) => {
         const result = await upload_cloudinary.json();
 
         if (result.secure_url) {
-            const imageURL = result.secure_url;
+            const videoURL = result.secure_url;
             const publicID = result.public_id;
 
-            console.log("Upload successful");
-            console.log("Image URL:", imageURL);
-            console.log("Cloudinary ID:", publicID);
+            console.log("Upload successful", videoURL, publicID);
 
             const location = await getLocation();
 
-            const uploadedMemory = await uploadMemory({
+            await uploadMemory({
                 location,
-                file_url: imageURL,
+                file_url: videoURL,
                 cloudinary_id: publicID,
                 tags: "sample, test",
                 family_id: 1
             });
 
-            if (!uploadedMemory) {
-                alert("Memory upload failed.");
-                return;
-            }
+            removeVideoEmptyMessage.classList.add("hidden");
+            addMoreVideos.classList.remove("hidden");
 
-            removePhotoEmptyMessage.classList.add("hidden");
-            addMorePhotos.classList.remove("hidden");
+            const video = document.createElement("video");
+            video.src = videoURL;
+            video.dataset.videoId = publicID;
+            video.controls = true;
+            video.className = "max-w-full h-auto rounded shadow cursor-pointer";
 
-            const isPdf = file.type === "application/pdf";
-            const element = isPdf ? document.createElement("iframe") : document.createElement("img");
-
-            element.src = imageURL;
-            element.dataset.imageId = publicID;
-            element.dataset.memoryId = uploadedMemory.id;
-            element.className = "w-full rounded";
-            if (isPdf) {
-                element.style.height = "250px";
-                element.style.width = "100%";
-
-                // Create overlay for iframe
-                const overlay = document.createElement("div");
-                overlay.className = "absolute inset-0 cursor-pointer bg-transparent z-10";
-                overlay.addEventListener("click", async () => {
-                    const data = await getImageData(uploadedMemory);
-                    modal(element, data);
-                });
-
-                // Wrap iframe + overlay
-                const wrapper = document.createElement("div");
-                wrapper.className = "relative w-full";
-                wrapper.appendChild(element);
-                wrapper.appendChild(overlay);
-                photoGrid.appendChild(wrapper);
-
-            } else {
-                element.addEventListener("click", async () => {
-                    const data = await getImageData(uploadedMemory);
-                    modal(element, data);
-                });
-                photoGrid.appendChild(element);
-            }
+            video.addEventListener('click', async () => {
+                const data = await getVideoData(video.dataset.videoId);
+                modal(video, data);
+            });
+            videoGrid.appendChild(video);
 
         } else {
             alert("Upload failed. No secure_url returned.");
             console.error(result);
         }
-
     } catch (error) {
         console.error("Cloudinary upload error:", error);
         alert("Upload failed. Check console for details.");
