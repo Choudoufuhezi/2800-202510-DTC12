@@ -15,13 +15,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const errorMessage = document.getElementById('error-message');
 
     if (!localStorage.getItem('token')) {
-        console.log('No token found, redirecting to login');
         window.location.href = `${BASE_URL}/login.html`;
         return;
     }
 
     if (!familyId) {
-        console.log('No family ID provided in URL');
         errorMessage.textContent = 'No family ID provided';
         errorMessage.classList.remove('hidden');
         loading.classList.add('hidden');
@@ -29,85 +27,82 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        console.log('Fetching family details for familyId:', familyId);
+        // Step 1: Fetch Family Details
         const familyResponse = await fetch(`${API_URL}/family/${familyId}/members`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
         });
 
         if (!familyResponse.ok) {
+            if (familyResponse.status === 401) window.location.href = `${BASE_URL}/login.html`;
+            if (familyResponse.status === 403) throw new Error('You are not a member of this family');
             const errorData = await familyResponse.json();
-            console.log('Family fetch failed:', familyResponse.status, errorData);
-            if (familyResponse.status === 401) {
-                window.location.href = `${BASE_URL}/login.html`;
-                throw new Error('Unauthorized: Please log in again');
-            }
-            if (familyResponse.status === 403) {
-                throw new Error('You are not a member of this family');
-            }
             throw new Error(errorData.detail || 'Failed to fetch family details');
         }
 
         const family = await familyResponse.json();
-        console.log('Family data:', family);
-        familyDescription.textContent = `Invite someone to join ${family.family_name}`;
+        const familyName = family?.family_name || 'this family';
+        familyDescription.textContent = `Invite someone to join ${familyName}`;
 
-        console.log('Creating invite for familyId:', familyId);
+        // Step 2: Create Invite
         const inviteResponse = await fetch(`${API_URL}/family/create-invite`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
             },
-            body: JSON.stringify({ family_id: parseInt(familyId), expires_in_hours: 24, max_uses: 1 }),
+            body: JSON.stringify({
+                family_id: parseInt(familyId),
+                expires_in_hours: 24,
+                max_uses: 1
+            }),
         });
 
         if (!inviteResponse.ok) {
+            if (inviteResponse.status === 401) window.location.href = `${BASE_URL}/login.html`;
+            if (inviteResponse.status === 403) throw new Error('Only family admins can create invites');
             const errorData = await inviteResponse.json();
-            console.log('Invite creation failed:', inviteResponse.status, errorData);
-            if (inviteResponse.status === 401) {
-                window.location.href = `${BASE_URL}/login.html`;
-                throw new Error('Unauthorized: Please log in again');
-            }
-            if (inviteResponse.status === 403) {
-                throw new Error('Only family admins can create invites');
-            }
             throw new Error(errorData.detail || 'Failed to create invite');
         }
 
         const invite = await inviteResponse.json();
-        console.log('Invite created:', invite);
+
+        // Step 3: Display Invite Info
         codeElement.textContent = invite.code;
-        inviteLinkElement.textContent = invite.invite_link;
+        inviteLinkElement.textContent = invite.invite_link || 'Link not available';
 
         const expiresAt = new Date(invite.expires_at);
         const now = new Date();
-        const minutesLeft = Math.round((expiresAt - now) / 1000 / 60);
-        expiresInElement.textContent = `${minutesLeft} minutes`;
+        const minutesLeft = Math.max(1, Math.round((expiresAt - now) / 60000));
+        expiresInElement.textContent = `${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}`;
 
+        // Set back button destination
         backToMembersButton.href = `${BASE_URL}/family-members.html?familyId=${familyId}`;
-        console.log('Set redirect to family-members.html with familyId:', familyId);
 
+        // Show content
         loading.classList.add('hidden');
         inviteContent.classList.remove('hidden');
 
+        // Optional: Auto-redirect after 5s
         setTimeout(() => {
-            console.log('Auto-redirecting to family-members.html');
             window.location.href = backToMembersButton.href;
         }, 5000);
     } catch (error) {
         console.error('Error in manage-members.js:', error);
-        errorMessage.textContent = error.message;
+        errorMessage.textContent = error.message || 'Something went wrong';
         errorMessage.classList.remove('hidden');
         loading.classList.add('hidden');
     }
 
-    copyCodeButton.addEventListener('click', () => {
+    // Clipboard copy buttons
+    copyCodeButton?.addEventListener('click', () => {
         navigator.clipboard.writeText(codeElement.textContent)
             .then(() => alert('Code copied to clipboard!'))
             .catch(() => alert('Failed to copy code'));
     });
 
-    copyLinkButton.addEventListener('click', () => {
+    copyLinkButton?.addEventListener('click', () => {
         navigator.clipboard.writeText(inviteLinkElement.textContent)
             .then(() => alert('Link copied to clipboard!'))
             .catch(() => alert('Failed to copy link'));

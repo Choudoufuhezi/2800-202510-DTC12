@@ -3,50 +3,68 @@ import { API_URL, BASE_URL } from './config.js';
 document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const familyId = urlParams.get('familyId');
+    const userId = urlParams.get('userId');
+
     const familyNameElement = document.getElementById('family-name');
     const errorMessage = document.getElementById('error-message');
     const loading = document.getElementById('loading');
+    const backButton = document.getElementById('back-to-members');
 
     if (!localStorage.getItem('token')) {
         window.location.href = `${BASE_URL}/login.html`;
         return;
     }
 
-    if (!familyId || !/^\d+$/.test(familyId)) {
-        errorMessage.textContent = 'Invalid or missing family ID';
+    if (!familyId || !userId || !/^\d+$/.test(familyId) || !/^\d+$/.test(userId)) {
+        errorMessage.textContent = 'Missing or invalid family or user ID';
         errorMessage.classList.remove('hidden');
+        loading.classList.add('hidden');
         return;
     }
 
-    const handleError = (error, redirectOn401 = false) => {
-        if (redirectOn401 && error.message.includes('401')) {
-            window.location.href = `${BASE_URL}/login.html`;
-        }
-        errorMessage.textContent = error.message || 'An error occurred';
-        errorMessage.classList.remove('hidden');
-        loading.classList.add('hidden');
-    };
+    backButton.href = `family-members.html?familyId=${familyId}`;
 
     try {
-        loading.classList.remove('hidden');
-
-        const response = await fetch(`${API_URL}/family/${familyId}/members`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        // Fetch all memories for the selected member
+        const response = await fetch(`${API_URL}/memories/member/${userId}/family/${familyId}`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
         });
 
         if (!response.ok) {
-            const status = response.status;
-            throw new Error(status === 401 ? 'Unauthorized: Please log in again' : 'Failed to fetch family details');
+            if (response.status === 401) {
+                window.location.href = `${BASE_URL}/login.html`;
+                return;
+            }
+            throw new Error('Failed to load member memories');
         }
 
-        const family = await response.json();
-        if (!family.family_name) {
-            throw new Error('Family name missing');
-        }
+        const memories = await response.json();
 
-        familyNameElement.textContent = `${family.family_name} – Categories`;
+        // Group by tag
+        const tags = ['Photos', 'Videos', 'Recipes', 'Stories'];
+        const grouped = {};
+
+        tags.forEach(tag => grouped[tag] = []);
+        memories.forEach(mem => {
+            if (grouped[mem.tags]) {
+                grouped[mem.tags].push(mem);
+            }
+        });
+
+        // Update header
+        familyNameElement.textContent = `Categories for Member #${userId}`;
+
+        // Optional: log for debug
+        console.log('Grouped memories:', grouped);
+
         loading.classList.add('hidden');
+
     } catch (error) {
-        handleError(error, true);
+        console.error('Error:', error);
+        errorMessage.textContent = error.message || 'Something went wrong';
+        errorMessage.classList.remove('hidden');
+        loading.classList.add('hidden');
     }
 });

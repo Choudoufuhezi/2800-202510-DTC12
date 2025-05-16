@@ -2,7 +2,7 @@ import { API_URL, BASE_URL } from './config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     if (!localStorage.getItem('token')) {
-        window.location.href = `${BASE_URL}/login.html`;
+        window.location.href = `/login.html`;
         return;
     }
 
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 if (response.status === 401) {
-                    window.location.href = `${BASE_URL}/login.html`;
+                    window.location.href = `/login.html`;
                     throw new Error('Unauthorized');
                 }
                 if (response.status === 400) {
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Failed to create family');
             }
 
-            window.location.href = `${BASE_URL}/family-groups.html`;
+            window.location.href = `/family-groups.html`;
         } catch (error) {
             console.error('Error creating family:', error);
             errorMessage.textContent = error.message;

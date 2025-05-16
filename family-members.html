@@ -10,9 +10,11 @@
 </head>
 
 <body class="bg-[#f5f3eb98] text-gray-800">
+    <!-- Top Nav and Banner -->
     <nav id="topNav" class="sticky top-0"></nav>
     <div id="familyIconContainer"></div>
 
+    <!-- Main Section -->
     <main class="min-h-[calc(100vh-128px)] px-4 pt-6 pb-24 max-w-xl mx-auto">
         <header class="mb-6">
             <h2 id="family-name" class="text-2xl font-bold flex items-center text-gray-900">Loading...</h2>
@@ -30,21 +32,21 @@
             </button>
         </section>
 
-        <!-- Invite Member Button -->
+        <!-- Invite Button -->
         <section class="mt-10 space-y-4">
-            <a href="manage-members.html" id="invite-button">
-                <button
-                    class="w-full inline-flex items-center justify-center gap-2 bg-sky-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-sky-700 transition">
-                    <i class="fas fa-user-plus"></i> Invite a Family Member
-                </button>
-            </a>
+            <button id="invite-button"
+                class="w-full inline-flex items-center justify-center gap-2 bg-sky-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-sky-700 transition">
+                <i class="fas fa-user-plus"></i> Invite a Family Member
+            </button>
         </section>
-
+        
         <p id="error-message" class="text-red-500 mt-4 hidden text-center"></p>
     </main>
 
+    <!-- Bottom Nav -->
     <nav id="bottomNav" class="sticky bottom-0"></nav>
 
+    <!-- Scripts -->
     <script src="../scripts/add_nav.js"></script>
     <script src="../scripts/dark_mode.js"></script>
     <script src="../scripts/load_family_icon.js"></script>

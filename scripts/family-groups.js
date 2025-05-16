@@ -25,39 +25,35 @@ async function loadFamilies() {
             throw new Error('Failed to fetch families');
         }
 
-        const familyIds = await response.json();
+        const families = await response.json();
         familiesContainer.innerHTML = '';
 
-        if (familyIds.length === 0) {
+        if (families.length === 0) {
             familiesContainer.innerHTML = '<p class="text-gray-600">No families found. Create a new one!</p>';
             return;
         }
 
-        for (const familyId of familyIds) {
-            const familyResponse = await fetch(`${API_URL}/family/${familyId}/members`, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-            });
-            if (!familyResponse.ok) continue;
-            const family = await familyResponse.json();
+        for (const family of families) {
             if (!family.family_name) {
-                console.warn(`Family ${familyId} has no name`);
+                console.warn(`Family ${family.id} has no name`);
                 continue;
             }
+
             const familyCard = document.createElement('div');
             familyCard.className = 'block bg-white p-4 rounded-xl shadow hover:shadow-md transition';
             familyCard.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <a href="family-members.html?familyId=${familyId}" class="flex-1">
-                        <div>
-                            <h2 class="text-lg font-semibold text-gray-800">${family.family_name}</h2>
-                            <p class="text-sm text-gray-500 mt-1">${family.members.length} members</p>
-                        </div>
-                    </a>
-                    <button class="edit-name-button" data-family-id="${familyId}" data-current-name="${family.family_name}">
-                        <i class="fas fa-edit text-sky-600 hover:text-sky-700"></i>
-                    </button>
+        <div class="flex justify-between items-center">
+            <a href="family-members.html?familyId=${family.id}" class="flex-1">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800">${family.family_name}</h2>
+                    <p class="text-sm text-gray-500 mt-1">${family.members.length} members</p>
                 </div>
-            `;
+            </a>
+            <button class="edit-name-button" data-family-id="${family.id}" data-current-name="${family.family_name}">
+                <i class="fas fa-edit text-sky-600 hover:text-sky-700"></i>
+            </button>
+        </div>
+    `;
             familiesContainer.appendChild(familyCard);
         }
 
