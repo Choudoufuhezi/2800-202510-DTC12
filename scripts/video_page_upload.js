@@ -156,6 +156,67 @@ function modal(video, data) {
     geolocation.className = "text-gray-500 mb-4";
     modalContent.appendChild(geolocation);
 
+    const commentsSection = document.createElement('div');
+    commentsSection.className = "comments-section mb-4";
+
+    const commentsHeader = document.createElement('h3');
+    commentsHeader.innerText = "Comments";
+    commentsHeader.className = "text-lg font-semibold mb-2";
+    commentsSection.appendChild(commentsHeader);
+
+    const commentsList = document.createElement('div');
+    commentsList.className = "comments-list max-h-40 overflow-auto mb-2";
+    commentsSection.appendChild(commentsList);
+
+    const commentForm = document.createElement('form');
+    commentForm.className = "flex";
+    const commentInput = document.createElement('input');
+    commentInput.type = "text";
+    commentInput.placeholder = "Add a comment…";
+    commentInput.className = "flex-grow border p-2 mr-2 rounded";
+    const commentSubmit = document.createElement('button');
+    commentSubmit.type = "submit";
+    commentSubmit.innerHTML = '<i class="fas fa-paper-plane"></i>';
+    commentSubmit.className = "bg-indigo-600 text-white px-4 py-2 hover:bg-indigo-700 rounded";
+    commentForm.appendChild(commentInput);
+    commentForm.appendChild(commentSubmit);
+    commentsSection.appendChild(commentForm);
+
+    modalContent.appendChild(commentsSection);
+
+    async function loadComments() {
+        const comments = await getComments(img.dataset.imageId);
+        commentsList.innerHTML = "";
+        comments.forEach((c, index) => {
+            const commentItem = document.createElement('div');
+            commentItem.className = "flex justify-between items-center mb-1";
+
+            const commentText = document.createElement('p');
+            commentText.className = "text-gray-800";
+            commentText.innerText = `${c.user}: ${c.text}`;
+            commentItem.appendChild(commentText);
+
+            const deleteButton = document.createElement('button');
+            deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteButton.className = "text-red-500 hover:text-red-700 ml-2";
+            deleteButton.addEventListener('click', async () => {
+                await deleteComment(img.dataset.imageId, index);
+                await loadComments();
+            });
+            commentItem.appendChild(deleteButton);
+            commentsList.appendChild(commentItem);
+        });
+    }
+
+    commentForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const text = commentInput.value.trim();
+        if (!text) return;
+        console.log(`(faked) POST comment "${text}" for image ${img.dataset.imageId}`);
+        commentInput.value = "";
+    });
+
+    loadComments();
     modal.appendChild(modalContent);
     document.body.appendChild(modal);
 }
