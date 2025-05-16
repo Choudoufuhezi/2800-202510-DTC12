@@ -16,11 +16,25 @@ addMorePhotos.addEventListener('click', () => {
 });
 
 //  Comment fetch APIs 
-async function getComments(imageId) {
-    return [
-        { user: "Alice", text: "Nice shot!" },
-        { user: "Bob", text: "Great view." }
-    ];
+async function getComments(memoryID) {
+    const token = localStorage.getItem("token");
+    try {
+        const response = await fetch(`http://localhost:8000/comments/memories/${memoryID}`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            console.error("Failed to fetch comments:", error);
+            return null;
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching comments:", error);
+        return null;
+    }
 }
 
 // Image Data API 
@@ -38,9 +52,31 @@ async function getImageData(memory) {
 }
 
 // Comment posting API
-async function postComment(imageId, text) {
-    console.log(`(faked) POST comment "${text}" for image ${imageId}`);
-    return { success: true };
+async function postComment(memoryId, text) {
+    const token = localStorage.getItem("token");
+    try {
+        const response = await fetch(`http://localhost:8000/comments/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ 
+                memory_id: memoryId,
+                comment_text: text
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            console.error("Failed to post comment:", error);
+            return null;
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error posting comment:", error);
+        return null;
+    }
 }
 
 async function uploadMemory({ location, file_url, cloudinary_id, tags, family_id }) {
