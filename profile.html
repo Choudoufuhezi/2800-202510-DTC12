@@ -7,12 +7,31 @@
     <title>Profile</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            background-color: #f5f3eb98;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        .content-wrapper {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 1rem;
+        }
+    </style>
 </head>
 
 <body class="bg-[#f5f3eb98]">
     <!--Top Nav-->
     <nav id="topNav" class="sticky top-0"></nav>
     <div id="familyIconContainer"></div>
+
+    <div class="background-upload relative flex-1 h-24 cursor-pointer flex items-center justify-center text-gray-600">
+        <input type="file" id="uploadBackground" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" />
+        <span>click here to change </span>
+    </div>
 
     <!--Main Content-->
     <div class="min-h-[calc(100vh-64px-64px)]">
@@ -116,6 +135,19 @@
         formData.append("file", file);
         formData.append("upload_preset", "digital_family_vault");
 
+        const token = localStorage.getItem("token");
+
+        const delete_profile = await fetch(`${API_URL}/profile/delete`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ type: "profile_picture" })
+        });
+
+        console.log(delete_profile.response)
+
         try {
             const upload_cloudinary = await fetch(`https://api.cloudinary.com/v1_1/dz7lbivvf/image/upload`, {
                 method: "POST",
@@ -124,6 +156,7 @@
 
             const data = await upload_cloudinary.json()
             const profile_picture = await data.secure_url
+            const delete_token = await data.public_id
 
             const update_profile = await fetch(`${API_URL}/profile/update`, {
                 method: "PUT",
@@ -131,13 +164,72 @@
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify({ profile_picture })
+                body: JSON.stringify({
+                    profile_picture,
+                    cloudinary_profile_picture_id: delete_token
+                })
             });
 
-            const result = await update_profile.json();
+            await update_profile.json();
             alert("Profile updated successfully!");
         } catch {
             alert("Profile updated failed, please try again!");
+        }
+    });
+
+    document.getElementById('uploadBackground').addEventListener('change', async function (event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            document.body.style.backgroundImage = `url('${e.target.result}')`;
+        };
+        reader.readAsDataURL(file);
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "digital_family_vault");
+
+        const token = localStorage.getItem("token");
+
+        const delete_profile = await fetch(`${API_URL}/profile/delete`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ type: "profile_background_picture" })
+        });
+
+        console.log(delete_profile.response)
+
+        try {
+            const upload_cloudinary = await fetch(`https://api.cloudinary.com/v1_1/dz7lbivvf/image/upload`, {
+                method: "POST",
+                body: formData
+            })
+
+            const data = await upload_cloudinary.json()
+            const profile_background_picture = await data.secure_url
+            const delete_token = await data.public_id
+
+            const update_profile = await fetch(`${API_URL}/profile/update`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    profile_background_picture,
+                    cloudinary_profile_background_picture_id: delete_token
+                })
+            });
+
+            await update_profile.json();
+            alert("Profile background picture updated successfully!");
+        } catch {
+            alert("Profile background picture setup failed, please try again!");
         }
     });
 
@@ -162,9 +254,9 @@
         dateInput.focus();
     });
 
-    const token = localStorage.getItem("token");
-
     document.getElementById("save").addEventListener("click", async function () {
+        const token = localStorage.getItem("token");
+
         const username = document.getElementById("username_text").value
         const address = document.getElementById("address_text").value
         const date_of_birth = document.getElementById("dob_date").value
@@ -209,8 +301,11 @@
         } else {
             user_profile_image.src = '/images/user_image.png';
         }
-    });
 
+        if (data.profile_background_picture) {
+            document.body.style.backgroundImage = `url('${data.profile_background_picture}')`;
+        }
+    });
 
 </script>
 
