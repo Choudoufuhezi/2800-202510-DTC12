@@ -75,7 +75,45 @@ async def get_user_chatrooms(
         "name": chatroom.ChatRoom.name,
         "created_date": chatroom.ChatRoom.created_date.isoformat() if chatroom.ChatRoom.created_date else None
     } for chatroom in chatrooms]
-
+    
+@router.get("/chatrooms/{chatroom_id}/info")
+async def get_chatroom_info(
+    chatroom_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get information about a specific chatroom
+    """
+    # Verify membership
+    verify_chatroom_membership(db, current_user.id, chatroom_id)
+    
+    # Get chatroom info
+    chatroom = db.query(ChatRoom).filter(
+        ChatRoom.id == chatroom_id
+    ).first()
+    # return member count and last message
+    member_count = db.query(UserChatRoom).filter(
+        UserChatRoom.chatroom_id == chatroom_id
+    ).count()
+    last_message = db.query(Message).filter(
+        Message.chatroom_id == chatroom_id
+    ).order_by(Message.time_stamp.desc()).first()
+    
+    if not chatroom:
+        raise HTTPException(
+            status_code=404,
+            detail="Chatroom not found"
+        )
+    
+    return {
+        "chatroom_id": chatroom.id,
+        "name": chatroom.name,
+        "created_date": chatroom.created_date.isoformat() if chatroom.created_date else None,
+        "member_count": member_count,
+        "last_message": last_message.message_text if last_message else None
+    }
+    
 @router.get("/chatrooms/{chatroom_id}/members")
 async def get_chatroom_members(
     chatroom_id: int,
