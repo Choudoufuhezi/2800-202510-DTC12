@@ -12,7 +12,7 @@ from config import settings
 from typing import List
 from database import create_message, Message  # Importing the create_message function from database module
 
-router = APIRouter(prefix="/family")
+router = APIRouter()
 
 async def get_current_user(db: Session = Depends(get_db), email: str = Depends(get_current_user_email)):  
     db_user = db.query(User).filter(User.email == email).first() #first because there's only one occurence (ideally)
@@ -72,7 +72,7 @@ async def create_family(
         # Create the family
         db_family = Family(
             family_name=family_data.family_name,
-            family_banner=family_data.family_banner,  # Include family banner if provided
+            family_banner=family_data.family_banner,
         )
         db.add(db_family)
         db.commit()
@@ -87,21 +87,22 @@ async def create_family(
         db.add(db_registration)
         db.commit()
         
-        # Get all members
+        # Create members list using MemberInfo schema
         members = [
-            {
-                "user_id": current_user.id,
-                "email": current_user.email,
-                "is_admin": True
-            }
+            MemberInfo(
+                user_id=current_user.id,
+                email=current_user.email,
+                is_admin=True
+            )
         ]
-        
-        return {
-            "id": db_family.id,
-            "admin": current_user.id,
-            "members": members,
-            "family_name": db_family.family_name  # Include family_name in response
-        }
+
+        return FamilyInfo(
+            id=db_family.id,
+            admin=current_user.id,
+            members=members,
+            family_name=db_family.family_name
+        ).dict() 
+
     except Exception as e:
         db.rollback()
         raise HTTPException(
@@ -219,11 +220,14 @@ async def join_family(
     family = db.query(Family).filter(Family.id == db_invite.family_id).first()
 
     return FamilyInfo(
-        id=db_invite.family_id,
-        admin=admin[0] if admin else None,
-        members=[MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members],
-        family_name=family.family_name
-    )
+    id=db_invite.family_id,
+    admin=admin[0] if admin else None,
+    members=[
+        MemberInfo(user_id=user_id, email=email, is_admin=is_admin)
+        for user_id, email, is_admin in members
+    ],
+    family_name=family.family_name
+)
     
 @router.delete("/{family_id}", response_model=dict)
 async def delete_family_endpoint(
@@ -293,35 +297,31 @@ async def get_family_members(
     family = db.query(Family).filter(Family.id == family_id).first()
     
     return {
-        "family_name": family.family_name,
-        "family_banner": family.family_banner,
-        "members": [
-            {"user_id": user_id, "email": email, "is_admin": is_admin}
-            for user_id, email, is_admin in members
-        ]
-    }
+    "family_name": family.family_name,
+    "family_banner": family.family_banner,
+    "members": [
+        MemberInfo(user_id=user_id, email=email, is_admin=is_admin).dict()
+        for user_id, email, is_admin in members
+    ]
+}
 
-@router.get("/my-families", response_model=List[FamilyInfo])
+@router.get("/my-families")
 async def get_user_families(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Return all family details for the families the current user belongs to.
-    """
     registrations = db.query(Registered).filter(
         Registered.user_id == current_user.id
     ).all()
 
     families = []
+
     for reg in registrations:
         db_family = db.query(Family).filter(Family.id == reg.family_id).first()
         if not db_family:
             continue
 
-        print(f"Processing Family ID {db_family.id} - Name: {db_family.family_name}")
-
-        members = db.query(User.id, User.email, Registered.is_admin).join(
+        members_raw = db.query(User.id, User.email, Registered.is_admin).join(
             Registered, Registered.user_id == User.id
         ).filter(Registered.family_id == reg.family_id).all()
 
@@ -330,19 +330,26 @@ async def get_user_families(
             Registered.is_admin == True
         ).first()
 
-        families.append(FamilyInfo(
-            id=db_family.id,
-            admin=admin[0] if admin else None,
-            members=[
-                MemberInfo(user_id=user_id, email=email, is_admin=is_admin)
-                for user_id, email, is_admin in members
-            ],
-            family_name=db_family.family_name
-        ))
+        members = [
+            {
+                "user_id": user_id,
+                "email": email,
+                "is_admin": is_admin
+            }
+            for user_id, email, is_admin in members_raw
+        ]
 
+        families.append({
+            "id": db_family.id,
+            "admin": admin[0] if admin else None,
+            "family_name": db_family.family_name,
+            "members": members
+        })
+
+    print("Sending families to frontend:", families)
     return families
 
-
+    
 @router.get("/invite/{code}", response_model=InviteResponse)
 async def get_invite_details(
     code: str,

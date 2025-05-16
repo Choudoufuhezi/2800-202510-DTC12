@@ -48,7 +48,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth_router)
-app.include_router(family_router)
+app.include_router(family_router, prefix="/family")
 app.include_router(profile_router)
 app.include_router(memory_router)
 app.include_router(comments_router)

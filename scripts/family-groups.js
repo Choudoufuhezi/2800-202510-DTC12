@@ -33,6 +33,7 @@ async function loadFamilies() {
             return;
         }
 
+        console.log("Fetched families:", families);
         for (const family of families) {
             if (!family.family_name) {
                 console.warn(`Family ${family.id} has no name`);
