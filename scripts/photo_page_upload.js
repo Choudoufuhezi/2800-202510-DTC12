@@ -1,4 +1,5 @@
 import { getLocation } from './geolocation.js';
+import { API_URL } from './config.js';
 
 const removePhotoEmptyMessage = document.getElementById("photoEmptyMessage");
 const uploadButton = document.getElementById("uploadButton");
@@ -46,7 +47,7 @@ async function uploadMemory({ location, file_url, cloudinary_id, tags, family_id
     const token = localStorage.getItem("token");
 
     try {
-        const response = await fetch("http://localhost:8000/memories/", {
+        const response = await fetch(`${API_URL}/memories/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -79,7 +80,7 @@ async function fetchFamilyMemberMemories(memberUserId, familyId) {
     const token = localStorage.getItem("token");
 
     try {
-        const response = await fetch(`http://localhost:8000/memories/member/${memberUserId}/family/${familyId}`, {
+        const response = await fetch(`${API_URL}/memories/member/${memberUserId}/family/${familyId}`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${token}`
@@ -102,7 +103,7 @@ async function deleteMemory(memoryId) {
     const token = localStorage.getItem("token");
 
     try {
-        const response = await fetch(`http://localhost:8000/memories/${memoryId}`, {
+        const response = await fetch(`${API_URL}/memories/${memoryId}`, {
             method: "DELETE",
             headers: {
                 Authorization: `Bearer ${token}`
@@ -183,9 +184,9 @@ function modal(img, data) {
         contentElement = document.createElement('img');
         contentElement.src = data.src;
         contentElement.className = "w-full h-auto rounded mb-4";
-    } 
+    }
     modalContent.appendChild(contentElement);
-    
+
     const description = document.createElement('p');
     description.innerText = data.description;
     description.className = "text-gray-700 mb-4";

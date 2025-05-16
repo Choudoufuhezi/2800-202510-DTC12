@@ -1,4 +1,5 @@
 import { getLocation } from './geolocation.js';
+import { API_URL } from './config.js';
 
 const removeVideoEmptyMessage = document.getElementById("videoEmptyMessage");
 const uploadButton = document.getElementById("uploadButton");
@@ -36,7 +37,7 @@ async function getVideoData(videoId) {
 async function uploadMemory({ location, file_url, cloudinary_id, tags, family_id }) {
     const token = localStorage.getItem("token");
     try {
-        const response = await fetch("http://localhost:8000/memories", {
+        const response = await fetch(`${API_URL}/memories`, {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
             body: JSON.stringify({ location, tags, file_url, cloudinary_id, family_id })
@@ -57,7 +58,7 @@ async function fetchFamilyMemberMemories(memberUserId, familyId) {
     const token = localStorage.getItem("token");
 
     try {
-        const response = await fetch(`http://localhost:8000/memories/member/${memberUserId}/family/${familyId}`, {
+        const response = await fetch(`${API_URL}/memories/member/${memberUserId}/family/${familyId}`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${token}`
@@ -79,7 +80,7 @@ async function fetchFamilyMemberMemories(memberUserId, familyId) {
 async function deleteMemory(memoryId) {
     const token = localStorage.getItem("token");
     try {
-        const response = await fetch(`http://localhost:8000/memories/${memoryId}`, {
+        const response = await fetch(`${API_URL}/memories/${memoryId}`, {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` }
         });
