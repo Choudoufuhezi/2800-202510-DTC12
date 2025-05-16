@@ -79,6 +79,30 @@ async function postComment(memoryId, text) {
     }
 }
 
+async function deleteComment(commentId) {
+    const token = localStorage.getItem("token");
+
+    try {
+        const response = await fetch(`${API_URL}/comments/${commentId}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            console.error("Failed to delete comment:", error);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Error deleting comment:", error);
+        return false;
+    }
+}
+
 async function uploadMemory({ location, file_url, cloudinary_id, tags, family_id }) {
     const token = localStorage.getItem("token");
 
@@ -259,7 +283,7 @@ function modal(img, data) {
     commentForm.className = "flex";
     const commentInput = document.createElement('input');
     commentInput.type = "text";
-    commentInput.placeholder = "Add a comment…";
+    commentInput.placeholder = "Add a comment";
     commentInput.className = "flex-grow border p-2 mr-2 rounded";
     const commentSubmit = document.createElement('button');
     commentSubmit.type = "submit";
@@ -287,8 +311,8 @@ function modal(img, data) {
             deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
             deleteButton.className = "text-red-500 hover:text-red-700 ml-2";
             deleteButton.addEventListener('click', async () => {
-                await deleteComment(img.dataset.imageId, index);
-                await loadComments();
+                const deleted = await deleteComment(c.id);
+                if (deleted) await loadComments();
             });
             commentItem.appendChild(deleteButton);
 
