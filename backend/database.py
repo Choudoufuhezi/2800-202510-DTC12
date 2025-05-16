@@ -105,6 +105,7 @@ class Memory(Base):
     date_for_notification = Column(DateTime, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"))
     family_id = Column(Integer, ForeignKey("family.id"))
+    resource_type = Column(String, default="image")
 
 class Comment(Base):
     __tablename__ = "comment"
@@ -218,6 +219,8 @@ def create_family_invite(db, family_id: int, code: int, created_by: int, expires
     return db_invite
 
 def create_memory(db, location: dict, tags: str, file_url: str, cloudinary_id: str, date_for_notification: datetime, user_id: int, family_id: int):
+    resource_type = "raw" if file_url.lower().endswith(".pdf") else "image"
+    
     db_memory = Memory(
         location=location,
         tags=tags,
@@ -225,8 +228,9 @@ def create_memory(db, location: dict, tags: str, file_url: str, cloudinary_id: s
         cloudinary_id=cloudinary_id,
         date_for_notification=date_for_notification,
         user_id=user_id,
-        family_id=family_id
-    )
+        family_id=family_id,
+        resource_type=resource_type
+        )
     db.add(db_memory)
     db.commit()
     db.refresh(db_memory)
