@@ -300,8 +300,14 @@ function modal(img, data) {
         e.preventDefault();
         const text = commentInput.value.trim();
         if (!text) return;
-        console.log(`(faked) POST comment "${text}" for image ${img.dataset.imageId}`);
-        commentInput.value = "";
+        
+        const posted = await postComment(img.dataset.memoryId, text);
+        if (posted) {
+            commentInput.value = "";
+            await loadComments();
+        } else {
+            alert("Failed to post comment");
+        }
     });
 
     loadComments();
