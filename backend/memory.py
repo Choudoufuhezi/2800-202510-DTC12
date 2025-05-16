@@ -21,8 +21,8 @@ from cloudinary.uploader import destroy
 # ==============================
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.getenv("CLOUDINARY_CLOUD_KEY"),
-    api_secret=os.getenv("CLOUDINARY_CLOUD_SECRET"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
     secure=False  # Update to True when using HTTPS
 )
 
@@ -45,6 +45,7 @@ class MemoryResponse(BaseModel):
     date_for_notification: datetime
     user_id: int
     family_id: int
+    resource_type: Optional[str] = "image"
     
 class MemoryDeleteResponse(BaseModel):
     message: str
@@ -125,7 +126,10 @@ async def delete_single_memory_endpoint(
             )
 
         try:
-            destroy(db_memory.cloudinary_id)
+            destroy(
+                public_id=db_memory.cloudinary_id,
+                resource_type=db_memory.resource_type or "image"
+            )
 
         except Exception as cloudinary_error:
             raise HTTPException(
