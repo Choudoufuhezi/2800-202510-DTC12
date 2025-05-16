@@ -301,21 +301,47 @@ async def get_family_members(
         ]
     }
 
-@router.get("/my-families", response_model=List[int])
+@router.get("/my-families", response_model=List[FamilyInfo])
 async def get_user_families(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get all family IDs that the current user belongs to
+    Return all family details for the families the current user belongs to.
     """
-    # Query all family IDs where user is registered
-    family_ids = db.query(Registered.family_id).filter(
+    registrations = db.query(Registered).filter(
         Registered.user_id == current_user.id
     ).all()
-    
-    # Extract just the IDs from the query results
-    return [family_id for (family_id,) in family_ids]
+
+    families = []
+    for reg in registrations:
+        db_family = db.query(Family).filter(Family.id == reg.family_id).first()
+        if not db_family:
+            continue
+
+        print(f"Processing Family ID {db_family.id} - Name: {db_family.family_name}")
+
+        members = db.query(User.id, User.email, Registered.is_admin).join(
+            Registered, Registered.user_id == User.id
+        ).filter(Registered.family_id == reg.family_id).all()
+
+        admin = db.query(Registered.user_id).filter(
+            Registered.family_id == reg.family_id,
+            Registered.is_admin == True
+        ).first()
+
+        families.append(FamilyInfo(
+            id=db_family.id,
+            admin=admin[0] if admin else None,
+            members=[
+                MemberInfo(user_id=user_id, email=email, is_admin=is_admin)
+                for user_id, email, is_admin in members
+            ],
+            family_name=db_family.family_name
+        ))
+
+    return families
+
 
 @router.get("/invite/{code}", response_model=InviteResponse)
 async def get_invite_details(

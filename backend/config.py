@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     smtp_password: str
     
     # Deepseek settings
-    deepseek_api_key: str
+    deepseek_api_key: str | None = None
     
     class Config:
         env_file = ".env"
