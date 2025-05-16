@@ -280,13 +280,6 @@ fileInput.addEventListener("change", async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    const maxSizeMB = 50;
-    if (file.size > maxSizeMB * 1024 * 1024) {
-        alert(`video size cannot be larger than${maxSizeMB}MB`);
-        fileInput.value = "";
-        return;
-    }
-
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", "digital_family_vault");
