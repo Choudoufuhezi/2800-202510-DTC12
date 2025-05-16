@@ -30,6 +30,8 @@ class User(Base):
     address = Column(String, nullable=True)
     profile_picture = Column(String, nullable=True)
     profile_background_picture = Column(String, nullable=True)
+    cloudinary_profile_picture_id = Column(String, nullable=True)
+    cloudinary_profile_background_picture_id = Column(String, nullable=True)
     hashed_password = Column(String)
     email_verified = Column(Boolean, default=False)
     verification_token = Column(String, nullable=True)
@@ -138,6 +140,8 @@ def create_user(db, email: str, hashed_password: str, verification_token: str = 
         address=None,
         profile_picture=None,
         profile_background_picture=None,
+        cloudinary_profile_picture_id=None,
+        cloudinary_profile_background_picture_id=None,
         email_verified=False,
         verification_token=verification_token
     )
