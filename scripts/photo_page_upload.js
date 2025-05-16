@@ -23,12 +23,15 @@ async function getComments(imageId) {
 }
 
 // Image Data API 
-async function getImageData(imageId) {
+async function getImageData(memory) {
+    const element = document.querySelector(`[data-image-id="${memory.cloudinary_id}"]`);
+    const src = element?.getAttribute("src") || element?.src || memory.file_url;
+
     const location = await getLocation();
     return {
-        src: document.querySelector(`img[data-image-id="${imageId}"]`).src,
+        src,
         description: "This is a sample description for the image.",
-        tags: "sample, test", // Example tags
+        tags: memory.tags,
         geolocation: { location }
     };
 }
@@ -43,7 +46,7 @@ async function uploadMemory({ location, file_url, cloudinary_id, tags, family_id
     const token = localStorage.getItem("token");
 
     try {
-        const response = await fetch("http://localhost:8000/memories", {
+        const response = await fetch("http://localhost:8000/memories/", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -60,8 +63,8 @@ async function uploadMemory({ location, file_url, cloudinary_id, tags, family_id
 
 
         if (!response.ok) {
-            const error = await response.json();
-            console.error("Failed to upload memory:", error);
+            const errorText = await response.json();
+            console.error("Failed to upload memory:", errorText);
             return null;
         }
 
@@ -162,11 +165,27 @@ function modal(img, data) {
 
     modalContent.appendChild(header);
 
-    const modalImage = document.createElement('img');
-    modalImage.src = data.src;
-    modalImage.className = "w-full h-auto rounded mb-4";
-    modalContent.appendChild(modalImage);
+    let contentElement;
+    const isPdf = data.src.toLowerCase().endsWith('.pdf');
 
+    if (isPdf) {
+        contentElement = document.createElement('iframe');
+        contentElement.src = data.src;
+        contentElement.type = "application/pdf";
+        contentElement.className = "w-full rounded mb-4";
+        contentElement.style.height = "500px";
+        contentElement.style.minHeight = "500px";
+        contentElement.style.width = "100%";
+        contentElement.setAttribute("frameborder", "0");
+        contentElement.setAttribute("allowfullscreen", "true");
+
+    } else {
+        contentElement = document.createElement('img');
+        contentElement.src = data.src;
+        contentElement.className = "w-full h-auto rounded mb-4";
+    } 
+    modalContent.appendChild(contentElement);
+    
     const description = document.createElement('p');
     description.innerText = data.description;
     description.className = "text-gray-700 mb-4";
@@ -261,17 +280,47 @@ window.addEventListener("DOMContentLoaded", async () => {
         removePhotoEmptyMessage.classList.add("hidden");
         addMorePhotos.classList.remove("hidden");
     }
+    if (!memories || memories.length === 0) return;
     memories.forEach((memory) => {
-        const img = document.createElement("img");
-        img.src = memory.file_url;
-        img.dataset.imageId = memory.cloudinary_id;
-        img.dataset.memoryId = memory.id;
-        img.className = "max-w-full h-auto rounded shadow";
-        img.addEventListener("click", async () => {
-            const data = await getImageData(img.dataset.imageId);
-            modal(img, data);
-        });
-        photoGrid.appendChild(img);
+        const isPdf = memory.file_url.toLowerCase().endsWith(".pdf");
+
+        const wrapper = document.createElement("div");
+        wrapper.className = isPdf ? "relative w-full rounded" : "";
+
+        const element = isPdf
+            ? document.createElement("iframe")
+            : document.createElement("img");
+
+        element.src = memory.file_url;
+        element.dataset.imageId = memory.cloudinary_id;
+        element.dataset.memoryId = memory.id;
+        element.className = isPdf ? "w-full h-auto rounded" : "w-full h-auto";
+        element.style.border = "none";
+
+        if (isPdf) {
+            element.style.height = "250px";
+
+            const overlay = document.createElement("div");
+            overlay.className = "absolute inset-0 z-10 cursor-pointer";
+            overlay.style.background = "transparent";
+
+            overlay.addEventListener("click", async () => {
+                const data = await getImageData(memory);
+                modal(element, data);
+            });
+
+            wrapper.appendChild(element);
+            wrapper.appendChild(overlay);
+            photoGrid.appendChild(wrapper);
+        } else {
+            element.classList.add("w-full", "h-auto", "rounded", "cursor-pointer");
+            element.addEventListener("click", async () => {
+                const data = await getImageData(memory);
+                modal(element, data);
+            });
+
+            photoGrid.appendChild(element);
+        }
     });
 });
 
@@ -285,7 +334,11 @@ fileInput.addEventListener("change", async (event) => {
     formData.append("upload_preset", "digital_family_vault");
 
     try {
-        const upload_cloudinary = await fetch(`https://api.cloudinary.com/v1_1/dz7lbivvf/image/upload`, {
+        const uploadUrl = file.type === "application/pdf"
+            ? "https://api.cloudinary.com/v1_1/dz7lbivvf/raw/upload"
+            : "https://api.cloudinary.com/v1_1/dz7lbivvf/image/upload";
+
+        const upload_cloudinary = await fetch(uploadUrl, {
             method: "POST",
             body: formData
         });
@@ -302,29 +355,55 @@ fileInput.addEventListener("change", async (event) => {
 
             const location = await getLocation();
 
-            await uploadMemory({
-                location: location,
+            const uploadedMemory = await uploadMemory({
+                location,
                 file_url: imageURL,
                 cloudinary_id: publicID,
                 tags: "sample, test",
-                family_id: 1 // Update with family ID 
+                family_id: 1
             });
 
-            // Removing empty message and show add more photos button
+            if (!uploadedMemory) {
+                alert("Memory upload failed.");
+                return;
+            }
+
             removePhotoEmptyMessage.classList.add("hidden");
             addMorePhotos.classList.remove("hidden");
 
-            // Create and display uploaded image
-            const img = document.createElement("img");
-            img.src = imageURL;
-            img.dataset.imageId = publicID;
-            img.className = "max-w-full h-auto rounded shadow";
+            const isPdf = file.type === "application/pdf";
+            const element = isPdf ? document.createElement("iframe") : document.createElement("img");
 
-            img.addEventListener('click', async () => {
-                const data = await getImageData(img.dataset.imageId);
-                modal(img, data);
-            });
-            photoGrid.appendChild(img);
+            element.src = imageURL;
+            element.dataset.imageId = publicID;
+            element.dataset.memoryId = uploadedMemory.id;
+            element.className = "w-full rounded";
+            if (isPdf) {
+                element.style.height = "250px";
+                element.style.width = "100%";
+
+                // Create overlay for iframe
+                const overlay = document.createElement("div");
+                overlay.className = "absolute inset-0 cursor-pointer bg-transparent z-10";
+                overlay.addEventListener("click", async () => {
+                    const data = await getImageData(uploadedMemory);
+                    modal(element, data);
+                });
+
+                // Wrap iframe + overlay
+                const wrapper = document.createElement("div");
+                wrapper.className = "relative w-full";
+                wrapper.appendChild(element);
+                wrapper.appendChild(overlay);
+                photoGrid.appendChild(wrapper);
+
+            } else {
+                element.addEventListener("click", async () => {
+                    const data = await getImageData(uploadedMemory);
+                    modal(element, data);
+                });
+                photoGrid.appendChild(element);
+            }
 
         } else {
             alert("Upload failed. No secure_url returned.");
