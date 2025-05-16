@@ -27,7 +27,7 @@ app.add_middleware(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: Change to frontend URL in production
+    allow_origins=["https://dev--digitalfamilyvault.netlify.app", "http://localhost:3000", "https://digitalfamilyvault.netlify.app"],  # TODO: Change to frontend URL in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
