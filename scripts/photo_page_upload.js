@@ -16,11 +16,25 @@ addMorePhotos.addEventListener('click', () => {
 });
 
 //  Comment fetch APIs 
-async function getComments(imageId) {
-    return [
-        { user: "Alice", text: "Nice shot!" },
-        { user: "Bob", text: "Great view." }
-    ];
+async function getComments(memoryID) {
+    const token = localStorage.getItem("token");
+    try {
+        const response = await fetch(`${API_URL}/comments/memory/${memoryID}`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            console.error("Failed to fetch comments:", error);
+            return null;
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching comments:", error);
+        return null;
+    }
 }
 
 // Image Data API 
@@ -38,9 +52,55 @@ async function getImageData(memory) {
 }
 
 // Comment posting API
-async function postComment(imageId, text) {
-    console.log(`(faked) POST comment "${text}" for image ${imageId}`);
-    return { success: true };
+async function postComment(memoryId, text) {
+    const token = localStorage.getItem("token");
+    try {
+        const response = await fetch(`${API_URL}/comments/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ 
+                memory_id: memoryId,
+                comment_text: text
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            console.error("Failed to post comment:", error);
+            return null;
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error posting comment:", error);
+        return null;
+    }
+}
+
+async function deleteComment(commentId) {
+    const token = localStorage.getItem("token");
+
+    try {
+        const response = await fetch(`${API_URL}/comments/${commentId}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            console.error("Failed to delete comment:", error);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Error deleting comment:", error);
+        return false;
+    }
 }
 
 async function uploadMemory({ location, file_url, cloudinary_id, tags, family_id }) {
@@ -223,7 +283,7 @@ function modal(img, data) {
     commentForm.className = "flex";
     const commentInput = document.createElement('input');
     commentInput.type = "text";
-    commentInput.placeholder = "Add a comment…";
+    commentInput.placeholder = "Add a comment";
     commentInput.className = "flex-grow border p-2 mr-2 rounded";
     const commentSubmit = document.createElement('button');
     commentSubmit.type = "submit";
@@ -236,7 +296,7 @@ function modal(img, data) {
     modalContent.appendChild(commentsSection);
 
     async function loadComments() {
-        const comments = await getComments(img.dataset.imageId);
+        const comments = await getComments(img.dataset.memoryId);
         commentsList.innerHTML = "";
         comments.forEach((c, index) => {
             const commentItem = document.createElement('div');
@@ -244,15 +304,15 @@ function modal(img, data) {
 
             const commentText = document.createElement('p');
             commentText.className = "text-gray-800";
-            commentText.innerText = `${c.user}: ${c.text}`;
+            commentText.innerText = `User ${c.user_id}: ${c.comment_text}`;
             commentItem.appendChild(commentText);
 
             const deleteButton = document.createElement('button');
             deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
             deleteButton.className = "text-red-500 hover:text-red-700 ml-2";
             deleteButton.addEventListener('click', async () => {
-                await deleteComment(img.dataset.imageId, index);
-                await loadComments();
+                const deleted = await deleteComment(c.id);
+                if (deleted) await loadComments();
             });
             commentItem.appendChild(deleteButton);
 
@@ -264,8 +324,14 @@ function modal(img, data) {
         e.preventDefault();
         const text = commentInput.value.trim();
         if (!text) return;
-        console.log(`(faked) POST comment "${text}" for image ${img.dataset.imageId}`);
-        commentInput.value = "";
+        
+        const posted = await postComment(img.dataset.memoryId, text);
+        if (posted) {
+            commentInput.value = "";
+            await loadComments();
+        } else {
+            alert("Failed to post comment");
+        }
     });
 
     loadComments();
