@@ -51,7 +51,7 @@
     </div>
 
     <script type="module">
-        import {API_URL} from '/scripts/config.js';
+        import { API_URL } from '/scripts/config.js';
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -73,7 +73,7 @@
                 if (response.ok) {
                     const { access_token } = await response.json();
                     localStorage.setItem('token', access_token);
-                    window.location.href = '/dashboard.html';
+                    window.location.href = '/family-groups.html';
                 } else {
                     const error = await response.json();
                     alert(error.detail || 'Login failed');
@@ -93,10 +93,10 @@
         const token = urlParams.get('token');
         if (token) {
             localStorage.setItem('token', token);
-            window.location.href = '/dashboard.html';
+            window.location.href = '/family-groups.html';
         }
     </script>
-<script src="../scripts/load_family_icon.js"></script>
+    <script src="../scripts/load_family_icon.js"></script>
 </body>
 
 </html>

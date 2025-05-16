@@ -1,25 +1,32 @@
-document.addEventListener("DOMContentLoaded", () => {
-    let chat = JSON.parse(localStorage.getItem("activeChat"));
-
-    if (!chat) {
-        chat = {
-            name: "Robinson Family",
-            id: "family123",
-            avatar: "https://via.placeholder.com/40",
-            members: ["Alice Johnson", "Bob Smith", "Charlie Wang", "Diana Patel"],
-            messages: [
-                { from: "Alice Johnson", text: "Hi everyone!" },
-                { from: "You", text: "Hey Alice!" },
-                { from: "Charlie Wang", text: "Are we meeting tonight?" },
-                { from: "You", text: "Yes, 7 PM works." }
-            ]
-        };
-        localStorage.setItem("activeChat", JSON.stringify(chat));
+document.addEventListener("DOMContentLoaded", async () => {
+    // Get token
+    const token = localStorage.getItem("token");
+    if (!token) {
+        console.error("Not logged in");
+        window.location.href = "/login.html";
+        return;
     }
 
-    let replyTo = null;
+    // Get user ID
+    let userId;
+    try {
+        const response = await fetch("http://localhost:8000/user/id", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error("Failed to get user ID");
+        }
+        const data = await response.json();
+        userId = data.user_id.toString();
+        console.log("Got user ID:", userId);
+    } catch (error) {
+        console.error("Error getting user ID:", error);
+        return;
+    }
 
-    const groupHeader = document.getElementById("group-header");
+    // Initialize chat UI elements
     const groupInfoModal = document.getElementById("group-info");
     const closeGroupInfo = document.getElementById("close-group-info");
     const groupNameSpan = document.getElementById("info-group-name");
@@ -35,9 +42,170 @@ document.addEventListener("DOMContentLoaded", () => {
     const sendBtn = document.getElementById("send-btn");
     const chatBox = document.getElementById("chat-box");
 
+    // Get chatroom ID from window object
+    const chatroomId = window.chatroomId;
+    if (!chatroomId) {
+        console.error("No chatroom ID provided");
+        window.location.href = "/family-members.html";
+        return;
+    }
+
+    // TODO: Move this to another aspect, rn it could be confusing
+    const translationSelect = document.createElement("select");
+    translationSelect.className = "p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-300";
+    translationSelect.innerHTML = `
+        <option value="">Original Language</option>
+        <option value="English">English</option>
+        <option value="Spanish">Spanish</option>
+        <option value="French">French</option>
+        <option value="German">German</option>
+        <option value="Chinese">Chinese</option>
+        <option value="Japanese">Japanese</option>
+        <option value="Korean">Korean</option>
+    `;
+
+    const inputContainer = input.parentElement;
+    inputContainer.insertBefore(translationSelect, input);
+
+    // Store og messages so always translating original
+    const originalMessages = new Map();
+
+    async function translateMessage(text, targetLanguage) {
+        try {
+            const response = await fetch("http://localhost:8000/translate/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    text: text,
+                    target_language: targetLanguage
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error("Translation failed");
+            }
+
+            return await response.text();
+        } catch (error) {
+            console.error("Translation error:", error);
+            return text; // Return original text if translation fails
+        }
+    }
+
+    // Update translation function was enhanced by deepseek to be more efficient and readable
+    async function updateTranslations(targetLanguage) {
+        const messageElements = chatBox.querySelectorAll("[data-id]");
+        
+        for (const element of messageElements) {
+            const messageId = element.dataset.id;
+            const messageText = element.querySelector("div > div:last-child");
+            
+            if (!messageText) continue;
+
+            if (!originalMessages.has(messageId)) {
+                originalMessages.set(messageId, messageText.textContent);
+            }
+
+            const originalText = originalMessages.get(messageId);
+            
+            if (targetLanguage) {
+                const translatedText = await translateMessage(originalText, targetLanguage);
+                messageText.textContent = translatedText;
+            } else {
+                messageText.textContent = originalText;
+            }
+        }
+    }
+
+    // Add translation change handler
+    translationSelect.addEventListener("change", async () => {
+        const targetLanguage = translationSelect.value;
+        await updateTranslations(targetLanguage);
+    });
+
     let selectedMember = null;
+    let replyTo = null;
+
+    // Fetch message history
+    try {
+        const response = await fetch(`http://localhost:8000/chatrooms/${chatroomId}/messages`, {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error("Failed to fetch message history");
+        }
+        const messages = await response.json();
+        console.log("Fetched message history:", messages);
+
+        // Display message history
+        messages.forEach(msg => {
+            const isOwnMessage = msg.sender_id.toString() === userId;
+            const bubble = createMessageBubble(
+                isOwnMessage ? "You" : `User ${msg.sender_id}`,
+                msg.content,
+                msg.id
+            );
+            chatBox.appendChild(bubble);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+    } catch (error) {
+        console.error("Error fetching message history:", error);
+    }
+
+    // WebSocket setup
+    const ws = new WebSocket(`ws://localhost:8000/ws/${userId}`);
+
+    console.log(`User ${userId}: Connected to WebSocket`);
+
+    ws.onopen = () => {
+        console.log(`User ${userId}: Connected to WebSocket`);
+        // Join the chatroom
+        const joinMessage = {
+            type: "join_chatroom",
+            chatroom_id: chatroomId
+        };
+        console.log(`User ${userId}: Sending join message:`, joinMessage);
+        ws.send(JSON.stringify(joinMessage));
+    };
+
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log(`User ${userId}: Received message:`, data);
+        
+        // Handle join confirmation
+        if (data.status === "success") {
+            console.log(`User ${userId}: ${data.message}`);
+            return;
+        }
+        
+        // Handle chat messages
+        if (data.sender_id && data.content) {
+            console.log(`User ${userId}: Processing chat message from User ${data.sender_id}`);
+            const isOwnMessage = data.sender_id === userId;
+            const bubble = createMessageBubble(
+                isOwnMessage ? "You" : `User ${data.sender_id}`,
+                data.content,
+                data.message_id
+            );
+            chatBox.appendChild(bubble);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    };
+
+    ws.onclose = () => {
+        console.log(`User ${userId}: Disconnected from WebSocket`);
+    };
+
+    ws.onerror = (error) => {
+        console.error(`User ${userId}: WebSocket error:`, error);
+    };
 
     function createMessageBubble(from, text, messageId = Date.now(), replyText = null) {
+        console.log(`User ${userId}: Creating message bubble - From: ${from}, Text: ${text}`);
         const bubbleWrapper = document.createElement("div");
         bubbleWrapper.className = `flex ${from === "You" ? "justify-end" : "justify-start"} relative`;
         bubbleWrapper.dataset.id = messageId;
@@ -107,17 +275,14 @@ document.addEventListener("DOMContentLoaded", () => {
         return bubbleWrapper;
     }
 
-    // Set header
-    document.querySelector("h2").textContent = chat.name;
-    document.querySelector("img").src = chat.avatar;
-
-    groupHeader.addEventListener("click", () => {
-        groupNameSpan.textContent = chat.name;
-        inviteLink.href = `https://example.com/invite/${chat.id}`;
+    document.getElementById("info-btn").addEventListener("click", () => {
+        groupNameSpan.textContent = "Chatroom " + chatroomId;
+        inviteLink.href = `https://example.com/invite/${chatroomId}`;
         inviteLink.textContent = inviteLink.href;
 
         memberList.innerHTML = "";
-        (chat.members || []).forEach(name => {
+        // For now, just show placeholder members
+        ["User 1", "User 2"].forEach(name => {
             const li = document.createElement("li");
             li.textContent = name;
             li.className = "cursor-pointer text-blue-600 hover:underline";
@@ -146,11 +311,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    chat.messages.forEach(msg => {
-        const bubble = createMessageBubble(msg.from, msg.text);
-        chatBox.appendChild(bubble);
-    });
-
     function sendMessage() {
         const text = input.value.trim();
         if (!text) return;
@@ -159,6 +319,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const oldBubble = document.querySelector(`[data-id="${replyTo.messageId}"] div`);
             if (oldBubble) oldBubble.textContent = text;
         } else {
+            // Send message through WebSocket
+            const message = {
+                type: "chat_message",
+                chatroom_id: chatroomId,
+                content: text
+            };
+            console.log(`User ${userId}: Sending message:`, message);
+            ws.send(JSON.stringify(message));
+
+            // Create local message bubble
             const replyText = replyTo?.originalText || null;
             const bubble = createMessageBubble("You", text, Date.now(), replyText);
             chatBox.appendChild(bubble);

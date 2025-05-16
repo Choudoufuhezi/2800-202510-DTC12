@@ -1,6 +1,6 @@
 import os
 
-html_dir = "."  # Update this if your HTML files are in a subfolder
+html_dir = "."  
 
 for filename in os.listdir(html_dir):
     if filename.endswith(".html"):
@@ -19,11 +19,11 @@ for filename in os.listdir(html_dir):
 
         # Inject script at the end before </body>
         if "load_family_icon.js" not in content and "</body>" in content:
-            content = content.replace("</body>", '<script src="../scripts/load_family_icon.js"></script>\n</body>')
+            content = content.replace("</body>", '<script type="module" src="../scripts/load_family_icon.js"></script>\n</body>')
             modified = True
 
         if modified:
             with open(path, "w", encoding="utf-8") as file:
                 file.write(content)
 
-print(" Family icon injected into all HTML files (only where needed).")
+print("Family icon injected into all HTML files (only where needed).")
