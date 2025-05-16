@@ -19,7 +19,7 @@ addMorePhotos.addEventListener('click', () => {
 async function getComments(memoryID) {
     const token = localStorage.getItem("token");
     try {
-        const response = await fetch(`http://localhost:8000/comments/memories/${memoryID}`, {
+        const response = await fetch(`${API_URL}/comments/memory/${memoryID}`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${token}`
@@ -55,7 +55,7 @@ async function getImageData(memory) {
 async function postComment(memoryId, text) {
     const token = localStorage.getItem("token");
     try {
-        const response = await fetch(`http://localhost:8000/comments/`, {
+        const response = await fetch(`${API_URL}/comments/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -272,7 +272,7 @@ function modal(img, data) {
     modalContent.appendChild(commentsSection);
 
     async function loadComments() {
-        const comments = await getComments(img.dataset.imageId);
+        const comments = await getComments(img.dataset.memoryId);
         commentsList.innerHTML = "";
         comments.forEach((c, index) => {
             const commentItem = document.createElement('div');
@@ -280,7 +280,7 @@ function modal(img, data) {
 
             const commentText = document.createElement('p');
             commentText.className = "text-gray-800";
-            commentText.innerText = `${c.user}: ${c.text}`;
+            commentText.innerText = `User ${c.user_id}: ${c.comment_text}`;
             commentItem.appendChild(commentText);
 
             const deleteButton = document.createElement('button');
