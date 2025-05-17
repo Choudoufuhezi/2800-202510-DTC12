@@ -4,9 +4,18 @@ from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
 from config import settings
 
+from auth import router as auth_router
+from family_management import router as family_router
+from profile import router as profile_router
+from memory import router as memory_router
+from comments import router as comments_router
+from chat_api import router as chat_api_router
+from translate import router as translate_router
+from chat_server import router as chat_router
+
 app = FastAPI()
 
-# Initialize OAuth
+# Initialize OAuth for Google
 oauth = OAuth()
 oauth.register(
     name='google',
@@ -27,29 +36,24 @@ app.add_middleware(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://dev--digitalfamilyvault.netlify.app", "http://localhost:3000", "https://digitalfamilyvault.netlify.app"],  # TODO: Change to frontend URL in production
+    allow_origins=[
+        "http://localhost:3000",
+        "https://two800-202510-dtc12-0d55.onrender.com",
+        "https://dev--digitalfamilyvault.netlify.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Include routers
-from auth import router as auth_router
-from family_management import router as family_router
-from profile import router as profile_router
-from memory import router as memory_router
-from comments import router as comments_router
-from chat_api import router as chat_api_router
-from translate import router as translate_router
 app.include_router(auth_router)
 app.include_router(family_router)
+app.include_router(profile_router)
 app.include_router(memory_router)
 app.include_router(comments_router)
-app.include_router(profile_router) 
 app.include_router(chat_api_router)
 app.include_router(translate_router)
-
-from chat_server import router as chat_router
 app.include_router(chat_router)
 
 @app.get("/")

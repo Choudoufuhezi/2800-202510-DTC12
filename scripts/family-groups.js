@@ -1,89 +1,96 @@
-document.addEventListener("DOMContentLoaded", () => {
-    fetchFamilyGroups();
+import { API_URL, BASE_URL } from './config.js';
 
-    const createBtn = document.getElementById("createFamilyBtn");
-    if (createBtn) {
-        createBtn.addEventListener("click", async () => {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                alert("You're not logged in.");
-                return;
-            }
+const familiesContainer = document.getElementById('families-container');
+const errorMessage = document.getElementById('error-message');
 
-            try {
-                const response = await fetch("http://localhost:3000/family/create", {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    alert("Family group created!");
-                    location.reload(); // reload to show updated group list
-                } else {
-                    const data = await response.json();
-                    alert(data.detail || "Failed to create family group.");
-                }
-            } catch (error) {
-                console.error("Error creating family:", error);
-                alert("Something went wrong.");
-            }
-        });
-    }
-});
-
-async function fetchFamilyGroups() {
-    const container = document.getElementById("familyGroupsContainer");
-    container.innerHTML = "<p class='text-gray-500'>Loading family groups...</p>";
-
-    try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:3000/family/groups", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        if (response.status === 401 || response.status === 403) {
-            alert("Session expired. Please log in again.");
-            window.location.href = "/login.html";
-            return;
-        }
-
-        const data = await response.json();
-        displayFamilyGroups(data);
-    } catch (error) {
-        console.error("Failed to fetch family groups:", error);
-        container.innerHTML = "<p class='text-red-500'>Failed to load family groups. Try again later.</p>";
-    }
-}
-
-function displayFamilyGroups(groups) {
-    const container = document.getElementById("familyGroupsContainer");
-    container.innerHTML = "";
-
-    if (!groups.length) {
-        container.innerHTML = "<p class='text-gray-500 text-center'>No family groups found.</p>";
+async function loadFamilies() {
+    if (!localStorage.getItem('token')) {
+        window.location.href = `${BASE_URL}/login.html`;
         return;
     }
 
-    groups.forEach((group) => {
-        const card = document.createElement("a");
-        card.href = "family-members.html"; // Can be made dynamic with group.id
-        card.className =
-            "block p-4 border rounded-lg shadow bg-white hover:shadow-md hover:bg-indigo-50 transition";
+    familiesContainer.innerHTML = '<div class="flex justify-center"><svg class="animate-spin h-5 w-5 text-sky-600" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8z"></path></svg></div>';
+    errorMessage.classList.add('hidden');
 
-        card.innerHTML = `
-            <div class="flex justify-between items-center">
+    try {
+        const response = await fetch(`${API_URL}/family/my-families`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                window.location.href = `${BASE_URL}/login.html`;
+                throw new Error('Unauthorized');
+            }
+            throw new Error('Failed to fetch families');
+        }
+
+        const families = await response.json();
+        familiesContainer.innerHTML = '';
+
+        if (families.length === 0) {
+            familiesContainer.innerHTML = '<p class="text-gray-600">No families found. Create a new one!</p>';
+            return;
+        }
+
+        for (const family of families) {
+            if (!family.family_name) {
+                console.warn(`Family ${family.id} has no name`);
+                continue;
+            }
+
+            const familyCard = document.createElement('div');
+            familyCard.className = 'block bg-white p-4 rounded-xl shadow hover:shadow-md transition';
+            familyCard.innerHTML = `
+        <div class="flex justify-between items-center">
+            <a href="family-members.html?familyId=${family.id}" class="flex-1">
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-800">${group.family_name}</h3>
-                    <p class="text-sm text-gray-600 mt-1">Code: ${group.invite_code}</p>
+                    <h2 class="text-lg font-semibold text-gray-800">${family.family_name}</h2>
+                    <p class="text-sm text-gray-500 mt-1">${family.members.length} members</p>
                 </div>
-                <i class="fas fa-chevron-right text-indigo-600"></i>
-            </div>
-        `;
+            </a>
+            <button class="edit-name-button" data-family-id="${family.id}" data-current-name="${family.family_name}">
+                <i class="fas fa-edit text-sky-600 hover:text-sky-700"></i>
+            </button>
+        </div>
+    `;
+            familiesContainer.appendChild(familyCard);
+        }
 
-        container.appendChild(card);
-    });
+        document.querySelectorAll('.edit-name-button').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                const familyId = e.currentTarget.dataset.familyId;
+                const currentName = e.currentTarget.dataset.currentName;
+                const newName = prompt('Enter new family name:', currentName);
+                if (newName && newName.trim() && newName !== currentName) {
+                    try {
+                        const response = await fetch(`${API_URL}/family/${familyId}/update`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                            },
+                            body: JSON.stringify({ family_name: newName.trim() }),
+                        });
+                        if (!response.ok) {
+                            if (response.status === 401) window.location.href = `${BASE_URL}/login.html`;
+                            if (response.status === 403) throw new Error('Only admins can update family name');
+                            throw new Error('Failed to update family name');
+                        }
+                        await loadFamilies();
+                    } catch (error) {
+                        console.error('Error updating family name:', error);
+                        errorMessage.textContent = error.message;
+                        errorMessage.classList.remove('hidden');
+                    }
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error loading families:', error);
+        errorMessage.textContent = error.message;
+        errorMessage.classList.remove('hidden');
+    }
 }
+
+document.addEventListener('DOMContentLoaded', loadFamilies);

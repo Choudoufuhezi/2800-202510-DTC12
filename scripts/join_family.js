@@ -1,47 +1,87 @@
-import {API_URL} from './config.js';
+import { API_URL, BASE_URL } from './config.js';
 
-console.log(API_URL);
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('join-form');
+    const codeInput = document.getElementById('inviteCode');
+    const clearButton = document.getElementById('clear-code');
+    const errorMessage = document.getElementById('error-message');
+    const expiresElement = document.getElementById('expires-in');
+    const linkButton = document.getElementById('use-link');
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteCode = urlParams.get('code');
 
-document.addEventListener("DOMContentLoaded", () => {
-    const form = document.querySelector("form");
+    if (inviteCode) {
+        codeInput.value = inviteCode;
+    }
 
-    form.addEventListener("submit", async (e) => {
+    if (inviteCode) {
+        fetch(`${API_URL}/family/invite/${inviteCode}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` },
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('Invalid invite code');
+                return response.json();
+            })
+            .then(data => {
+                const expiresAt = new Date(data.expires_at);
+                const now = new Date();
+                const hoursLeft = Math.round((expiresAt - now) / (1000 * 60 * 60));
+                expiresElement.textContent = `${hoursLeft} hour${hoursLeft !== 1 ? 's' : ''}`;
+            })
+            .catch(error => {
+                console.error('Error validating invite code:', error);
+                errorMessage.textContent = error.message;
+                errorMessage.classList.remove('hidden');
+            });
+    }
+
+    clearButton.addEventListener('click', () => {
+        codeInput.value = '';
+        codeInput.focus();
+        errorMessage.classList.add('hidden');
+        expiresElement.textContent = '24 hours';
+    });
+
+    linkButton.addEventListener('click', () => {
+        window.location.href = `${BASE_URL}/invite.html`;
+    });
+
+    form.addEventListener('submit', async e => {
         e.preventDefault();
+        if (!localStorage.getItem('token')) {
+            window.location.href = `${BASE_URL}/login.html`;
+            return;
+        }
 
-        const codeInput = document.getElementById("inviteCode");
-        const inviteCode = codeInput.value.trim();
-
-        if (inviteCode.length !== 6) {
-            alert("Please enter a valid 6-digit invite code.");
+        const code = codeInput.value.trim();
+        if (!/^\d{6}$/.test(code)) {
+            errorMessage.textContent = 'Please enter a valid 6-digit numeric code';
+            errorMessage.classList.remove('hidden');
             return;
         }
 
         try {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                alert("You're not logged in. Please log in first.");
-                return;
-            }
             const response = await fetch(`${API_URL}/family/join`, {
-                method: "POST",
+                method: 'POST',
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 },
-                body: JSON.stringify({ code: inviteCode })
+                body: JSON.stringify({ code }),
             });
 
-            const result = await response.json();
-
-            if (response.ok) {
-                alert("Successfully joined the family!");
-                window.location.href = "family-groups.html"; 
-            } else {
-                alert(result.detail || "Failed to join family.");
+            if (!response.ok) {
+                if (response.status === 401) window.location.href = `${BASE_URL}/login.html`;
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to join family');
             }
+
+            const data = await response.json();
+            window.location.href = `${BASE_URL}/family-members.html?familyId=${data.id}`;
         } catch (error) {
-            console.error("Error joining family:", error);
-            alert("Something went wrong. Try again later.");
+            console.error('Error joining family:', error);
+            errorMessage.textContent = error.message;
+            errorMessage.classList.remove('hidden');
         }
     });
 });

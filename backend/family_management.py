@@ -10,7 +10,7 @@ from auth import get_current_user_email
 from database import FamilyInvite, delete_family, get_db, Family, User, Registered
 from config import settings
 from typing import List
-
+from database import create_message, Message  # Importing the create_message function from database module
 
 router = APIRouter(prefix="/family")
 
@@ -24,13 +24,23 @@ async def get_current_user(db: Session = Depends(get_db), email: str = Depends(g
     return db_user
 
 class MemberInfo(BaseModel):
+    user_id: int # user_id of the member
     email: str
     is_admin: bool
+
+class FamilyCreate(BaseModel):
+    family_name: str
+    family_banner: Optional[str] = None  # Optional field for family banner
 
 class FamilyInfo(BaseModel):
     id: int
     admin: int  # user_id of the admin
     members: List[MemberInfo]
+    family_name: str  # Add family_name
+
+class FamilyUpdate(BaseModel):  # Added for updating family name
+    family_name: Optional[str] = None
+    family_banner: Optional[str] = None
     
 class CreateInviteRequest(BaseModel):
     family_id: int
@@ -42,12 +52,14 @@ class InviteResponse(BaseModel):
     expires_at: datetime
     max_uses: int
     family_id: int
+    invite_link : str
     
 class JoinFamilyRequest(BaseModel):
     code: str
     
 @router.post("/create", response_model=FamilyInfo)
 async def create_family(
+    family_data: FamilyCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -59,7 +71,8 @@ async def create_family(
     try:
         # Create the family
         db_family = Family(
-            family_banner = None
+            family_name=family_data.family_name,
+            family_banner=family_data.family_banner,  # Include family banner if provided
         )
         db.add(db_family)
         db.commit()
@@ -77,6 +90,7 @@ async def create_family(
         # Get all members
         members = [
             {
+                "user_id": current_user.id,
                 "email": current_user.email,
                 "is_admin": True
             }
@@ -85,7 +99,8 @@ async def create_family(
         return {
             "id": db_family.id,
             "admin": current_user.id,
-            "members": members
+            "members": members,
+            "family_name": db_family.family_name  # Include family_name in response
         }
     except Exception as e:
         db.rollback()
@@ -118,7 +133,7 @@ async def create_invite(
             detail="Only family admin can create invites",
         )
 
-    code = ''.join(random.choices('0123456789', k=6)) # generate random 6 number string
+    code = ''.join(random.choices(settings.invite_code_chars, k=settings.invite_code_length))
     expires_at = datetime.utcnow() + timedelta(hours=request.expires_in_hours)
 
     db_invite = FamilyInvite(
@@ -136,7 +151,8 @@ async def create_invite(
         "code": code,
         "expires_at": expires_at,
         "max_uses": request.max_uses,
-        "family_id": request.family_id
+        "family_id": request.family_id,
+        "invite_link": f"{settings.frontend_url}/invite.html?code={code}" 
     }
     
 @router.post("/join", response_model=FamilyInfo)
@@ -188,7 +204,7 @@ async def join_family(
     db.commit()
 
     # Get all members with their admin status
-    members = db.query(User.email, Registered.is_admin).join(
+    members = db.query(User.id, User.email, Registered.is_admin).join(
         Registered, Registered.user_id == User.id
     ).filter(
         Registered.family_id == db_invite.family_id
@@ -200,10 +216,13 @@ async def join_family(
         Registered.is_admin == True
     ).first()
 
+    family = db.query(Family).filter(Family.id == db_invite.family_id).first()
+
     return FamilyInfo(
         id=db_invite.family_id,
         admin=admin[0] if admin else None,
-        members=[MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members]
+        members=[MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members],
+        family_name=family.family_name
     )
     
 @router.delete("/{family_id}", response_model=dict)
@@ -241,7 +260,7 @@ async def delete_family_endpoint(
             detail=f"Failed to delete family: {str(e)}"
         )
         
-@router.get("/{family_id}/members", response_model=List[MemberInfo])
+@router.get("/{family_id}/members", response_model=dict)
 async def get_family_members(
     family_id: int,
     db: Session = Depends(get_db),
@@ -270,21 +289,237 @@ async def get_family_members(
     ).filter(
         Registered.family_id == family_id
     ).all()
-    
-    return [MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members]
 
-@router.get("/my-families", response_model=List[int])
+    family = db.query(Family).filter(Family.id == family_id).first()
+    
+    return {
+        "family_name": family.family_name,
+        "family_banner": family.family_banner,
+        "members": [
+            {"user_id": user_id, "email": email, "is_admin": is_admin}
+            for user_id, email, is_admin in members
+        ]
+    }
+
+@router.get("/my-families", response_model=List[FamilyInfo])
 async def get_user_families(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get all family IDs that the current user belongs to
+    Return all family details for the families the current user belongs to.
     """
-    # Query all family IDs where user is registered
-    family_ids = db.query(Registered.family_id).filter(
+    registrations = db.query(Registered).filter(
         Registered.user_id == current_user.id
     ).all()
+
+    families = []
+    for reg in registrations:
+        db_family = db.query(Family).filter(Family.id == reg.family_id).first()
+        if not db_family:
+            continue
+
+        print(f"Processing Family ID {db_family.id} - Name: {db_family.family_name}")
+
+        members = db.query(User.id, User.email, Registered.is_admin).join(
+            Registered, Registered.user_id == User.id
+        ).filter(Registered.family_id == reg.family_id).all()
+
+        admin = db.query(Registered.user_id).filter(
+            Registered.family_id == reg.family_id,
+            Registered.is_admin == True
+        ).first()
+
+        families.append(FamilyInfo(
+            id=db_family.id,
+            admin=admin[0] if admin else None,
+            members=[
+                MemberInfo(user_id=user_id, email=email, is_admin=is_admin)
+                for user_id, email, is_admin in members
+            ],
+            family_name=db_family.family_name
+        ))
+
+    return families
+
+
+@router.get("/invite/{code}", response_model=InviteResponse)
+async def get_invite_details(
+    code: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    invite = db.query(FamilyInvite).filter(
+        FamilyInvite.code == code,
+        FamilyInvite.expires_at > datetime.utcnow(),
+        FamilyInvite.uses < FamilyInvite.max_uses
+    ).first()
+
+    if not invite:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired invite code"
+        )
+
+    return {
+        "code": invite.code,
+        "expires_at": invite.expires_at,
+        "max_uses": invite.max_uses,
+        "family_id": invite.family_id
+    }
+
+@router.get("/{family_id}/invites", response_model=List[InviteResponse])
+async def get_family_invites(
+    family_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    is_member = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id
+    ).first()
     
-    # Extract just the IDs from the query results
-    return [family_id for (family_id,) in family_ids]
+    if not is_member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must be a member of this family to view its invites"
+        )
+    
+    invites = db.query(FamilyInvite).filter(
+        FamilyInvite.family_id == family_id,
+        FamilyInvite.expires_at > datetime.utcnow(),
+        FamilyInvite.uses < FamilyInvite.max_uses
+    ).all()
+    
+    return [
+        {
+            "code": invite.code,
+            "expires_at": invite.expires_at,
+            "max_uses": invite.max_uses,
+            "family_id": invite.family_id
+        }
+        for invite in invites
+    ]
+
+@router.put("/{family_id}/update", response_model=FamilyInfo)
+async def update_family(
+    family_id: int,
+    update_data: FamilyUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update a family's name
+    """
+    is_admin = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id,
+        Registered.is_admin == True
+    ).first()
+
+    if not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail = "Only family admin can update the family name",
+        )
+
+    db_family = db.query(Family).filter(Family.id == family_id).first()
+    if not db_family:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Family not found",
+        )
+
+    try:
+        if update_data.family_name is not None:
+            db_family.family_name = update_data.family_name
+        if update_data.family_banner is not None:
+            db_family.family_banner = update_data.family_banner
+        db.commit()
+        db.refresh(db_family)
+
+        members = db.query(User.id, User.email, Registered.is_admin).join(
+            Registered, Registered.user_id == User.id
+        ).filter(
+            Registered.family_id == family_id
+        ).all()
+
+        admin = db.query(Registered.user_id).filter(
+            Registered.family_id == family_id,
+            Registered.is_admin == True
+        ).first()
+
+        return {
+            "id": db_family.id,
+            "admin": admin[0] if admin else None,
+            "members": [MemberInfo(user_id=user_id, email=email, is_admin=is_admin) for user_id, email, is_admin in members],
+            "family_name": db_family.family_name,
+            "family_banner": db_family.family_banner
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update family: {str(e)}"
+        )
+
+class SendMessageRequest(BaseModel):
+    text: str
+    reply_to: Optional[int] = None
+
+@router.post("/{family_id}/messages")
+async def send_message(
+    family_id: int,
+    payload: SendMessageRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    is_member = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id
+    ).first()
+    if not is_member:
+        raise HTTPException(status_code=403, detail="You are not a member of this family")
+
+    msg = create_message(
+        db=db,
+        user_id=current_user.id,
+        chatroom_id=family_id,
+        message_text=payload.text,
+        time_stamp=datetime.utcnow()
+    )
+
+    return {
+        "id": msg.id,
+        "from": current_user.email,
+        "text": msg.message_text,
+        "reply_to": msg.reply_to
+    }
+
+@router.get("/{family_id}/messages")
+async def get_messages(
+    family_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    is_member = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id
+    ).first()
+    if not is_member:
+        raise HTTPException(status_code=403, detail="You are not a member of this family")
+
+    messages = db.query(Message).filter(
+        Message.chatroom_id == family_id
+    ).order_by(Message.time_stamp).all()
+
+    result = []
+    for msg in messages:
+        sender = db.query(User).filter(User.id == msg.user_id).first()
+        result.append({
+            "id": msg.id,
+            "from": sender.email if sender else "Unknown",
+            "text": msg.message_text,
+            "reply_to": msg.reply_to
+        })
+    return result

@@ -4,30 +4,32 @@ from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+
 from database import Registered, User, Memory, create_memory, delete_memory, get_db
 from family_management import get_current_user
 
 # Set your Cloudinary credentials
-# ==============================
 from dotenv import load_dotenv
 load_dotenv()
 
 # Import the Cloudinary libraries
-# ==============================
 import cloudinary
 from cloudinary.uploader import destroy
 
-# Set configuration parameter:
-# ==============================
+# Set configuration parameter
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
     api_key=os.getenv("CLOUDINARY_API_KEY"),
     api_secret=os.getenv("CLOUDINARY_API_SECRET"),
-    secure=False  # Update to True when using HTTPS
+    secure=False  # Set to True in production
 )
 
 router = APIRouter(prefix="/memories")
 
+
+# ---------------------------
+# Models
+# ---------------------------
 class MemoryCreateRequest(BaseModel):
     location: dict
     tags: str
@@ -35,6 +37,7 @@ class MemoryCreateRequest(BaseModel):
     cloudinary_id: str
     date_for_notification: Optional[datetime] = None
     family_id: int
+
 
 class MemoryResponse(BaseModel):
     id: int
@@ -46,10 +49,15 @@ class MemoryResponse(BaseModel):
     user_id: int
     family_id: int
     resource_type: Optional[str] = "image"
-    
+
+
 class MemoryDeleteResponse(BaseModel):
     message: str
 
+
+# ---------------------------
+# Endpoints
+# ---------------------------
 @router.post("/", response_model=MemoryResponse)
 async def create_memory_endpoint(
     memory_data: MemoryCreateRequest,
@@ -60,20 +68,18 @@ async def create_memory_endpoint(
     Create a new memory
     """
     try:
-        # Verify user belongs to the specified family
         is_member = db.query(Registered).filter(
             Registered.user_id == current_user.id,
             Registered.family_id == memory_data.family_id
         ).first()
-        
+
         if not is_member:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User is not a member of the specified family"
             )
 
-        # Set current time if timestamp not provided
-        date_for_notification = memory_data.date_for_notification if memory_data.date_for_notification else datetime.utcnow()
+        date_for_notification = memory_data.date_for_notification or datetime.utcnow()
 
         db_memory = create_memory(
             db=db,
@@ -85,15 +91,16 @@ async def create_memory_endpoint(
             user_id=current_user.id,
             family_id=memory_data.family_id
         )
-        
+
         return db_memory
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create memory: {str(e)}"
         )
-        
+
+
 @router.delete("/{memory_id}", response_model=MemoryDeleteResponse)
 async def delete_single_memory_endpoint(
     memory_id: int,
@@ -101,17 +108,17 @@ async def delete_single_memory_endpoint(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Delete a memory from Cloudinary and then database
+    Delete a memory from Cloudinary and then from the database
     """
     try:
         db_memory = db.query(Memory).filter(Memory.id == memory_id).first()
 
         if not db_memory:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, 
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail="Memory not found"
             )
-        
+
         is_owner = db_memory.user_id == current_user.id
         is_admin = db.query(Registered).filter_by(
             user_id=current_user.id,
@@ -130,17 +137,16 @@ async def delete_single_memory_endpoint(
                 public_id=db_memory.cloudinary_id,
                 resource_type=db_memory.resource_type or "image"
             )
-
         except Exception as cloudinary_error:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Cloudinary deletion failed: {str(cloudinary_error)}"
             )
-        
+
         delete_memory(db, memory_id, current_user.id, db_memory.family_id)
 
         return {"message": "Memory deleted successfully"}
-    
+
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -156,7 +162,35 @@ async def delete_single_memory_endpoint(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete memory: {str(e)}"
         )
-        
+
+
+@router.get("/{family_id}", response_model=List[MemoryResponse])
+async def get_family_memories(
+    family_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all memories for a family
+    """
+    is_member = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id
+    ).first()
+
+    if not is_member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must be a member of the family to view memories"
+        )
+
+    memories = db.query(Memory).filter(
+        Memory.family_id == family_id
+    ).order_by(Memory.date_for_notification.desc()).all()
+
+    return memories
+
+
 @router.get("/member/{member_user_id}/family/{family_id}", response_model=List[MemoryResponse])
 async def get_memories_endpoint(
     member_user_id: int,
@@ -168,26 +202,24 @@ async def get_memories_endpoint(
     Get all memories for a specific family member
     """
     try:
-        # Check if user is part of the family group
         membership = db.query(Registered).filter_by(
             user_id=current_user.id,
             family_id=family_id
-            ).first()
+        ).first()
 
         if not membership:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User is not registered in this family"
             )
-        
-        # Get memories for the specified family member
+
         memories = db.query(Memory).filter(
             Memory.user_id == member_user_id,
             Memory.family_id == family_id
         ).all()
 
         return memories
-                
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

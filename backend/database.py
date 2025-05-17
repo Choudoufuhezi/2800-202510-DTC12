@@ -66,6 +66,7 @@ class Family(Base):
     __tablename__ = "family"
 
     id = Column(Integer, primary_key=True, index=True)
+    family_name = Column(String, nullable=True)  # Add family_name field
     family_banner = Column(String, nullable=True)
     members = relationship("Registered", back_populates="family")
 

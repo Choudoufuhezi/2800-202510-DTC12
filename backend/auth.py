@@ -10,9 +10,9 @@ import os
 from sqlalchemy.orm import Session
 from database import get_db, get_user, create_user
 from database import User as DBUser
-from config import settings
+from config import settings, oauth2_scheme  # Import oauth2_scheme from config
 from email_service import generate_verification_token, send_password_reset_email, send_verification_email
-from main import oauth  # Import oauth from main
+import importlib
 
 router = APIRouter()
 
@@ -56,7 +56,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     token = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
     return token if isinstance(token, str) else token.decode("utf-8")
 
-async def get_current_user_email(request: Request):
+async def get_current_user_email(request: Request, token: str = Depends(oauth2_scheme)):
     """
     Dependency to get current user's email from the JWT token
     """
@@ -146,12 +146,14 @@ async def login(user_data: dict = Body(...), db: Session = Depends(get_db)):
 # Google OAuth routes
 @router.get("/auth/google")
 async def login_via_google(request: Request):
+    main = importlib.import_module("main")  # Lazy import to avoid circular import
     redirect_uri = request.url_for('auth_via_google_callback')
-    return await oauth.google.authorize_redirect(request, redirect_uri)
+    return await main.oauth.google.authorize_redirect(request, redirect_uri)
 
 @router.get("/auth/google/callback")
 async def auth_via_google_callback(request: Request, db: Session = Depends(get_db)):
-    token = await oauth.google.authorize_access_token(request)
+    main = importlib.import_module("main")  # Lazy import to avoid circular import
+    token = await main.oauth.google.authorize_access_token(request)
     user_info = token.get('userinfo')
     
     if not user_info:
@@ -218,7 +220,7 @@ async def delete_account(request: Request, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete account",
         )
-        
+    
 @router.post("/forgot-password")
 async def forgot_password(request_data: dict = Body(...), db: Session = Depends(get_db)):
     """
