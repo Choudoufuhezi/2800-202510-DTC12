@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -42,32 +41,33 @@
     </style>
 </head>
 
-<body class="bg-[#f5f3eb98]">
-    <!--Top Nav-->
-    <nav id="topNav" class="sticky top-0"></nav>
+<body class="noise-bg text-gray-800">
+    <!-- Top Navbar -->
+    <nav id="topNav" class="sticky top-0 z-50 bg-white/70 backdrop-blur-md shadow-md"></nav>
 
-    <div class="flex justify-center py-20">
-        <p class="font-semibold text-5xl text-left">Digital Family Vault</p>
-    </div>
+    <section class="text-center py-20 px-6 fade-in">
+        <h1
+            class="text-6xl font-extrabold bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent drop-shadow-lg">
+            Digital Family Vault
+        </h1>
+        <p class="mt-4 text-lg text-gray-600 max-w-xl mx-auto">
+            A beautiful home for your family’s past, present, and future.
+        </p>
+    </section>
 
-    <div class="flex text-center justify-center py-10 flex-row md:flex-col lg:flex-row">
-        <!-- Text Section -->
-        <div class="w-full md:w-4/5 lg:w-1/5 text-container">
-            <div>
-                <h1 class="m-6 font-semibold text-left">Build Your Family's Legacy, One Memory at a Time</h1>
-                <p class="m-6 text-left">
-                    Securely preserve your cherished stories, photos, recipes, and wisdom in a private, encrypted vault.
-                    The app is more than just storage, it's a digital heirloom designed to connect generations and
-                    ensure your family's unique history lives on.
-                </p>
+    <section class="max-w-7xl mx-auto px-6 py-10 flex flex-col lg:flex-row gap-12 items-center fade-in">
+        <!-- Glass Cards -->
+        <div class="flex-1 space-y-6">
+            <div class="p-6 rounded-3xl glass shadow-xl transition hover:scale-105">
+                <h2 class="text-2xl font-semibold mb-2 text-rose-600">Build Your Family's Legacy</h2>
+                <p class="text-gray-700">Securely preserve stories, recipes, and wisdom in a private encrypted vault
+                    that lasts generations.</p>
             </div>
-
             <div class="p-6 rounded-3xl glass shadow-xl transition hover:scale-105">
                 <h2 class="text-2xl font-semibold mb-2 text-pink-600">Connect Across Generations</h2>
                 <p class="text-gray-700">Relive precious memories, share traditions, and keep your family emotionally
                     closer.</p>
             </div>
-
             <div class="p-6 rounded-3xl glass shadow-xl transition hover:scale-105">
                 <h2 class="text-2xl font-semibold mb-2 text-purple-600">Turn Memories into a Storybook</h2>
                 <p class="text-gray-700">Structure moments into beautiful narratives—your family’s very own digital
@@ -75,8 +75,7 @@
             </div>
         </div>
 
-        <!-- Image Section -->
-        <section class="flex-1 grid grid-cols-2 gap-4">
+        <div class="flex-1 grid grid-cols-2 gap-4">
             <div class="rounded-xl overflow-hidden shadow-xl transform transition hover:scale-105 hover:rotate-1">
                 <img src="images/family.webp" class="object-cover w-full h-full" alt="Family 1">
             </div>
@@ -89,8 +88,8 @@
             <div class="rounded-xl overflow-hidden shadow-xl transform transition hover:scale-105 hover:-rotate-2">
                 <img src="images/family4.jpg" class="object-cover w-full h-full" alt="Family 4">
             </div>
-        </section>
-    </div>
+        </div>
+    </section>
 
     <!-- Bottom Navbar -->
     <nav id="bottomNav" class="sticky bottom-0 z-50 bg-white/70 backdrop-blur-md shadow-inner"></nav>
