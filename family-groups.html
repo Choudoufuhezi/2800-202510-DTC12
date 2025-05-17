@@ -10,37 +10,37 @@
 </head>
 
 <body class="bg-[#f5f3eb98] text-gray-800">
-
-    <!-- Top Navigation -->
     <nav id="topNav" class="sticky top-0"></nav>
     <div id="familyIconContainer"></div>
-
-    <main class="max-w-3xl mx-auto px-4 py-10 min-h-[calc(101vh-64px-64px)]">
-        <!-- Heading -->
-        <h1 class="text-3xl font-extrabold text-center text-gray-900 mb-8">
-            Your Family Groups
-        </h1>
-
-        <!-- Group Cards Section -->
-        <section id="families-container" class="space-y-5">
-        </section>
-
-        <!-- Action Buttons -->
+    <main class="min-h-[calc(100vh-128px)] px-4 pt-6 pb-24 max-w-xl mx-auto">
+        <header class="mb-6">
+            <h2 class="text-2xl font-bold flex items-center text-gray-900">
+                <i class="fas fa-users mr-3 text-indigo-600"></i>
+                Family Groups
+            </h2>
+            <p class="text-gray-600 mt-2">Tap a family group to view its members.</p>
+        </header>
+        <section id="families-container" class="space-y-5"></section>
         <section class="mt-10 space-y-4">
-            <button id="create-family-button"
-                class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-blue-700 transition">
-                <i class="fas fa-plus"></i> Create a New Family Group
-            </button>
+            <a href="create-family.html">
+                <button
+                    class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-blue-700 transition">
+                    <i class="fas fa-plus"></i> Create a New Family Group
+                </button>
+            </a><br><br>
+            <a href="join-family.html">
+                <button
+                    class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-blue-700 transition">
+                    <i class="fas fa-link"></i> Join a Family
+                </button>
+            </a>
         </section>
+        <p id="error-message" class="text-red-500 mt-4 hidden text-center"></p>
     </main>
-
-    <!-- Bottom Navigation -->
     <nav id="bottomNav" class="sticky bottom-0"></nav>
-
-    <!-- Scripts -->
     <script src="../scripts/add_nav.js"></script>
-    <script src="../scripts/load_family_icon.js"></script>
-    <script type="module" src="../scripts/load_family.js"></script>
+    <script type ="module" src="../scripts/load_family_icon.js"></script>
+    <script type="module" src="../scripts/family-groups.js"></script>
 </body>
 
 </html>
