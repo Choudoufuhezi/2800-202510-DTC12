@@ -27,6 +27,8 @@ class MemberInfo(BaseModel):
     user_id: int # user_id of the member
     email: str
     is_admin: bool
+    custom_name: Optional[str] = None
+    relationship: Optional[str] = None
 
 class FamilyCreate(BaseModel):
     family_name: str
@@ -297,13 +299,19 @@ async def get_family_members(
     family = db.query(Family).filter(Family.id == family_id).first()
     
     return {
-    "family_name": family.family_name,
-    "family_banner": family.family_banner,
-    "members": [
-        MemberInfo(user_id=user_id, email=email, is_admin=is_admin).dict()
-        for user_id, email, is_admin in members
-    ]
-}
+        "family_name": family.family_name,
+        "family_banner": family.family_banner,
+        "members": [
+            {
+                "user_id": user_id,
+                "email": email,
+                "is_admin": is_admin,
+                "custom_name": custom_name,
+                "relationship": relationship
+            }
+            for user_id, email, is_admin, custom_name, relationship in members
+        ]
+    }
 
 @router.get("/my-families")
 async def get_user_families(
@@ -445,11 +453,17 @@ async def update_family(
         db.commit()
         db.refresh(db_family)
 
-        members = db.query(User.id, User.email, Registered.is_admin).join(
-            Registered, Registered.user_id == User.id
-        ).filter(
-            Registered.family_id == family_id
-        ).all()
+        members = db.query(
+                    User.id,
+                    User.email,
+                    Registered.is_admin,
+                    Registered.custom_name,
+                    Registered.relationship
+                ).join(
+                    Registered, Registered.user_id == User.id
+                ).filter(
+                    Registered.family_id == family_id
+                ).all()
 
         admin = db.query(Registered.user_id).filter(
             Registered.family_id == family_id,
@@ -459,7 +473,16 @@ async def update_family(
         return {
             "id": db_family.id,
             "admin": admin[0] if admin else None,
-            "members": [MemberInfo(user_id=user_id, email=email, is_admin=is_admin) for user_id, email, is_admin in members],
+            "members": [
+                MemberInfo(
+                    user_id=user_id,
+                    email=email,
+                    is_admin=is_admin,
+                    custom_name=custom_name,
+                    relationship=relationship
+                ).dict()
+                for user_id, email, is_admin, custom_name, relationship in members
+            ],
             "family_name": db_family.family_name,
             "family_banner": db_family.family_banner
         }
@@ -530,3 +553,36 @@ async def get_messages(
             "reply_to": msg.reply_to
         })
     return result
+
+class MemberUpdateRequest(BaseModel):
+    custom_name: Optional[str] = None
+    relationship: Optional[str] = None
+
+@router.put("/{family_id}/me", response_model=dict)
+async def update_member_info(
+    family_id: int,
+    update: MemberUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    member = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id
+    ).first()
+
+    if not member:
+        raise HTTPException(status_code=404, detail="You are not a member of this family.")
+
+    if update.custom_name is not None:
+        member.custom_name = update.custom_name
+    if update.relationship is not None:
+        member.relationship = update.relationship
+
+    db.commit()
+    db.refresh(member)
+
+    return {
+        "message": "Member info updated",
+        "custom_name": member.custom_name,
+        "relationship": member.relationship
+    }

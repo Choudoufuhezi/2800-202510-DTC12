@@ -164,7 +164,7 @@ async def delete_single_memory_endpoint(
         )
 
 
-@router.get("/{family_id}", response_model=List[MemoryResponse])
+@router.get("/memories/{family_id}", response_model=List[MemoryResponse])
 async def get_family_memories(
     family_id: int,
     db: Session = Depends(get_db),
