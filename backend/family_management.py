@@ -284,7 +284,7 @@ async def get_family_members(
         )
     
     # Get all members with email and admin status
-    members = db.query(User.email, Registered.is_admin).join(
+    members = db.query(User.id, User.email, Registered.is_admin).join(
         Registered, Registered.user_id == User.id
     ).filter(
         Registered.family_id == family_id
