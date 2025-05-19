@@ -89,11 +89,11 @@ async def create_family(
         
         # Get all members
         members = [
-            {
-                "user_id": current_user.id,
-                "email": current_user.email,
-                "is_admin": True
-            }
+            MemberInfo(
+                user_id=current_user.id,
+                email=current_user.email,
+                is_admin=True
+            )
         ]
         
         return {
@@ -221,7 +221,7 @@ async def join_family(
     return FamilyInfo(
         id=db_invite.family_id,
         admin=admin[0] if admin else None,
-        members=[MemberInfo(email=email, is_admin=is_admin) for email, is_admin in members],
+        members=[MemberInfo(user_id=user_id, email=email, is_admin=is_admin) for user_id, email, is_admin in members],
         family_name=family.family_name
     )
     
@@ -284,7 +284,7 @@ async def get_family_members(
         )
     
     # Get all members with email and admin status
-    members = db.query(User.email, Registered.is_admin).join(
+    members = db.query(User.id, User.email, Registered.is_admin).join(
         Registered, Registered.user_id == User.id
     ).filter(
         Registered.family_id == family_id
@@ -296,7 +296,7 @@ async def get_family_members(
         "family_name": family.family_name,
         "family_banner": family.family_banner,
         "members": [
-            {"user_id": user_id, "email": email, "is_admin": is_admin}
+            MemberInfo(user_id=user_id, email=email, is_admin=is_admin)
             for user_id, email, is_admin in members
         ]
     }
@@ -452,7 +452,10 @@ async def update_family(
         return {
             "id": db_family.id,
             "admin": admin[0] if admin else None,
-            "members": [MemberInfo(user_id=user_id, email=email, is_admin=is_admin) for user_id, email, is_admin in members],
+            "members": [
+                MemberInfo(user_id=user_id, email=email, is_admin=is_admin)
+                for user_id, email, is_admin in members
+            ],
             "family_name": db_family.family_name,
             "family_banner": db_family.family_banner
         }
