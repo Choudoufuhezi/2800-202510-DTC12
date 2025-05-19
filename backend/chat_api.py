@@ -52,8 +52,11 @@ async def get_messages(
     # Verify membership
     verify_chatroom_membership(db, current_user.id, chatroom_id)
     
-    # Get messages
-    messages = db.query(Message).filter(
+    # Get all messages
+    messages = db.query(Message, User).join(
+        User,
+        Message.user_id == User.id
+    ).filter(
         Message.chatroom_id == chatroom_id
     ).order_by(Message.time_stamp.asc()).all()
     
@@ -65,12 +68,13 @@ async def get_messages(
     last_read_id = user_chatroom.last_read_message_id if user_chatroom else None
     
     return [{
-        "id": msg.id,
-        "sender_id": msg.user_id,
-        "content": msg.message_text,
-        "timestamp": msg.time_stamp.isoformat(),
-        "chatroom_id": msg.chatroom_id,
-        "is_unread": last_read_id is None or msg.id > last_read_id
+        "id": msg.Message.id,
+        "sender_id": msg.Message.user_id,
+        "sender_name": msg.User.username or msg.User.email,
+        "content": msg.Message.message_text,
+        "timestamp": msg.Message.time_stamp.isoformat(),
+        "chatroom_id": msg.Message.chatroom_id,
+        "is_unread": last_read_id is None or msg.Message.id > last_read_id
     } for msg in messages]
 
 @router.get("/users/chatrooms")

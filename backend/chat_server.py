@@ -3,7 +3,7 @@ from typing import Dict, Set
 import json
 from datetime import datetime
 from sqlalchemy.orm import Session
-from database import ChatRoom, UserChatRoom, create_chatroom, create_userchatroom, create_message, get_db, Message
+from database import ChatRoom, UserChatRoom, create_chatroom, create_userchatroom, create_message, get_db, Message, User
 
 router = APIRouter()
 
@@ -58,6 +58,10 @@ class ConnectionManager:
             time_stamp=datetime.now()
         )
         
+        # Get sender information
+        sender = db.query(User).filter(User.id == int(sender_id)).first()
+        sender_name = sender.username or sender.email if sender else "Unknown"
+        
         # Update sender's last read message
         user_chatroom = db.query(UserChatRoom).filter(
             UserChatRoom.user_id == int(sender_id),
@@ -73,6 +77,7 @@ class ConnectionManager:
                 if member_id in self.active_connections and member_id != sender_id:
                     await self.active_connections[member_id].send_json({
                         "sender_id": sender_id,
+                        "sender_name": sender_name,
                         "content": message,
                         "chatroom_id": chatroom_id,
                         "timestamp": db_message.time_stamp.isoformat(),

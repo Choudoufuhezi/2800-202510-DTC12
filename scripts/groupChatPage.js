@@ -143,10 +143,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Display message history
         let lastUnreadMessageId = null;
-        messages.forEach(msg => {
+        for (const msg of messages) {
             const isOwnMessage = msg.sender_id.toString() === userId;
             const bubble = createMessageBubble(
-                isOwnMessage ? "You" : `User ${msg.sender_id}`,
+                isOwnMessage ? "You" : msg.sender_name,
                 msg.content,
                 msg.id,
                 null,
@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (msg.is_unread) {
                 lastUnreadMessageId = msg.id;
             }
-        });
+        }
         chatBox.scrollTop = chatBox.scrollHeight;
 
         if (lastUnreadMessageId) {
@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         ws.send(JSON.stringify(joinMessage));
     };
 
-    ws.onmessage = (event) => {
+    ws.onmessage = async (event) => {
         const data = JSON.parse(event.data);
         console.log(`User ${userId}: Received message:`, data);
         
@@ -200,8 +200,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (data.sender_id && data.content) {
             console.log(`User ${userId}: Processing chat message from User ${data.sender_id}`);
             const isOwnMessage = data.sender_id === userId;
+            
             const bubble = createMessageBubble(
-                isOwnMessage ? "You" : `User ${data.sender_id}`,
+                isOwnMessage ? "You" : data.sender_name,
                 data.content,
                 data.message_id
             );
@@ -233,7 +234,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         const bubbleWrapper = document.createElement("div");
         bubbleWrapper.className = `flex ${from === "You" ? "justify-end" : "justify-start"} relative`;
         bubbleWrapper.dataset.id = messageId;
-
+    
+        const bubbleContainer = document.createElement("div");
+        bubbleContainer.className = `flex flex-col ${from === "You" ? "items-end" : "items-start"}`;
+    
         const bubble = document.createElement("div");
         bubble.className = `${from === "You" ? "bg-blue-100" : "bg-gray-200"} text-gray-800 px-4 py-2 rounded-lg max-w-xs shadow`;
         
@@ -247,13 +251,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         const messageText = document.createElement("div");
         messageText.textContent = text;
         bubble.appendChild(messageText);
-        bubbleWrapper.appendChild(bubble);
-
+        bubbleContainer.appendChild(bubble);
+    
+        // Only show if not from current user
+        if (from !== "You") {
+            const senderInfo = document.createElement("div");
+            senderInfo.className = "text-xs text-gray-500 mt-1";
+            senderInfo.textContent = from;
+            bubbleContainer.appendChild(senderInfo);
+        }
+    
+        bubbleWrapper.appendChild(bubbleContainer);
+    
         if (from === "You") {
             const menuBtn = document.createElement("button");
             menuBtn.innerHTML = "⋮";
             menuBtn.className = "ml-2 text-gray-500 hover:text-gray-800 focus:outline-none";
-
+    
             const menuBox = document.createElement("div");
             menuBox.className = "absolute right-0 top-full mt-2 w-32 bg-white border rounded shadow hidden z-10 menu-box";
             menuBox.innerHTML = `
@@ -261,41 +275,41 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer edit-btn">Edit</div>
                 <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer delete-btn">Delete</div>
             `;
-
+    
             menuBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
                 document.querySelectorAll(".menu-box").forEach(box => box.classList.add("hidden"));
                 menuBox.classList.toggle("hidden");
             });
-
+    
             document.addEventListener("click", () => {
                 menuBox.classList.add("hidden");
             });
-
+    
             const rightSide = document.createElement("div");
             rightSide.className = "flex flex-col items-end";
             rightSide.appendChild(menuBtn);
             rightSide.appendChild(menuBox);
             bubbleWrapper.appendChild(rightSide);
-
+    
             menuBox.querySelector(".reply-btn").addEventListener("click", () => {
                 replyTo = { messageId, originalText: text };
                 document.getElementById("reply-text").textContent = text;
                 document.getElementById("reply-preview").classList.remove("hidden");
                 input.focus();
             });
-
+    
             menuBox.querySelector(".edit-btn").addEventListener("click", () => {
                 input.value = text;
                 input.focus();
                 replyTo = { messageId, editMode: true };
             });
-
+    
             menuBox.querySelector(".delete-btn").addEventListener("click", () => {
                 bubbleWrapper.remove();
             });
         }
-
+    
         return bubbleWrapper;
     }
 
