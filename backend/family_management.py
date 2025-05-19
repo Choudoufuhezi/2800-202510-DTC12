@@ -222,14 +222,11 @@ async def join_family(
     family = db.query(Family).filter(Family.id == db_invite.family_id).first()
 
     return FamilyInfo(
-    id=db_invite.family_id,
-    admin=admin[0] if admin else None,
-    members=[
-        MemberInfo(user_id=user_id, email=email, is_admin=is_admin)
-        for user_id, email, is_admin in members
-    ],
-    family_name=family.family_name
-)
+        id=db_invite.family_id,
+        admin=admin[0] if admin else None,
+        members=[MemberInfo(user_id=user_id, email=email, is_admin=is_admin) for user_id, email, is_admin in members],
+        family_name=family.family_name
+    )
     
 @router.delete("/{family_id}", response_model=dict)
 async def delete_family_endpoint(
@@ -290,7 +287,7 @@ async def get_family_members(
         )
     
     # Get all members with email and admin status
-    members = db.query(User.email, Registered.is_admin).join(
+    members = db.query(User.id, User.email, Registered.is_admin).join(
         Registered, Registered.user_id == User.id
     ).filter(
         Registered.family_id == family_id
@@ -307,29 +304,33 @@ async def get_family_members(
                 "email": email,
                 "is_admin": is_admin,
                 "custom_name": custom_name,
-                "relationship": relationship
+                "relationship_": relationship_
             }
-            for user_id, email, is_admin, custom_name, relationship in members
+            for user_id, email, is_admin, custom_name, relationship_ in members
         ]
     }
 
-@router.get("/my-families")
+@router.get("/my-families", response_model=List[FamilyInfo])
 async def get_user_families(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    """
+    Return all family details for the families the current user belongs to.
+    """
     registrations = db.query(Registered).filter(
         Registered.user_id == current_user.id
     ).all()
 
     families = []
-
     for reg in registrations:
         db_family = db.query(Family).filter(Family.id == reg.family_id).first()
         if not db_family:
             continue
 
-        members_raw = db.query(User.id, User.email, Registered.is_admin).join(
+        print(f"Processing Family ID {db_family.id} - Name: {db_family.family_name}")
+
+        members = db.query(User.id, User.email, Registered.is_admin).join(
             Registered, Registered.user_id == User.id
         ).filter(Registered.family_id == reg.family_id).all()
 
@@ -338,23 +339,16 @@ async def get_user_families(
             Registered.is_admin == True
         ).first()
 
-        members = [
-            {
-                "user_id": user_id,
-                "email": email,
-                "is_admin": is_admin
-            }
-            for user_id, email, is_admin in members_raw
-        ]
+        families.append(FamilyInfo(
+            id=db_family.id,
+            admin=admin[0] if admin else None,
+            members=[
+                MemberInfo(user_id=user_id, email=email, is_admin=is_admin)
+                for user_id, email, is_admin in members
+            ],
+            family_name=db_family.family_name
+        ))
 
-        families.append({
-            "id": db_family.id,
-            "admin": admin[0] if admin else None,
-            "family_name": db_family.family_name,
-            "members": members
-        })
-
-    print("Sending families to frontend:", families)
     return families
 
     
@@ -479,9 +473,9 @@ async def update_family(
                     email=email,
                     is_admin=is_admin,
                     custom_name=custom_name,
-                    relationship=relationship
+                    relationship_=relationship_
                 ).dict()
-                for user_id, email, is_admin, custom_name, relationship in members
+                for user_id, email, is_admin, custom_name, relationship_ in members
             ],
             "family_name": db_family.family_name,
             "family_banner": db_family.family_banner

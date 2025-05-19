@@ -125,4 +125,63 @@ document.addEventListener('DOMContentLoaded', () => {
     inviteButton.addEventListener('click', () => {
         window.location.href = `${BASE_URL}/manage-members.html?familyId=${familyId}`;
     });
+
+    const createGroupChatBtn = document.getElementById('create-group-chat');
+    if (createGroupChatBtn) {
+        // Check if family chat exists
+        fetch(`${API_URL}/chatrooms/family/${familyId}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            return null;
+        })
+        .then(chatData => {
+            if (chatData) {
+                // Family chat exists, update button
+                createGroupChatBtn.innerHTML = '<i class="fas fa-comments"></i> Go to Family Group Chat';
+                createGroupChatBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                createGroupChatBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                
+                // Update click handler to navigate to existing chat
+                createGroupChatBtn.onclick = () => {
+                    window.location.href = `GroupChatPage.html?chatroomId=${chatData.chatroom_id}`;
+                };
+            } else {
+                // No family chat exists, keep original create behavior
+                createGroupChatBtn.onclick = async () => {
+                    try {
+                        const response = await fetch(`${API_URL}/chatrooms/create-family-chat`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            },
+                            body: JSON.stringify({
+                                family_id: parseInt(familyId)
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Failed to create group chat');
+                        }
+
+                        const chatData = await response.json();
+                        // Redirect to the group chat page
+                        window.location.href = `GroupChatPage.html?chatroomId=${chatData.chatroom_id}`;
+                    } catch (error) {
+                        console.error('Error creating group chat:', error);
+                        alert('Failed to create group chat. Please try again.');
+                    }
+                };
+            }
+        })
+        .catch(error => {
+            console.error('Error checking family chat:', error);
+        });
+    }
 });

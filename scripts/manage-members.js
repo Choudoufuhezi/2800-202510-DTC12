@@ -83,11 +83,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Show content
         loading.classList.add('hidden');
         inviteContent.classList.remove('hidden');
-
-        // Optional: Auto-redirect after 5s
-        setTimeout(() => {
-            window.location.href = backToMembersButton.href;
-        }, 5000);
     } catch (error) {
         console.error('Error in manage-members.js:', error);
         errorMessage.textContent = error.message || 'Something went wrong';

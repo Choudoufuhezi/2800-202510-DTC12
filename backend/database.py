@@ -78,7 +78,7 @@ class Registered(Base):
     is_admin = Column(Boolean, default=False, nullable=False)
 
     custom_name = Column(String, nullable=True)
-    relationship = Column(String, nullable=True)
+    relationship_ = Column(String, nullable=True)
     
     __table_args__ = (
         PrimaryKeyConstraint('user_id', 'family_id'),

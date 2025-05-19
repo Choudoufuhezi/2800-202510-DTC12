@@ -17,6 +17,8 @@ async function loadFamilies() {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         });
 
+        console.log(response)
+
         if (!response.ok) {
             if (response.status === 401) {
                 window.location.href = `${BASE_URL}/login.html`;
