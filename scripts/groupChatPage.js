@@ -142,21 +142,35 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log("Fetched message history:", messages);
 
         // Display message history
+        let lastUnreadMessageId = null;
         messages.forEach(msg => {
             const isOwnMessage = msg.sender_id.toString() === userId;
             const bubble = createMessageBubble(
                 isOwnMessage ? "You" : `User ${msg.sender_id}`,
                 msg.content,
-                msg.id
+                msg.id,
+                null,
+                msg.is_unread
             );
             chatBox.appendChild(bubble);
+            if (msg.is_unread) {
+                lastUnreadMessageId = msg.id;
+            }
         });
         chatBox.scrollTop = chatBox.scrollHeight;
+
+        if (lastUnreadMessageId) {
+            const updateMessage = {
+                type: "update_last_read",
+                chatroom_id: chatroomId,
+                message_id: lastUnreadMessageId
+            };
+            ws.send(JSON.stringify(updateMessage));
+        }
     } catch (error) {
         console.error("Error fetching message history:", error);
     }
 
-    // WebSocket setup
     const ws = new WebSocket(`ws://localhost:8000/ws/${userId}`);
 
     console.log(`User ${userId}: Connected to WebSocket`);
@@ -193,6 +207,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
             chatBox.appendChild(bubble);
             chatBox.scrollTop = chatBox.scrollHeight;
+
+            // If it's our own message, update last read position
+            if (isOwnMessage) {
+                const updateMessage = {
+                    type: "update_last_read",
+                    chatroom_id: chatroomId,
+                    message_id: data.message_id
+                };
+                ws.send(JSON.stringify(updateMessage));
+            }
         }
     };
 
@@ -212,14 +236,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const bubble = document.createElement("div");
         bubble.className = `${from === "You" ? "bg-blue-100" : "bg-gray-200"} text-gray-800 px-4 py-2 rounded-lg max-w-xs shadow`;
-
+        
         if (replyText) {
             const replyPreview = document.createElement("div");
             replyPreview.className = "text-xs text-gray-600 italic border-l-2 border-blue-400 pl-2 mb-1";
             replyPreview.textContent = replyText;
             bubble.appendChild(replyPreview);
         }
-
+    
         const messageText = document.createElement("div");
         messageText.textContent = text;
         bubble.appendChild(messageText);

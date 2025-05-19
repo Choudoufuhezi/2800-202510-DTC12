@@ -52,8 +52,26 @@ async def get_messages(
     # Verify membership
     verify_chatroom_membership(db, current_user.id, chatroom_id)
     
-    # Get and return messages
-    return get_chatroom_messages(db, chatroom_id)
+    # Get messages
+    messages = db.query(Message).filter(
+        Message.chatroom_id == chatroom_id
+    ).order_by(Message.time_stamp.asc()).all()
+    
+    # Get user's last read message
+    user_chatroom = db.query(UserChatRoom).filter(
+        UserChatRoom.user_id == current_user.id,
+        UserChatRoom.chatroom_id == chatroom_id
+    ).first()
+    last_read_id = user_chatroom.last_read_message_id if user_chatroom else None
+    
+    return [{
+        "id": msg.id,
+        "sender_id": msg.user_id,
+        "content": msg.message_text,
+        "timestamp": msg.time_stamp.isoformat(),
+        "chatroom_id": msg.chatroom_id,
+        "is_unread": last_read_id is None or msg.id > last_read_id
+    } for msg in messages]
 
 @router.get("/users/chatrooms")
 async def get_user_chatrooms(
@@ -70,11 +88,30 @@ async def get_user_chatrooms(
         UserChatRoom.user_id == current_user.id
     ).all()
     
-    return [{
-        "chatroom_id": chatroom.ChatRoom.id,
-        "name": chatroom.ChatRoom.name,
-        "created_date": chatroom.ChatRoom.created_date.isoformat() if chatroom.ChatRoom.created_date else None
-    } for chatroom in chatrooms]
+    result = []
+    for chatroom in chatrooms:
+        # Get the last message
+        last_message = db.query(Message).filter(
+            Message.chatroom_id == chatroom.ChatRoom.id
+        ).order_by(Message.time_stamp.desc()).first()
+        
+        # Get unread count
+        unread_count = 0
+        if last_message and chatroom.UserChatRoom.last_read_message_id:
+            unread_count = db.query(Message).filter(
+                Message.chatroom_id == chatroom.ChatRoom.id,
+                Message.id > chatroom.UserChatRoom.last_read_message_id
+            ).count()
+        
+        result.append({
+            "chatroom_id": chatroom.ChatRoom.id,
+            "name": chatroom.ChatRoom.name,
+            "created_date": chatroom.ChatRoom.created_date.isoformat() if chatroom.ChatRoom.created_date else None,
+            "last_message": last_message.message_text if last_message else None,
+            "unread_count": unread_count
+        })
+    
+    return result
     
 @router.get("/chatrooms/{chatroom_id}/info")
 async def get_chatroom_info(

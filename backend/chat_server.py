@@ -1,9 +1,9 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from typing import Dict, Set
 import json
 from datetime import datetime
 from sqlalchemy.orm import Session
-from database import ChatRoom, UserChatRoom, create_chatroom, create_userchatroom, create_message, get_db
+from database import ChatRoom, UserChatRoom, create_chatroom, create_userchatroom, create_message, get_db, Message
 
 router = APIRouter()
 
@@ -32,7 +32,7 @@ class ConnectionManager:
             
             self.chatroom_members[chatroom_id] = set()
 
-        # Add user to in-memory tracking TODO: move to database in the future
+        # Add user to in-memory tracking
         self.chatroom_members[chatroom_id].add(user_id)
         
         # Add user to chatroom in database (many-to-many relationship)
@@ -49,7 +49,7 @@ class ConnectionManager:
             self.chatroom_members[chatroom_id].remove(user_id)
 
     async def broadcast_to_chatroom(self, db: Session, message: str, sender_id: str, chatroom_id: int):
-        # First save the message to database
+        # Save the message to database
         db_message = create_message(
             db,
             user_id=int(sender_id),
@@ -58,7 +58,16 @@ class ConnectionManager:
             time_stamp=datetime.now()
         )
         
-        # Then broadcast to all members in the chatroom (except sender)
+        # Update sender's last read message
+        user_chatroom = db.query(UserChatRoom).filter(
+            UserChatRoom.user_id == int(sender_id),
+            UserChatRoom.chatroom_id == chatroom_id
+        ).first()
+        if user_chatroom:
+            user_chatroom.last_read_message_id = db_message.id
+            db.commit()
+        
+        # Don't broadcast to sender to prevent duplicate messages
         if chatroom_id in self.chatroom_members:
             for member_id in self.chatroom_members[chatroom_id]:
                 if member_id in self.active_connections and member_id != sender_id:
@@ -112,6 +121,16 @@ async def websocket_endpoint(
                     sender_id=client_id,
                     chatroom_id=message["chatroom_id"]
                 )
+                
+            elif message["type"] == "update_last_read":
+                # Update user's last read message
+                user_chatroom = db.query(UserChatRoom).filter(
+                    UserChatRoom.user_id == int(client_id),
+                    UserChatRoom.chatroom_id == message["chatroom_id"]
+                ).first()
+                if user_chatroom:
+                    user_chatroom.last_read_message_id = message["message_id"]
+                    db.commit()
                 
     except WebSocketDisconnect:
         manager.disconnect(client_id)
