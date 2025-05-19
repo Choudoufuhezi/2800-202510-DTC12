@@ -44,11 +44,12 @@ async function renderGroupChatItem(group) {
     const groupInfo = await fetchGroupChatInfo(groupID);
     const lastMessage = groupInfo.last_message || 'No messages yet';
     const memberCount = groupInfo.member_count || 0;
+    const unreadCount = group.unread_count || 0;
 
     console.log(groupInfo);
     
     return `
-        <div class="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow cursor-pointer"
+        <div class="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow cursor-pointer relative"
              onclick="window.location.href='GroupChatPage.html?chatroomId=${groupID}'">
             <div class="flex justify-between items-start">
                 <div>
@@ -64,6 +65,11 @@ async function renderGroupChatItem(group) {
             <div class="mt-2">
                 <p class="text-sm text-gray-600 truncate">Last message: ${lastMessage}</p>
             </div>
+            ${unreadCount > 0 ? `
+                <div class="absolute bottom-2 right-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                    ${unreadCount} unread messages
+                </div>
+            ` : ''}
         </div>
     `;
 }
