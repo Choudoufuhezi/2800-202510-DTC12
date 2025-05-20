@@ -52,6 +52,7 @@ class UserChatRoom(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     chatroom_id = Column(Integer, ForeignKey("chatroom.id"))
+    last_read_message_id = Column(Integer, ForeignKey("message.id"), nullable=True)
 
 class Message(Base):
     __tablename__ = "message"
@@ -168,7 +169,8 @@ def create_chatroom(db, name: str, date: datetime):
 def create_userchatroom(db, user_id: int, chatroom_id: int):
     db_userchatroom = UserChatRoom(
         user_id=user_id, 
-        chatroom_id=chatroom_id
+        chatroom_id=chatroom_id,
+        last_read_message_id=None
     )
     db.add(db_userchatroom)
     db.commit()
