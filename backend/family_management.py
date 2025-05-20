@@ -287,7 +287,11 @@ async def get_family_members(
         )
     
     # Get all members with email and admin status
-    members = db.query(User.id, User.email, Registered.is_admin).join(
+    members = db.query(User.id,
+                    User.email,
+                    Registered.is_admin,
+                    Registered.custom_name,
+                    Registered.relationship_).join(
         Registered, Registered.user_id == User.id
     ).filter(
         Registered.family_id == family_id
@@ -452,7 +456,7 @@ async def update_family(
                     User.email,
                     Registered.is_admin,
                     Registered.custom_name,
-                    Registered.relationship
+                    Registered.relationship_
                 ).join(
                     Registered, Registered.user_id == User.id
                 ).filter(
@@ -463,7 +467,7 @@ async def update_family(
             Registered.family_id == family_id,
             Registered.is_admin == True
         ).first()
-
+        
         return {
             "id": db_family.id,
             "admin": admin[0] if admin else None,
