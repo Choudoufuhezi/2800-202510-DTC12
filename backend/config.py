@@ -7,10 +7,10 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 
-    # frontend_url: str = "http://localhost:3000"  
-    frontend_url: str = "https://dev--digitalfamilyvault.netlify.app"
-    backend_url: str = "https://two800-202510-dtc12-0d55.onrender.com"
-    # backend_url: str = "http://localhost:8000"
+    frontend_url: str = "http://localhost:3000"  
+    # frontend_url: str = "https://dev--digitalfamilyvault.netlify.app"
+    # backend_url: str = "https://two800-202510-dtc12-0d55.onrender.com"
+    backend_url: str = "http://localhost:8000"
 
     # Google OAuth
     google_client_id: str
@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     
     # Deepseek settings
     deepseek_api_key: str | None = None
+
+    invite_code_chars: str = "0123456789"
+    invite_code_length: int = 6
     
     class Config:
         env_file = ".env"

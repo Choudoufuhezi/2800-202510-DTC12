@@ -80,9 +80,10 @@ async function loadFamilyDetails() {
         for (const member of family.members) {
             const memberMemories = memoriesByUser[member.user_id] || [];
 
-            const memberCard = document.createElement('div');
-            memberCard.className = 'block bg-white p-4 rounded-xl shadow hover:shadow-md transition';
+            const memberContainer = document.createElement("div")
+            memberContainer.className = 'flex flex-row bg-white p-4 rounded-xl shadow hover:shadow-md transition';
 
+            const memberCard = document.createElement('div');
             memberCard.innerHTML = `
                 <div class="flex justify-between items-center">
                     <div>
@@ -108,7 +109,45 @@ async function loadFamilyDetails() {
                 </div>
             `;
 
-            membersContainer.appendChild(memberCard);
+            const adminButtonModal = document.createElement('button');
+            adminButtonModal.innerHTML = '<i class="fa-solid fa-user-tie"></i>';
+            adminButtonModal.className = "text-red-500 hover:text-red-700 p-4 text-xl";
+
+            const dropdownMenu = document.createElement('div');
+            dropdownMenu.className = "hidden absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg z-50";
+
+            const options = document.createElement('ul')
+            options.className = "text-gray-700";
+
+            const option = document.createElement("li")
+            option.className = "px-4 py-2 hover:bg-gray-100 cursor-pointer"
+            option.innerHTML = "Delete User From Family"
+            option.addEventListener("click", async () => {
+                if (confirm("Are you sure you want to delete this user?")) {
+                    delete_user(member.user_id, familyId)
+                }
+            })
+
+            options.appendChild(option)
+            dropdownMenu.appendChild(options)
+
+            adminButtonModal.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', () => {
+                dropdownMenu.classList.add('hidden');
+            });
+
+            const container = document.createElement('div');
+            container.className = "relative inline-block ml-auto";
+            container.appendChild(adminButtonModal);
+            container.appendChild(dropdownMenu);
+
+            memberContainer.appendChild(memberCard);
+            memberContainer.appendChild(container);
+            membersContainer.appendChild(memberContainer);
         }
 
     } catch (error) {
@@ -185,3 +224,28 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 });
+
+
+async function delete_user(target_user_id, family_id) {
+    const token = localStorage.getItem("token");
+    try {
+        const response = await fetch(`${API_URL}/family/${family_id}/${target_user_id}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            console.error("Failed to delete user:", error);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        return false;
+    }
+}
+
