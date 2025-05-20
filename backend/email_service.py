@@ -1,3 +1,4 @@
+from datetime import datetime
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -6,6 +7,34 @@ import secrets
 
 def generate_verification_token():
     return secrets.token_urlsafe(32)
+
+def create_email_footer():
+    """
+    Create a standardized footer for all emails
+    """
+    current_year = datetime.now().year
+    return f"""
+    <footer style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #777; font-size: 12px;">
+        <p>© {current_year} Family Vault. All rights reserved.</p>
+        <p>
+            <a href="{settings.app_url}/privacy" style="color: #777;">Privacy Policy</a> | 
+            <a href="{settings.app_url}/terms" style="color: #777;">Terms of Service</a> | 
+            <a href="{settings.app_url}/unsubscribe" style="color: #777;">Unsubscribe</a>
+        </p>
+        <p>This email was sent automatically. Please do not reply directly to this message.</p>
+    </footer>
+    """
+
+def create_email_header():
+    """
+    Create a standardized header for all emails
+    """
+    return f"""
+    <header style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+        <img src="{settings.app_logo_url}" alt="Family Vault Logo" style="max-height: 50px;">
+    </header>
+    """
+
 
 def send_verification_email(email: str, verification_token: str):
     # Create message
