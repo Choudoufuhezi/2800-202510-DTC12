@@ -54,7 +54,8 @@ class InviteResponse(BaseModel):
     expires_at: datetime
     max_uses: int
     family_id: int
-    invite_link : str
+    invite_link: str
+    uses: int
     
 class JoinFamilyRequest(BaseModel):
     code: str
@@ -155,7 +156,8 @@ async def create_invite(
         "expires_at": expires_at,
         "max_uses": request.max_uses,
         "family_id": request.family_id,
-        "invite_link": f"{settings.frontend_url}/invite.html?code={code}" 
+        "invite_link": f"{settings.frontend_url}/invite.html?code={code}",
+        "uses": 0
     }
     
 @router.post("/join", response_model=FamilyInfo)
@@ -378,7 +380,8 @@ async def get_invite_details(
         "code": invite.code,
         "expires_at": invite.expires_at,
         "max_uses": invite.max_uses,
-        "family_id": invite.family_id
+        "family_id": invite.family_id,
+        "uses": invite.uses
     }
 
 @router.get("/{family_id}/invites", response_model=List[InviteResponse])
@@ -409,7 +412,9 @@ async def get_family_invites(
             "code": invite.code,
             "expires_at": invite.expires_at,
             "max_uses": invite.max_uses,
-            "family_id": invite.family_id
+            "family_id": invite.family_id,
+            "invite_link": f"{settings.frontend_url}/invite.html?code={invite.code}",
+            "uses": invite.uses
         }
         for invite in invites
     ]
