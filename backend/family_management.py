@@ -348,7 +348,34 @@ async def delete_user(
 
     return {"message": "Member deleted successfully."}
 
+@router.put("/{family_id}/{member_id}", response_model=dict)
+async def admin_user(
+    family_id: int,
+    member_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    admin_record = db.query(Registered).filter(
+        Registered.user_id == current_user.id, 
+        Registered.family_id == family_id
+    ).first()
 
+    opponent_record = db.query(Registered).filter(
+        Registered.user_id == member_id, 
+        Registered.family_id == family_id
+    ).first()
+
+    if not admin_record or not admin_record.is_admin:
+        return {"error": "You do not have admin privileges."}
+    
+    if not opponent_record:
+        return {"error": "The member you are trying to delete does not exist."}
+
+    opponent_record.is_admin = True
+
+    db.commit()
+
+    return {"message": "Member have been updated as admin."}
 
 @router.get("/my-families", response_model=List[FamilyInfo])
 async def get_user_families(

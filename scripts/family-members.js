@@ -119,16 +119,26 @@ async function loadFamilyDetails() {
             const options = document.createElement('ul')
             options.className = "text-gray-700";
 
-            const option = document.createElement("li")
-            option.className = "px-4 py-2 hover:bg-gray-100 cursor-pointer"
-            option.innerHTML = "Delete User From Family"
-            option.addEventListener("click", async () => {
+            const option_delete = document.createElement("li")
+            option_delete.className = "px-4 py-2 hover:bg-gray-100 cursor-pointer"
+            option_delete.innerHTML = "Delete User From Family"
+            option_delete.addEventListener("click", async () => {
                 if (confirm("Are you sure you want to delete this user?")) {
                     delete_user(member.user_id, familyId)
                 }
             })
 
-            options.appendChild(option)
+            const option_update_admin = document.createElement("li")
+            option_update_admin.className = "px-4 py-2 hover:bg-gray-100 cursor-pointer"
+            option_update_admin.innerHTML = "Make User Admin"
+            option_update_admin.addEventListener("click", async () => {
+                if (confirm("Are you sure you want to make the user as admin?")) {
+                    update_admin(member.user_id, familyId)
+                }
+            })
+
+            options.appendChild(option_delete)
+            options.appendChild(option_update_admin)
             dropdownMenu.appendChild(options)
 
             adminButtonModal.addEventListener('click', (e) => {
@@ -245,6 +255,29 @@ async function delete_user(target_user_id, family_id) {
         return true;
     } catch (error) {
         console.error("Error deleting user:", error);
+        return false;
+    }
+}
+
+async function update_admin(target_user_id, family_id) {
+    const token = localStorage.getItem("token");
+    try {
+        const response = await fetch(`${API_URL}/family/${family_id}/${target_user_id}`, {
+            method: "PUT",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            console.error("Failed to delete user:", error);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Error giving user admin status:", error);
         return false;
     }
 }
