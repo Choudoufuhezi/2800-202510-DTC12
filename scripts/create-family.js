@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const familyName = document.getElementById('family-name').value.trim();
+        console.log("Creating family:", familyName);
         errorMessage.classList.add('hidden');
 
         if (!familyName) {
@@ -30,6 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ family_name: familyName }),
             });
 
+            console.log(" Server responded:", response);
+
             if (!response.ok) {
                 if (response.status === 401) {
                     window.location.href = `/login.html`;
@@ -41,11 +44,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Failed to create family');
             }
 
+            const data = await response.json();
+            console.log("✅ Created family data:", data);
+
             window.location.href = `/family-groups.html`;
         } catch (error) {
-            console.error('Error creating family:', error);
+            console.error(' Error creating family:', error);
             errorMessage.textContent = error.message;
             errorMessage.classList.remove('hidden');
         }
     });
-});
+}); 

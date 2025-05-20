@@ -17,6 +17,8 @@ async function loadFamilies() {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         });
 
+        console.log(response)
+
         if (!response.ok) {
             if (response.status === 401) {
                 window.location.href = `${BASE_URL}/login.html`;
@@ -33,6 +35,7 @@ async function loadFamilies() {
             return;
         }
 
+        console.log("Fetched families:", families);
         for (const family of families) {
             if (!family.family_name) {
                 console.warn(`Family ${family.id} has no name`);
