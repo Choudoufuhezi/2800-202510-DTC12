@@ -38,7 +38,6 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://two800-202510-dtc12-0d55.onrender.com",
         "https://dev--digitalfamilyvault.netlify.app"
     ],
     allow_credentials=True,
