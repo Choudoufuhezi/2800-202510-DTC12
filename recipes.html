@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,46 +9,49 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
 </head>
+
 <body class="bg-[#f5f3eb98]">
     <!--Top Nav-->
     <nav id="topNav" class="sticky top-0 z-50"></nav>
-<div id="familyIconContainer"></div>
+    <div id="familyIconContainer"></div>
 
-<!--Main Content-->
+    <!--Main Content-->
     <div class="min-h-[calc(101vh-64px-64px)] max-w-4xl mx-auto px-10 py-10">
-        
+
         <div class="flex justify-between">
             <div class="flex flex-row items-center space-x-4 mb-8">
                 <i class="fa-solid fa-scroll fa-2xl text-indigo-600"></i>
                 <h1 class="text-2xl font-semibold my-auto">Recipes</h1>
             </div>
-            <div id="addMoreRecipesButton" class="hidden text-indigo-600 hover:text-indigo-700 transition cursor-pointer">
+            <div id="addMoreRecipesButton"
+                class="hidden text-indigo-600 hover:text-indigo-700 transition cursor-pointer">
                 <i class="fa-solid fa-square-plus fa-2xl"></i>
             </div>
         </div>
 
-        <!--No photos message -->
+        <!--No recipes message -->
         <div id="recipeEmptyMessage" class="flex flex-col space-y-6 items-center justify-center text-center">
             <h3>
                 Get started by uploading your first recipe to share with your family.
                 You can also add a description to provide context or share a story about the memory.
             </h3>
 
-            <!--Upload photos button-->
-            <div id="uploadButton" class="cursor-pointer max-w-3xl w-full inline-flex items-center justify-center gap-2 bg-indigo-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-indigo-700 transition">
+            <!--Upload recipes button-->
+            <div id="uploadButton"
+                class="cursor-pointer max-w-3xl w-full inline-flex items-center justify-center gap-2 bg-indigo-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-indigo-700 transition">
                 <p>Upload Recipe</p>
-            </div>    
+            </div>
         </div>
 
         <!--Upload file functionality-->
-        <input id="fileInput" type="file" accept="image/*" class="hidden">
+        <input id="fileInput" type="file" accept=".pdf" class="hidden">
 
         <div id="recipeGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <!-- Images added here -->
+            <!-- Recipes added here -->
         </div>
 
     </div>
-    
+
     <!--Bottom Nav-->
     <nav id="bottomNav" class="sticky bottom-0"></nav>
 
@@ -55,8 +59,9 @@
     <nav id="footer"></nav>
 
     <!--JavaScript-->
-    <script src="../scripts/add_nav.js"></script>    
-    <script src="../scripts/recipe_page_upload.js"></script>
-<script src="../scripts/load_family_icon.js"></script>
+    <script src="../scripts/add_nav.js"></script>
+    <script type="module" src="../scripts/recipe_page_upload.js"></script>
+    <script type="module" src="../scripts/load_family_icon.js"></script>
 </body>
+
 </html>
