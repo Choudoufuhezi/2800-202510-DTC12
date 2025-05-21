@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const errorMessage = document.getElementById('error-message');
     const loading = document.getElementById('loading');
     const backButton = document.getElementById('back-to-members');
+    const photoSection = document.getElementById('photo-section');
 
     if (!localStorage.getItem('token')) {
         window.location.href = `${BASE_URL}/login.html`;
@@ -21,6 +22,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         loading.classList.add('hidden');
         return;
     }
+
+    photoSection.innerHTML =
+    `<a href="photos.html?userId=${userId}&familyId=${familyId}" aria-label="View Photos category"
+        class="block bg-white rounded-xl p-6 shadow hover:shadow-md transition hover:bg-indigo-50">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-800">Photos</h2>
+            </div>
+            <i class="fas fa-chevron-right text-indigo-600"></i>
+        </div>
+    </a>`;
 
     backButton.href = `family-members.html?familyId=${familyId}`;
 

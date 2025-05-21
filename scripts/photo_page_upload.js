@@ -437,8 +437,9 @@ async function modal(img, memory) {
 };
 
 window.addEventListener("DOMContentLoaded", async () => {
-    const memberUserId = 1; // replace with dynamic logic
-    const familyId = 1; // replace with dynamic logic
+    const urlParams = new URLSearchParams(window.location.search);
+    const familyId = urlParams.get('familyId');
+    const memberUserId = urlParams.get('userId');
     memories = await fetchFamilyMemberMemories(memberUserId, familyId);
     if (memories && memories.length > 0) {
         removePhotoEmptyMessage.classList.add("hidden");
