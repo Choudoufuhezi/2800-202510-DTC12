@@ -1,11 +1,12 @@
 import { getLocation } from './geolocation.js';
-import { API_URL } from './config.js';
+import { API_URL, BASE_URL } from './config.js';
 
 const removePhotoEmptyMessage = document.getElementById("photoEmptyMessage");
 const uploadButton = document.getElementById("uploadButton");
 const fileInput = document.getElementById("fileInput");
 const photoGrid = document.getElementById("photoGrid");
 const addMorePhotos = document.getElementById("addMorePhotosButton");
+const backButton = document.getElementById("back")
 let memories = [];
 let familyMembers = [];
 
@@ -17,16 +18,43 @@ addMorePhotos.addEventListener('click', () => {
     fileInput.click();
 });
 
+backButton.addEventListener('click', () => {
+    backPreviousPage()
+});
+
+async function backPreviousPage() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const familyId = urlParams.get('familyId');
+    const userId = urlParams.get('userId');
+    if (!familyId || !userId) {
+        window.location.href = `${API_URL}/login.html`;
+        return;
+    }
+    window.location.href = `${BASE_URL}/member-categories.html?userId=${userId}&familyId=${familyId}`;
+}
+
+
 //  Comment fetch APIs 
 async function getComments(memoryID) {
     const token = localStorage.getItem("token");
+    let timeoutId;
     try {
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), 15000);
+        controller.signal.onabort = () => {
+            console.log("Fetch aborted due to timeout");
+        };
+
         const response = await fetch(`${API_URL}/comments/memory/${memoryID}`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${token}`
-            }
+            },
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
             const error = await response.json();
             console.error("Failed to fetch comments:", error);
@@ -34,7 +62,12 @@ async function getComments(memoryID) {
         }
         return await response.json();
     } catch (error) {
-        console.error("Error fetching comments:", error);
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            console.error("Fetch aborted due to timeout");
+        } else {
+            console.error("Error fetching comments:", error);
+        }
         return null;
     }
 }
@@ -139,14 +172,25 @@ async function uploadMemory({ location, file_url, cloudinary_id, family_id, tags
 
 async function fetchFamilyMemberMemories(memberUserId, familyId) {
     const token = localStorage.getItem("token");
+    let timeoutId;
 
     try {
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), 15000);
+        controller.signal.onabort = () => {
+            console.log("Fetch aborted due to timeout");
+        };
+
         const response = await fetch(`${API_URL}/memories/member/${memberUserId}/family/${familyId}`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${token}`
-            }
+            },
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
             const error = await response.json();
             console.error("Failed to fetch family member memories:", error);
@@ -162,7 +206,12 @@ async function fetchFamilyMemberMemories(memberUserId, familyId) {
 
         return memories;
     } catch (error) {
-        console.error("Error fetching family member memories:", error);
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            console.error("Fetch aborted due to timeout");
+        } else {
+            console.error("Error fetching family member memories:", error);
+        }
         return null;
     }
 }
@@ -299,8 +348,8 @@ async function modal(img, memory) {
     contentElement.src = data.src;
     contentElement.className = "w-full h-auto block";
 
-    imageWrapper.appendChild(contentElement); 
-    modalContent.appendChild(imageWrapper); 
+    imageWrapper.appendChild(contentElement);
+    modalContent.appendChild(imageWrapper);
 
     const description = document.createElement('textarea');
     description.value = data.description || "";
@@ -406,7 +455,7 @@ async function modal(img, memory) {
         if (comments.length === 0) {
             commentsList.innerHTML = "<p class='text-gray-500 italic'>No comments yet.</p>";
         } else {
-            comments.forEach((c, index) => {
+            comments.forEach((c) => {
                 const familyMember = familyMembers.find(member => member.user_id === c.user_id);
                 const userName = familyMember ?
                     (familyMember.custom_name ? familyMember.custom_name : familyMember.email)
@@ -561,7 +610,7 @@ async function getFamilyMembers() {
     // make sure the user is logged in
     if (!localStorage.getItem('token')) {
         window.location.href = `${API_URL}/login.html`;
-        return; 
+        return;
     }
 
     // make sure the familyId is present
@@ -572,25 +621,42 @@ async function getFamilyMembers() {
         return;
     }
 
-    const response = await fetch(`${API_URL}/family/${familyId}/members`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-    });
+    let timeoutId;
+    try {
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), 15000);
+        controller.signal.onabort = () => {
+            console.log("Fetch aborted due to timeout");
+        };
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 401) {
-            window.location.href = `${API_URL}/login.html`;
-            throw new Error('Unauthorized: Please log in again');
+        const response = await fetch(`${API_URL}/family/${familyId}/members`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            if (response.status === 401) {
+                window.location.href = `${API_URL}/login.html`;
+                throw new Error('Unauthorized: Please log in again');
+            }
+            if (response.status === 403) {
+                throw new Error('You are not a member of this family');
+            }
+            throw new Error(errorData.detail || 'Failed to fetch family members');
         }
-        if (response.status === 403) {
-            throw new Error('You are not a member of this family');
+
+        const family = await response.json();
+        return family.members;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error('Server timed out, please try again later');
         }
-        throw new Error(errorData.detail || 'Failed to fetch family members');
+        throw error;
     }
-
-    const family = await response.json();
-
-    return family.members;
 }
 
 function showBasicUploadingModal() {

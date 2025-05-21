@@ -27,12 +27,22 @@ async function loadFamilyDetails() {
         </div>`;
     errorMessage.classList.add('hidden');
 
+    let timeoutId;
     try {
         if (isNaN(familyId)) throw new Error('Invalid family ID');
 
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), 15000);
+        controller.signal.onabort = () => {
+            console.log("Fetch aborted due to timeout");
+        };
+
         const response = await fetch(`${API_URL}/family/${familyId}/members`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -165,10 +175,19 @@ async function loadFamilyDetails() {
         }
 
     } catch (error) {
-        console.error('Error in family-members.js:', error);
-        errorMessage.textContent = error.message;
-        errorMessage.classList.remove('hidden');
-        membersContainer.innerHTML = '';
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            errorMessage.textContent = 'Server timed out, please try again later.';
+            errorMessage.classList.remove('hidden');
+            membersContainer.innerHTML = '';
+            return;
+        }
+        else {
+            console.error('Error in family-members.js:', error);
+            errorMessage.textContent = error.message;
+            errorMessage.classList.remove('hidden');
+            membersContainer.innerHTML = '';
+        }
     }
 }
 

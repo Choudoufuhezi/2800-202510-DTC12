@@ -1,4 +1,4 @@
-import { API_URL, BASE_URL } from './config.js';
+import { API_URL } from './config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     if (!localStorage.getItem('token')) {
