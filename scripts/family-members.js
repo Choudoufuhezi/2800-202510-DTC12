@@ -133,7 +133,7 @@ async function loadFamilyDetails() {
             option_update_admin.className = "px-4 py-2 hover:bg-gray-100 cursor-pointer"
             option_update_admin.innerHTML = "Make User Admin"
             option_update_admin.addEventListener("click", async () => {
-                if (confirm("Are you sure you want to make the user as admin?")) {
+                if (confirm("Are you sure you want to make the user an admin?")) {
                     update_admin(member.user_id, familyId)
                 }
             })
