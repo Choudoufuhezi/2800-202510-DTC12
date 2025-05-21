@@ -316,7 +316,6 @@ async function modal(img, memory) {
     deleteButtonModal.className = "text-red-500 hover:text-red-700 p-4 text-xl";
     deleteButtonModal.addEventListener('click', async () => {
         if (confirm("Are you sure you want to delete this recipe?")) {
-            console.log("delete memory with", img.dataset.memoryId);
             const memoryId = img.dataset.memoryId;
             const deleted = await deleteMemory(memoryId);
             if (deleted) {
