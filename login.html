@@ -70,7 +70,7 @@
             e.preventDefault();
             const formData = new FormData(e.target);
             const data = {
-                email: formData.get('email'),
+                email: formData.get('email').trim(),
                 password: formData.get('password')
             };
 
