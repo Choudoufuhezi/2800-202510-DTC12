@@ -7,6 +7,7 @@ const fileInput = document.getElementById("fileInput");
 const photoGrid = document.getElementById("photoGrid");
 const addMorePhotos = document.getElementById("addMorePhotosButton");
 let memories = [];
+let familyMembers = [];
 
 uploadButton.addEventListener("click", () => {
     fileInput.click();
@@ -42,7 +43,6 @@ async function getComments(memoryID) {
 async function getImageData(memory) {
     const element = document.querySelector(`[data-image-id="${memory.cloudinary_id}"]`);
     const src = element?.getAttribute("src") || element?.src || memory.file_url;
-    console.log(memory);
     const location = await getLocation();
     return {
         src,
@@ -152,7 +152,14 @@ async function fetchFamilyMemberMemories(memberUserId, familyId) {
             console.error("Failed to fetch family member memories:", error);
             return null;
         }
-        const memories = await response.json();
+        const allMemories = await response.json();
+
+        // filter out memories that are only images
+        const memories = allMemories.filter(memory => {
+            const isImage = memory.resource_type === "image";
+            return isImage;
+        });
+
         return memories;
     } catch (error) {
         console.error("Error fetching family member memories:", error);
@@ -285,25 +292,15 @@ async function modal(img, memory) {
     modalContent.appendChild(header);
 
     let contentElement;
-    const isPdf = data.src.toLowerCase().endsWith('.pdf');
+    const imageWrapper = document.createElement('div');
+    imageWrapper.className = "w-full max-h-[400px] overflow-y-auto mb-4 rounded";
 
-    if (isPdf) {
-        contentElement = document.createElement('iframe');
-        contentElement.src = data.src;
-        contentElement.type = "application/pdf";
-        contentElement.className = "w-full rounded mb-4";
-        contentElement.style.height = "500px";
-        contentElement.style.minHeight = "500px";
-        contentElement.style.width = "100%";
-        contentElement.setAttribute("frameborder", "0");
-        contentElement.setAttribute("allowfullscreen", "true");
+    contentElement = document.createElement('img');
+    contentElement.src = data.src;
+    contentElement.className = "w-full h-auto block";
 
-    } else {
-        contentElement = document.createElement('img');
-        contentElement.src = data.src;
-        contentElement.className = "w-full h-auto rounded mb-4";
-    }
-    modalContent.appendChild(contentElement);
+    imageWrapper.appendChild(contentElement); 
+    modalContent.appendChild(imageWrapper); 
 
     const description = document.createElement('textarea');
     description.value = data.description || "";
@@ -323,7 +320,6 @@ async function modal(img, memory) {
     modalContent.appendChild(editButton);
 
     editButton.addEventListener('click', () => {
-        console.log('edit button clicked')
         description.disabled = false;
         tags.disabled = false;
         saveButton.classList.remove("hidden");
@@ -395,26 +391,47 @@ async function modal(img, memory) {
     async function loadComments() {
         const comments = await getComments(img.dataset.memoryId);
         commentsList.innerHTML = "";
-        comments.forEach((c, index) => {
-            const commentItem = document.createElement('div');
-            commentItem.className = "flex justify-between items-center mb-1";
 
-            const commentText = document.createElement('p');
-            commentText.className = "text-gray-800";
-            commentText.innerText = `User ${c.user_id}: ${c.comment_text}`;
-            commentItem.appendChild(commentText);
+        commentsList.classList.remove('max-h-40', 'max-h-24', 'overflow-auto');
 
-            const deleteButton = document.createElement('button');
-            deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteButton.className = "text-red-500 hover:text-red-700 ml-2";
-            deleteButton.addEventListener('click', async () => {
-                const deleted = await deleteComment(c.id);
-                if (deleted) await loadComments();
+        if (!comments) {
+            commentsList.innerHTML = "<p class='text-red-500'>Could not load comments.</p>";
+            return;
+        }
+
+        if (comments.length > 3) {
+            commentsList.classList.add('max-h-24', 'overflow-auto');
+        }
+
+        if (comments.length === 0) {
+            commentsList.innerHTML = "<p class='text-gray-500 italic'>No comments yet.</p>";
+        } else {
+            comments.forEach((c, index) => {
+                const familyMember = familyMembers.find(member => member.user_id === c.user_id);
+                const userName = familyMember ?
+                    (familyMember.custom_name ? familyMember.custom_name : familyMember.email)
+                    : `User ${c.user_id}`;
+
+                const commentItem = document.createElement('div');
+                commentItem.className = "flex justify-between items-center mb-1";
+
+                const commentText = document.createElement('p');
+                commentText.className = "text-gray-800";
+                commentText.innerText = `${userName}: ${c.comment_text}`;
+                commentItem.appendChild(commentText);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteButton.className = "text-red-500 hover:text-red-700 ml-2";
+                deleteButton.addEventListener('click', async () => {
+                    const deleted = await deleteComment(c.id);
+                    if (deleted) await loadComments();
+                });
+                commentItem.appendChild(deleteButton);
+
+                commentsList.appendChild(commentItem);
             });
-            commentItem.appendChild(deleteButton);
-
-            commentsList.appendChild(commentItem);
-        });
+        }
     }
 
     commentForm.addEventListener('submit', async e => {
@@ -437,9 +454,20 @@ async function modal(img, memory) {
 };
 
 window.addEventListener("DOMContentLoaded", async () => {
+    if (!localStorage.getItem('token')) {
+        window.location.href = `${API_URL}/login.html`;
+        return;
+    }
     const urlParams = new URLSearchParams(window.location.search);
     const familyId = urlParams.get('familyId');
     const memberUserId = urlParams.get('userId');
+    if (!familyId || !memberUserId) {
+        console.error("Missing familyId or userId in URL");
+        window.location.href = `${API_URL}/index.html`;
+        return;
+    }
+
+    familyMembers = await getFamilyMembers();
     memories = await fetchFamilyMemberMemories(memberUserId, familyId);
     if (memories && memories.length > 0) {
         removePhotoEmptyMessage.classList.add("hidden");
@@ -447,45 +475,23 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
     if (!memories || memories.length === 0) return;
     memories.forEach((memory) => {
-        const isPdf = memory.file_url.toLowerCase().endsWith(".pdf");
-
         const wrapper = document.createElement("div");
-        wrapper.className = isPdf ? "relative w-full rounded" : "";
-
-        const element = isPdf
-            ? document.createElement("iframe")
-            : document.createElement("img");
-
+        wrapper.className = "";
+        const element = document.createElement("img");
         element.src = memory.file_url;
         element.dataset.imageId = memory.cloudinary_id;
         element.dataset.memoryId = memory.id;
-        element.className = isPdf ? "w-full h-auto rounded" : "w-full h-auto";
+        element.className = "w-full h-auto";
+
         element.style.border = "none";
+        element.classList.add("w-full", "h-auto", "rounded", "cursor-pointer");
+        element.addEventListener("click", async () => {
+            const memoryId = element.dataset.memoryId;
+            const latestMemory = memories.find(m => m.id == memoryId);
+            modal(element, latestMemory);
+        });
 
-        if (isPdf) {
-            element.style.height = "250px";
-
-            const overlay = document.createElement("div");
-            overlay.className = "absolute inset-0 z-10 cursor-pointer";
-            overlay.style.background = "transparent";
-
-            overlay.addEventListener("click", async () => {
-                modal(element, memory);
-            });
-
-            wrapper.appendChild(element);
-            wrapper.appendChild(overlay);
-            photoGrid.appendChild(wrapper);
-        } else {
-            element.classList.add("w-full", "h-auto", "rounded", "cursor-pointer");
-            element.addEventListener("click", async () => {
-                const memoryId = element.dataset.memoryId;
-                const latestMemory = memories.find(m => m.id == memoryId);
-                modal(element, latestMemory);
-            });
-
-            photoGrid.appendChild(element);
-        }
+        photoGrid.appendChild(element);
     });
 });
 
@@ -493,7 +499,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 fileInput.addEventListener("change", async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
+    const urlParams = new URLSearchParams(window.location.search);
+    const familyId = urlParams.get('familyId');
     const closeUploadingModal = showBasicUploadingModal();
 
     const formData = new FormData();
@@ -501,9 +508,8 @@ fileInput.addEventListener("change", async (event) => {
     formData.append("upload_preset", "digital_family_vault");
 
     try {
-        const uploadUrl = file.type === "application/pdf"
-            ? "https://api.cloudinary.com/v1_1/dz7lbivvf/raw/upload"
-            : "https://api.cloudinary.com/v1_1/dz7lbivvf/image/upload";
+        const uploadUrl =
+            "https://api.cloudinary.com/v1_1/dz7lbivvf/image/upload";
 
         const upload_cloudinary = await fetch(uploadUrl, {
             method: "POST",
@@ -515,20 +521,15 @@ fileInput.addEventListener("change", async (event) => {
         if (result.secure_url) {
             const imageURL = result.secure_url;
             const publicID = result.public_id;
-
-            console.log("Upload successful");
-            console.log("Image URL:", imageURL);
-            console.log("Cloudinary ID:", publicID);
-
             const location = await getLocation();
 
             const uploadedMemory = await uploadMemory({
                 location,
                 file_url: imageURL,
                 cloudinary_id: publicID,
+                family_id: familyId,
                 tags: "Add tags",
-                description: "Add description",
-                family_id: 1
+                description: "Add description"
             });
 
             if (!uploadedMemory) {
@@ -556,6 +557,42 @@ fileInput.addEventListener("change", async (event) => {
     }
 });
 
+async function getFamilyMembers() {
+    // make sure the user is logged in
+    if (!localStorage.getItem('token')) {
+        window.location.href = `${API_URL}/login.html`;
+        return; 
+    }
+
+    // make sure the familyId is present
+    const urlParams = new URLSearchParams(window.location.search);
+    const familyId = urlParams.get('familyId');
+    if (!familyId) {
+        window.location.href = `${API_URL}/login.html`;
+        return;
+    }
+
+    const response = await fetch(`${API_URL}/family/${familyId}/members`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 401) {
+            window.location.href = `${API_URL}/login.html`;
+            throw new Error('Unauthorized: Please log in again');
+        }
+        if (response.status === 403) {
+            throw new Error('You are not a member of this family');
+        }
+        throw new Error(errorData.detail || 'Failed to fetch family members');
+    }
+
+    const family = await response.json();
+
+    return family.members;
+}
+
 function showBasicUploadingModal() {
     // Modal container
     const modal = document.createElement('div');
@@ -566,20 +603,29 @@ function showBasicUploadingModal() {
 
     // Modal content
     const modalContent = document.createElement('div');
-    modalContent.className = "modal-content bg-white pt-2 pb-6 px-6 rounded shadow-lg max-w-md w-full flex flex-col items-center";
+    modalContent.className = "modal-content bg-white pt-2 pb-6 px-6 rounded shadow-lg max-w-md w-full flex flex-col items-center"; // Fixed unterminated string
     modal.appendChild(modalContent);
 
     // Spinner + message
-    modalContent.innerHTML = `
-      <div class="flex flex-col items-center py-8">
-        <svg class="animate-spin h-8 w-8 text-gray-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-        </svg>
-        <span class="ml-4 text-gray-500">Uploading your memory...</span>
-      </div>
+    const spinner = document.createElement('div');
+    spinner.className = "animate-spin h-8 w-8 text-gray-400";
+    spinner.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+      </svg>
     `;
+
+    const message = document.createElement('span');
+    message.className = "ml-4 text-gray-500";
+    message.innerText = "Uploading image, please wait...";
+
+    modalContent.appendChild(spinner);
+    modalContent.appendChild(message);
+
     document.body.appendChild(modal);
 
-    return () => modal.remove();
+    return () => {
+        modal.remove();
+    };
 }

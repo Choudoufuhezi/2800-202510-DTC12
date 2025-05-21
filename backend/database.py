@@ -226,8 +226,15 @@ def create_family_invite(db, family_id: int, code: int, created_by: int, expires
     return db_invite
 
 def create_memory(db, location: dict, tags: str, description: str, file_url: str, cloudinary_id: str, date_for_notification: datetime, user_id: int, family_id: int):
-    resource_type = "raw" if file_url.lower().endswith(".pdf") else "image"
-    
+    lower_file_url = file_url.lower()
+    if lower_file_url.endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.tiff', '.svg', '.heic', '.avif')):
+        resource_type = 'image'
+    elif lower_file_url.endswith(('.pdf')):
+        resource_type = 'pdf'
+    # add more file types as needed
+    else:
+        resource_type = 'other'
+
     db_memory = Memory(
         location=location,
         tags=tags,
