@@ -287,6 +287,7 @@ async def get_family_members(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You must be a member of this family to view its members"
         )
+
     
     # Get all members with email and admin status
     members = db.query(User.id,
@@ -313,8 +314,70 @@ async def get_family_members(
                 "relationship_": relationship_
             }
             for user_id, email, is_admin, custom_name, relationship_ in members
-        ]
+        ],
+        "is_admin": is_member.is_admin
     }
+
+
+@router.delete("/{family_id}/{member_id}", response_model=dict)
+async def delete_user(
+    family_id: int,
+    member_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    admin_record = db.query(Registered).filter(
+        Registered.user_id == current_user.id, 
+        Registered.family_id == family_id
+    ).first()
+
+    opponent_record = db.query(Registered).filter(
+        Registered.user_id == member_id, 
+        Registered.family_id == family_id
+    ).first()
+
+    if not admin_record or not admin_record.is_admin:
+        return {"error": "You do not have admin privileges."}
+    
+    if not opponent_record:
+        return {"error": "The member you are trying to delete does not exist."}
+
+    if opponent_record.is_admin:
+        return {"error": "You cannot delete another admin."}
+
+    db.delete(opponent_record)
+    db.commit()
+
+    return {"message": "Member deleted successfully."}
+
+@router.put("/{family_id}/{member_id}", response_model=dict)
+async def admin_user(
+    family_id: int,
+    member_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    admin_record = db.query(Registered).filter(
+        Registered.user_id == current_user.id, 
+        Registered.family_id == family_id
+    ).first()
+
+    opponent_record = db.query(Registered).filter(
+        Registered.user_id == member_id, 
+        Registered.family_id == family_id
+    ).first()
+
+    if not admin_record or not admin_record.is_admin:
+        return {"error": "You do not have admin privileges."}
+    
+    if not opponent_record:
+        return {"error": "The member you are trying to delete does not exist."}
+
+    opponent_record.is_admin = True
+
+    db.commit()
+
+    return {"message": "Member have been updated as admin."}
 
 @router.get("/my-families", response_model=List[FamilyInfo])
 async def get_user_families(

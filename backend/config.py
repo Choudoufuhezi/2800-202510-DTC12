@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     
     # Deepseek settings
     deepseek_api_key: str | None = None
+
+    invite_code_chars: str = "0123456789"
+    invite_code_length: int = 6
     
     class Config:
         env_file = ".env"
