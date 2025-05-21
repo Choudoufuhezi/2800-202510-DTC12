@@ -1,11 +1,12 @@
 import { getLocation } from './geolocation.js';
-import { API_URL } from './config.js';
+import { API_URL, BASE_URL } from './config.js';
 
 const removeVideoEmptyMessage = document.getElementById("videoEmptyMessage");
 const uploadButton = document.getElementById("uploadButton");
 const fileInput = document.getElementById("fileInput");
 const videoGrid = document.getElementById("videoGrid");
 const addMoreVideos = document.getElementById("addMoreVideosButton");
+const backButton = document.getElementById("back")
 let memories = [];
 let familyMembers = [];
 
@@ -17,6 +18,20 @@ addMoreVideos.addEventListener('click', () => {
     fileInput.click();
 });
 
+backButton.addEventListener('click', () => {
+    backPreviousPage()
+});
+
+async function backPreviousPage() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const familyId = urlParams.get('familyId');
+    const userId = urlParams.get('userId');
+    if (!familyId || !userId) {
+        window.location.href = `${API_URL}/login.html`;
+        return;
+    }
+    window.location.href = `${BASE_URL}/member-categories.html?userId=${userId}&familyId=${familyId}`;
+}
 
 async function getComments(memoryID) {
     const token = localStorage.getItem("token");

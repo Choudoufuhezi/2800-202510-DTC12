@@ -1,11 +1,12 @@
 import { getLocation } from './geolocation.js';
-import { API_URL } from './config.js';
+import { API_URL, BASE_URL } from './config.js';
 
 const removePhotoEmptyMessage = document.getElementById("photoEmptyMessage");
 const uploadButton = document.getElementById("uploadButton");
 const fileInput = document.getElementById("fileInput");
 const photoGrid = document.getElementById("photoGrid");
 const addMorePhotos = document.getElementById("addMorePhotosButton");
+const backButton = document.getElementById("back")
 let memories = [];
 let familyMembers = [];
 
@@ -16,6 +17,22 @@ uploadButton.addEventListener("click", () => {
 addMorePhotos.addEventListener('click', () => {
     fileInput.click();
 });
+
+backButton.addEventListener('click', () => {
+    backPreviousPage()
+});
+
+async function backPreviousPage() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const familyId = urlParams.get('familyId');
+    const userId = urlParams.get('userId');
+    if (!familyId || !userId) {
+        window.location.href = `${API_URL}/login.html`;
+        return;
+    }
+    window.location.href = `${BASE_URL}/member-categories.html?userId=${userId}&familyId=${familyId}`;
+}
+
 
 //  Comment fetch APIs 
 async function getComments(memoryID) {
@@ -299,8 +316,8 @@ async function modal(img, memory) {
     contentElement.src = data.src;
     contentElement.className = "w-full h-auto block";
 
-    imageWrapper.appendChild(contentElement); 
-    modalContent.appendChild(imageWrapper); 
+    imageWrapper.appendChild(contentElement);
+    modalContent.appendChild(imageWrapper);
 
     const description = document.createElement('textarea');
     description.value = data.description || "";
@@ -561,7 +578,7 @@ async function getFamilyMembers() {
     // make sure the user is logged in
     if (!localStorage.getItem('token')) {
         window.location.href = `${API_URL}/login.html`;
-        return; 
+        return;
     }
 
     // make sure the familyId is present
