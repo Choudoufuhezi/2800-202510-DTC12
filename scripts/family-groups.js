@@ -12,12 +12,20 @@ async function loadFamilies() {
     familiesContainer.innerHTML = '<div class="flex justify-center"><svg class="animate-spin h-5 w-5 text-sky-600" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8z"></path></svg></div>';
     errorMessage.classList.add('hidden');
 
+    let timeoutId;
     try {
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), 15000);
+        controller.signal.onabort = () => {
+            console.log("Fetch aborted due to timeout");
+        };
+
         const response = await fetch(`${API_URL}/family/my-families`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            signal: controller.signal
         });
 
-        console.log(response)
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             if (response.status === 401) {
@@ -90,9 +98,18 @@ async function loadFamilies() {
             });
         });
     } catch (error) {
+        clearTimeout(timeoutId)
+        if (error.name === 'AbortError') {
+            errorMessage.textContent = 'Server timed out, please try again later.';
+            errorMessage.classList.remove('hidden');
+            familiesContainer.innerHTML = '';
+            return;
+        }
+        else {
         console.error('Error loading families:', error);
         errorMessage.textContent = error.message;
         errorMessage.classList.remove('hidden');
+        }
     }
 }
 
