@@ -6,16 +6,25 @@ const familyId = urlParams.get('familyId');
 
 // DOM Elements
 const membersContainer = document.getElementById('members-container');
-const familyNameElement = document.querySelector('h2');
 
 // Fetch and display family members
 async function loadFamilyMembers() {
+    let timeoutId;
     try {
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), 15000);
+        controller.signal.onabort = () => {
+            console.log("Fetch aborted due to timeout");
+        };
+
         const response = await fetch(`${API_URL}/family/${familyId}/members`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
+            },
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             throw new Error('Failed to fetch family members');
@@ -46,8 +55,13 @@ async function loadFamilyMembers() {
             membersContainer.appendChild(memberElement);
         });
     } catch (error) {
-        console.error('Error loading family members:', error);
-        membersContainer.innerHTML = '<p class="text-red-500">Failed to load family members</p>';
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            membersContainer.innerHTML = '<p class="text-red-500">Server timed out, please try again later.</p>';
+        } else {
+            console.error('Error loading family members:', error);
+            membersContainer.innerHTML = '<p class="text-red-500">Failed to load family members</p>';
+        }
     }
 }
 

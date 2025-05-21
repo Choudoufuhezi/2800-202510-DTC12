@@ -38,7 +38,6 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://two800-202510-dtc12-0d55.onrender.com",
         "https://dev--digitalfamilyvault.netlify.app"
     ],
     allow_credentials=True,
@@ -48,7 +47,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth_router)
-app.include_router(family_router)
+app.include_router(family_router, prefix="/family")
 app.include_router(profile_router)
 app.include_router(memory_router)
 app.include_router(comments_router)

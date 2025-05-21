@@ -52,6 +52,7 @@ class UserChatRoom(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     chatroom_id = Column(Integer, ForeignKey("chatroom.id"))
+    last_read_message_id = Column(Integer, ForeignKey("message.id"), nullable=True)
 
 class Message(Base):
     __tablename__ = "message"
@@ -77,6 +78,9 @@ class Registered(Base):
     family_id = Column(Integer, ForeignKey("family.id"))
     is_admin = Column(Boolean, default=False, nullable=False)
 
+    custom_name = Column(String, nullable=True)
+    relationship_ = Column(String, nullable=True)
+    
     __table_args__ = (
         PrimaryKeyConstraint('user_id', 'family_id'),
     )
@@ -101,6 +105,7 @@ class Memory(Base):
     id = Column(Integer, primary_key=True, index=True)
     location = Column(JSON)
     tags = Column(String)
+    description = Column(String)
     file_url = Column(String)
     cloudinary_id = Column(String)
     date_for_notification = Column(DateTime, nullable=False)
@@ -165,7 +170,8 @@ def create_chatroom(db, name: str, date: datetime):
 def create_userchatroom(db, user_id: int, chatroom_id: int):
     db_userchatroom = UserChatRoom(
         user_id=user_id, 
-        chatroom_id=chatroom_id
+        chatroom_id=chatroom_id,
+        last_read_message_id=None
     )
     db.add(db_userchatroom)
     db.commit()
@@ -219,12 +225,22 @@ def create_family_invite(db, family_id: int, code: int, created_by: int, expires
     db.refresh(db_invite)
     return db_invite
 
-def create_memory(db, location: dict, tags: str, file_url: str, cloudinary_id: str, date_for_notification: datetime, user_id: int, family_id: int):
-    resource_type = "raw" if file_url.lower().endswith(".pdf") else "image"
-    
+def create_memory(db, location: dict, tags: str, description: str, file_url: str, cloudinary_id: str, date_for_notification: datetime, user_id: int, family_id: int):
+    lower_file_url = file_url.lower()
+    if lower_file_url.endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.tiff', '.svg', '.heic', '.avif')):
+        resource_type = 'image'
+    elif lower_file_url.endswith(('.pdf')):
+        resource_type = 'pdf'
+    elif lower_file_url.endswith(('.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.mpeg', '.mpg', '.3gp', '.m4vf')):
+        resource_type = 'video'
+    # add more file types as needed
+    else:
+        resource_type = 'other'
+
     db_memory = Memory(
         location=location,
         tags=tags,
+        description=description,
         file_url=file_url,
         cloudinary_id=cloudinary_id,
         date_for_notification=date_for_notification,

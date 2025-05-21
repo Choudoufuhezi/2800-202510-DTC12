@@ -1,5 +1,5 @@
 export async function getLocation() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         if (!navigator.geolocation) {
             console.log('Geolocation is not supported by your browser');
             resolve(null);

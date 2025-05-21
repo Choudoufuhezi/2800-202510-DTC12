@@ -10,7 +10,7 @@
 </head>
 
 <body class="bg-[#f5f3eb98] text-gray-800">
-    <nav id="topNav"></nav>
+    <nav id="topNav" class="sticky top-0 z-50"></nav>
     <div id="familyIconContainer"></div>
     <main class="min-h-[calc(101vh-64px-64px)] px-4 pt-6 pb-24 max-w-xl mx-auto">
         <header class="mb-6">
@@ -26,6 +26,14 @@
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8z"></path>
             </svg>
         </div>
+        <div id="invites-container" class="space-y-4 hidden">
+            <!-- Active invites will be displayed here -->
+        </div>
+        <div id="create-invite-container" class="mt-6 hidden">
+            <button id="create-invite-btn" class="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-indigo-700 transition">
+                <i class="fas fa-plus"></i> Create New Invite
+            </button>
+        </div>
         <div id="invite-content" class="bg-white p-6 rounded-lg shadow hidden">
             <div class="text-center mb-6">
                 <h3 class="text-xl font-semibold text-gray-800">Send Invitation</h3>
@@ -40,6 +48,7 @@
                     </button>
                 </div>
                 <p class="text-sm text-gray-500 mt-2">Expires in <span id="expires-in" class="font-medium"></span></p>
+                <p class="text-sm text-gray-500 mt-1">Remaining uses: <span id="remaining-uses" class="font-medium"></span></p>
             </div>
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Invitation Link</label>

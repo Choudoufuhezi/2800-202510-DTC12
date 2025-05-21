@@ -32,17 +32,18 @@ router = APIRouter(prefix="/memories")
 # ---------------------------
 class MemoryCreateRequest(BaseModel):
     location: dict
-    tags: str
+    tags: Optional[str] = None 
+    description: Optional[str] = None
     file_url: str
     cloudinary_id: str
     date_for_notification: Optional[datetime] = None
     family_id: int
 
-
 class MemoryResponse(BaseModel):
     id: int
     location: dict
     tags: str
+    description: str
     file_url: str
     cloudinary_id: str
     date_for_notification: datetime
@@ -50,6 +51,9 @@ class MemoryResponse(BaseModel):
     family_id: int
     resource_type: Optional[str] = "image"
 
+class MemoryUpdateRequest(BaseModel):
+    tags: Optional[str] = None
+    description: Optional[str] = None
 
 class MemoryDeleteResponse(BaseModel):
     message: str
@@ -85,6 +89,7 @@ async def create_memory_endpoint(
             db=db,
             location=memory_data.location,
             tags=memory_data.tags,
+            description=memory_data.description,
             file_url=memory_data.file_url,
             cloudinary_id=memory_data.cloudinary_id,
             date_for_notification=date_for_notification,
@@ -225,3 +230,37 @@ async def get_memories_endpoint(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to load memories: {str(e)}"
         )
+
+@router.patch("/{memory_id}", response_model=MemoryResponse)
+async def update_memory(
+    memory_id: int,
+    memory_update: MemoryUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    memory = db.query(Memory).filter(Memory.id == memory_id).first()
+
+    if not memory:
+        raise HTTPException(status_code=404, detail="Memory not found")
+
+    is_member = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == memory.family_id
+    ).first()
+
+    if not is_member:
+        raise HTTPException(
+            status_code=403, 
+            detail="You are not a member of this family"
+        )
+
+    # Proceed with updates
+    if memory_update.tags is not None:
+        memory.tags = memory_update.tags
+
+    if memory_update.description is not None:
+        memory.description = memory_update.description
+
+    db.commit()
+    db.refresh(memory)
+    return memory
