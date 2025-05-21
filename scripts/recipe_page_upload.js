@@ -43,7 +43,6 @@ async function getComments(memoryID) {
 async function getImageData(memory) {
     const element = document.querySelector(`[data-image-id="${memory.cloudinary_id}"]`);
     const src = element?.getAttribute("src") || element?.src || memory.file_url;
-    console.log(memory);
     const location = await getLocation();
     return {
         src,
@@ -297,8 +296,8 @@ async function modal(img, memory) {
     contentElement.src = data.src;
     contentElement.type = "application/pdf";
     contentElement.className = "w-full rounded mb-4";
-    contentElement.style.height = "500px";
-    contentElement.style.minHeight = "500px";
+    contentElement.style.maxHeight = "500px";
+    contentElement.style.minHeight = "400px";
     contentElement.style.width = "100%";
     contentElement.setAttribute("frameborder", "0");
     contentElement.setAttribute("allowfullscreen", "true");
@@ -322,7 +321,6 @@ async function modal(img, memory) {
     modalContent.appendChild(editButton);
 
     editButton.addEventListener('click', () => {
-        console.log('edit button clicked')
         description.disabled = false;
         tags.disabled = false;
         saveButton.classList.remove("hidden");
@@ -372,7 +370,7 @@ async function modal(img, memory) {
     commentsSection.appendChild(commentsHeader);
 
     const commentsList = document.createElement('div');
-    commentsList.className = "comments-list max-h-40 overflow-auto mb-2";
+    commentsList.className = "comments-list max-h-24 overflow-auto mb-2";
     commentsSection.appendChild(commentsList);
 
     const commentForm = document.createElement('form');
@@ -394,30 +392,47 @@ async function modal(img, memory) {
     async function loadComments() {
         const comments = await getComments(img.dataset.memoryId);
         commentsList.innerHTML = "";
-        comments.forEach((c, index) => {
-            const familyMember = familyMembers.find(member => member.user_id === c.user_id);
-            const userName = familyMember ?
-                (familyMember.custom_name ? familyMember.custom_name : familyMember.email)
-                : `User ${c.user_id}`;
-            const commentItem = document.createElement('div');
-            commentItem.className = "flex justify-between items-center mb-1";
 
-            const commentText = document.createElement('p');
-            commentText.className = "text-gray-800";
-            commentText.innerText = `${userName}: ${c.comment_text}`;
-            commentItem.appendChild(commentText);
+        commentsList.classList.remove('max-h-40', 'max-h-24', 'overflow-auto');
 
-            const deleteButton = document.createElement('button');
-            deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteButton.className = "text-red-500 hover:text-red-700 ml-2";
-            deleteButton.addEventListener('click', async () => {
-                const deleted = await deleteComment(c.id);
-                if (deleted) await loadComments();
+        if (!comments) {
+            commentsList.innerHTML = "<p class='text-red-500'>Could not load comments.</p>";
+            return;
+        }
+
+        if (comments.length > 3) {
+            commentsList.classList.add('max-h-24', 'overflow-auto');
+        }
+
+        if (comments.length === 0) {
+            commentsList.innerHTML = "<p class='text-gray-500 italic'>No comments yet.</p>";
+        } else {
+            comments.forEach((c, index) => {
+                const familyMember = familyMembers.find(member => member.user_id === c.user_id);
+                const userName = familyMember ?
+                    (familyMember.custom_name ? familyMember.custom_name : familyMember.email)
+                    : `User ${c.user_id}`;
+
+                const commentItem = document.createElement('div');
+                commentItem.className = "flex justify-between items-center mb-1";
+
+                const commentText = document.createElement('p');
+                commentText.className = "text-gray-800";
+                commentText.innerText = `${userName}: ${c.comment_text}`;
+                commentItem.appendChild(commentText);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteButton.className = "text-red-500 hover:text-red-700 ml-2";
+                deleteButton.addEventListener('click', async () => {
+                    const deleted = await deleteComment(c.id);
+                    if (deleted) await loadComments();
+                });
+                commentItem.appendChild(deleteButton);
+
+                commentsList.appendChild(commentItem);
             });
-            commentItem.appendChild(deleteButton);
-
-            commentsList.appendChild(commentItem);
-        });
+        }
     }
 
     commentForm.addEventListener('submit', async e => {
@@ -442,16 +457,14 @@ async function modal(img, memory) {
 async function getFamilyMembers() {
     // make sure the user is logged in
     if (!localStorage.getItem('token')) {
-        console.log('No token found, redirecting to login');
-        window.location.href = `${BASE_URL}/login.html`;
+        window.location.href = `${API_URL}/login.html`;
     }
 
     // make sure the familyId is present
     const urlParams = new URLSearchParams(window.location.search);
     const familyId = urlParams.get('familyId');
     if (!familyId) {
-        console.log('No familyId found in URL');
-        window.location.href = `${BASE_URL}/login.html`;
+        window.location.href = `${API_URL}/login.html`;
     }
 
     const response = await fetch(`${API_URL}/family/${familyId}/members`, {
@@ -461,7 +474,7 @@ async function getFamilyMembers() {
     if (!response.ok) {
         const errorData = await response.json();
         if (response.status === 401) {
-            window.location.href = `${BASE_URL}/login.html`;
+            window.location.href = `${API_URL}/login.html`;
             throw new Error('Unauthorized: Please log in again');
         }
         if (response.status === 403) {
@@ -478,7 +491,7 @@ async function getFamilyMembers() {
 window.addEventListener("DOMContentLoaded", async () => {
     // ensure the user is logged in
     if (!localStorage.getItem('token')) {
-        window.location.href = `${BASE_URL}/login.html`;
+        window.location.href = `${API_URL}/login.html`;
         return;
     }
 
@@ -488,7 +501,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     if (!familyId || !memberUserId) {
         console.error('Missing familyId or userId in URL');
-        window.location.href = `${BASE_URL}/index.html`;
+        window.location.href = `${API_URL}/index.html`;
         return;
     }
 
@@ -547,18 +560,13 @@ fileInput.addEventListener("change", async (event) => {
         const result = await upload_cloudinary.json();
 
         if (result.secure_url) {
-            const imageURL = result.secure_url;
+            const recipePdfUrl = result.secure_url;
             const publicID = result.public_id;
-
-            console.log("Upload successful");
-            console.log("Image URL:", imageURL);
-            console.log("Cloudinary ID:", publicID);
-
             const location = await getLocation();
 
             const uploadedMemory = await uploadMemory({
                 location,
-                file_url: imageURL,
+                file_url: recipePdfUrl,
                 cloudinary_id: publicID,
                 family_id: familyId,
                 tags: "Add tags",
