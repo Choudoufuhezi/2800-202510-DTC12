@@ -231,6 +231,8 @@ def create_memory(db, location: dict, tags: str, description: str, file_url: str
         resource_type = 'image'
     elif lower_file_url.endswith(('.pdf')):
         resource_type = 'pdf'
+    elif lower_file_url.endswith(('.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.mpeg', '.mpg', '.3gp', '.m4vf')):
+        resource_type = 'video'
     # add more file types as needed
     else:
         resource_type = 'other'

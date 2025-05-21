@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const backButton = document.getElementById('back-to-members');
     const photoSection = document.getElementById('photo-section');
     const recipesSection = document.getElementById('recipes-section');
+    const videosSection = document.getElementById('videos-section');
 
     if (!localStorage.getItem('token')) {
         window.location.href = `${BASE_URL}/login.html`;
@@ -34,6 +35,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             <i class="fas fa-chevron-right text-indigo-600"></i>
         </div>
     </a>`;
+
+    videosSection.innerHTML =
+        `<a href="videos.html?userId=${userId}&familyId=${familyId}" aria-label="View Photos category"
+        class="block bg-white rounded-xl p-6 shadow hover:shadow-md transition hover:bg-indigo-50">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-800">Videos</h2>
+            </div>
+            <i class="fas fa-chevron-right text-indigo-600"></i>
+        </div>
+    </a>`;
+
 
     recipesSection.innerHTML =
         `<a href="recipes.html?userId=${userId}&familyId=${familyId}" aria-label="View Recipes category"
