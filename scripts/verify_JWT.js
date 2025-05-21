@@ -1,5 +1,4 @@
 //Function to make sure the JWT token in the local storage is valid and not expired, if not, redirect to the login page
-
 function verifyJWT() {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -22,5 +21,5 @@ verifyJWT();
 
 function redirectToLogin() {
     localStorage.removeItem('token');
-    window.location.href = '/login.html'; //TODO: Add a redirect param so that the login can tell the user they were signed out due to inactivity
+    window.location.href = `/login.html?logout=inactivity`;
   }
