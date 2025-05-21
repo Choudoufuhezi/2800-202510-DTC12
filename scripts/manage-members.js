@@ -26,12 +26,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    let timeoutId;
     try {
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), 15000);
+        controller.signal.onabort = () => {
+            console.log("Fetch aborted due to timeout");
+        };
+
         const familyResponse = await fetch(`${API_URL}/family/${familyId}/members`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!familyResponse.ok) {
             if (familyResponse.status === 401) window.location.href = `${BASE_URL}/login.html`;
@@ -44,11 +54,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const familyName = family?.family_name || 'this family';
         familyDescription.textContent = `Invite someone to join ${familyName}`;
 
+        const controller2 = new AbortController();
+        timeoutId = setTimeout(() => controller2.abort(), 15000);
+        controller2.signal.onabort = () => {
+            console.log("Fetch aborted due to timeout");
+        };
+
         const invitesResponse = await fetch(`${API_URL}/family/${familyId}/invites`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
             },
+            signal: controller2.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!invitesResponse.ok) {
             if (invitesResponse.status === 401) window.location.href = `${BASE_URL}/login.html`;
@@ -82,10 +101,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Show content
         loading.classList.add('hidden');
     } catch (error) {
-        console.error('Error in manage-members.js:', error);
-        errorMessage.textContent = error.message || 'Something went wrong';
-        errorMessage.classList.remove('hidden');
-        loading.classList.add('hidden');
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            errorMessage.textContent = 'Server timed out, please try again later.';
+            errorMessage.classList.remove('hidden');
+            loading.classList.add('hidden');
+            return;
+        }
+        else {
+            console.error('Error in manage-members.js:', error);
+            errorMessage.textContent = error.message || 'Something went wrong';
+            errorMessage.classList.remove('hidden');
+            loading.classList.add('hidden');
+        }
     }
 
     // Create new invite button handler

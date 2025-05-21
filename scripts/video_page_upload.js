@@ -124,14 +124,25 @@ async function uploadMemory({ location, file_url, cloudinary_id, family_id, tags
 
 async function fetchFamilyMemberMemories(memberUserId, familyId) {
     const token = localStorage.getItem("token");
+    let timeoutId;
 
     try {
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), 15000);
+        controller.signal.onabort = () => {
+            console.log("Fetch aborted due to timeout");
+        };
+
         const response = await fetch(`${API_URL}/memories/member/${memberUserId}/family/${familyId}`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${token}`
-            }
+            },
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
             const error = await response.json();
             console.error("Failed to fetch family member memories:", error);
@@ -144,9 +155,14 @@ async function fetchFamilyMemberMemories(memberUserId, familyId) {
             return isVideo;
         });
 
-        return memories
+        return memories;
     } catch (error) {
-        console.error("Error fetching family member memories:", error);
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            console.error("Fetch aborted due to timeout");
+        } else {
+            console.error("Error fetching family member memories:", error);
+        }
         return null;
     }
 }
@@ -546,25 +562,42 @@ async function getFamilyMembers() {
         return;
     }
 
-    const response = await fetch(`${API_URL}/family/${familyId}/members`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-    });
+    let timeoutId;
+    try {
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), 15000);
+        controller.signal.onabort = () => {
+            console.log("Fetch aborted due to timeout");
+        };
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 401) {
-            window.location.href = `${API_URL}/login.html`;
-            throw new Error('Unauthorized: Please log in again');
+        const response = await fetch(`${API_URL}/family/${familyId}/members`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            if (response.status === 401) {
+                window.location.href = `${API_URL}/login.html`;
+                throw new Error('Unauthorized: Please log in again');
+            }
+            if (response.status === 403) {
+                throw new Error('You are not a member of this family');
+            }
+            throw new Error(errorData.detail || 'Failed to fetch family members');
         }
-        if (response.status === 403) {
-            throw new Error('You are not a member of this family');
+
+        const family = await response.json();
+        return family.members;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error('Server timed out, please try again later');
         }
-        throw new Error(errorData.detail || 'Failed to fetch family members');
+        throw error;
     }
-
-    const family = await response.json();
-
-    return family.members;
 }
 
 function showBasicUploadingModal() {
