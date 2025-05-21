@@ -287,6 +287,7 @@ async def get_family_members(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You must be a member of this family to view its members"
         )
+
     
     # Get all members with email and admin status
     members = db.query(User.id,
@@ -313,7 +314,8 @@ async def get_family_members(
                 "relationship_": relationship_
             }
             for user_id, email, is_admin, custom_name, relationship_ in members
-        ]
+        ],
+        "is_admin": is_member.is_admin
     }
 
 

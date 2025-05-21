@@ -47,6 +47,7 @@ async function loadFamilyDetails() {
         }
 
         const family = await response.json();
+        console.log(family)
         familyNameElement.textContent = `${family.family_name} – Members`;
 
         const memoriesResponse = await fetch(`${API_URL}/memories/${familyId}`, {
@@ -156,7 +157,7 @@ async function loadFamilyDetails() {
             container.appendChild(dropdownMenu);
 
             memberContainer.appendChild(memberCard);
-            if (!member.is_admin) {
+            if (!member.is_admin && family.is_admin) {
                 memberContainer.appendChild(container);
             }
             membersContainer.appendChild(memberContainer);
