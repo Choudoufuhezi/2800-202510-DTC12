@@ -6,7 +6,6 @@ const familyId = urlParams.get('familyId');
 
 // DOM Elements
 const membersContainer = document.getElementById('members-container');
-const familyNameElement = document.querySelector('h2');
 
 // Fetch and display family members
 async function loadFamilyMembers() {
