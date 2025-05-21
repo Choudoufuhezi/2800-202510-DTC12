@@ -200,7 +200,7 @@ async function fetchFamilyMemberMemories(memberUserId, familyId) {
 
         // filter out memories that are only pdfs
         const memories = allMemories.filter(memory => {
-            const isPdf = memory.resource_type === "pdf";
+            const isPdf = memory.resource_type === "raw";
             return isPdf;
         });
 
@@ -316,6 +316,7 @@ async function modal(img, memory) {
     deleteButtonModal.className = "text-red-500 hover:text-red-700 p-4 text-xl";
     deleteButtonModal.addEventListener('click', async () => {
         if (confirm("Are you sure you want to delete this recipe?")) {
+            console.log("delete memory with", img.dataset.memoryId);
             const memoryId = img.dataset.memoryId;
             const deleted = await deleteMemory(memoryId);
             if (deleted) {
@@ -474,8 +475,10 @@ async function modal(img, memory) {
                 deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
                 deleteButton.className = "text-red-500 hover:text-red-700 ml-2";
                 deleteButton.addEventListener('click', async () => {
-                    const deleted = await deleteComment(c.id);
-                    if (deleted) await loadComments();
+                    if (confirm("Are you sure you want to delete this comment?")) {
+                        const deleted = await deleteComment(c.id);
+                        if (deleted) await loadComments();
+                    }
                 });
                 commentItem.appendChild(deleteButton);
 
