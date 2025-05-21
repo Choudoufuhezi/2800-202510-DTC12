@@ -105,6 +105,7 @@ class Memory(Base):
     id = Column(Integer, primary_key=True, index=True)
     location = Column(JSON)
     tags = Column(String)
+    description = Column(String)
     file_url = Column(String)
     cloudinary_id = Column(String)
     date_for_notification = Column(DateTime, nullable=False)
@@ -224,12 +225,13 @@ def create_family_invite(db, family_id: int, code: int, created_by: int, expires
     db.refresh(db_invite)
     return db_invite
 
-def create_memory(db, location: dict, tags: str, file_url: str, cloudinary_id: str, date_for_notification: datetime, user_id: int, family_id: int):
+def create_memory(db, location: dict, tags: str, description: str, file_url: str, cloudinary_id: str, date_for_notification: datetime, user_id: int, family_id: int):
     resource_type = "raw" if file_url.lower().endswith(".pdf") else "image"
     
     db_memory = Memory(
         location=location,
         tags=tags,
+        description=description,
         file_url=file_url,
         cloudinary_id=cloudinary_id,
         date_for_notification=date_for_notification,
