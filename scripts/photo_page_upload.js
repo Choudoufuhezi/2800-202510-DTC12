@@ -209,7 +209,20 @@ async function updateMemory(memoryId, { tags, description }) {
     }
 }
 
-function modal(img, data) {
+function createSpinner() {
+    const spinner = document.createElement('div');
+    spinner.className = "flex items-center justify-center py-12";
+    spinner.innerHTML = `
+      <svg class="animate-spin h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+      </svg>
+      <span class="ml-4 text-gray-500">Loading...</span>
+    `;
+    return spinner;
+}
+
+async function modal(img, memory) {
     const modal = document.createElement('div');
     modal.className = "fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50";
     modal.addEventListener('click', (e) => {
@@ -220,6 +233,24 @@ function modal(img, data) {
 
     const modalContent = document.createElement('div');
     modalContent.className = "bg-white pt-2 pb-6 px-6 rounded shadow-lg max-w-md w-full";
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    // Add a spinner while loading
+    const spinner = createSpinner();
+    modalContent.appendChild(spinner);
+
+    // Fetch image data (takes time!)
+    let data;
+    try {
+        data = await getImageData(memory);
+    } catch (e) {
+        spinner.innerHTML = `<span class="text-red-500">Failed to load image data.</span>`;
+        return;
+    }
+
+    // Remove the spinner
+    modalContent.innerHTML = '';
 
     const header = document.createElement('div');
     header.className = "flex justify-between items-center";
@@ -438,8 +469,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             overlay.style.background = "transparent";
 
             overlay.addEventListener("click", async () => {
-                const data = await getImageData(memory);
-                modal(element, data);
+                modal(element, memory);
             });
 
             wrapper.appendChild(element);
@@ -450,8 +480,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             element.addEventListener("click", async () => {
                 const memoryId = element.dataset.memoryId;
                 const latestMemory = memories.find(m => m.id == memoryId);
-                const data = await getImageData(latestMemory);
-                modal(element, data);
+                modal(element, latestMemory);
             });
 
             photoGrid.appendChild(element);
