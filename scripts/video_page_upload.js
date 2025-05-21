@@ -308,13 +308,13 @@ async function modal(video, memory) {
 
     const description = document.createElement('textarea');
     description.value = data.description || "";
-    description.className = "w-full p-2 mb-2 border rounded resize-none";
+    description.className = "w-full border border-gray-300 p-2 mb-4 border rounded resize-none";
     description.disabled = true;
     modalContent.appendChild(description);
 
     const tags = document.createElement('input');
     tags.value = data.tags || "";
-    tags.className = "w-full p-2 mb-4 border rounded";
+    tags.className = "w-full border border-gray-300 p-2 mb-4 border rounded";
     tags.disabled = true;
     modalContent.appendChild(tags);
 
@@ -332,7 +332,7 @@ async function modal(video, memory) {
 
     const saveButton = document.createElement('button');
     saveButton.innerHTML = '<i class="fa-solid fa-floppy-disk"></i>';
-    saveButton.className = "bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 hidden";
+    saveButton.className = "bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 hidden mr-2 mb-4";
     modalContent.appendChild(saveButton);
 
     saveButton.addEventListener('click', async () => {
