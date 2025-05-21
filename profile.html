@@ -30,15 +30,16 @@
 
     <div class="background-upload relative flex-1 h-24 cursor-pointer flex items-center justify-center text-gray-600">
         <input type="file" id="uploadBackground" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" />
-        <span>click here to change </span>
+        <span>Click here to change backgound</span>
     </div>
 
     <!--Main Content-->
-    <div class="min-h-[calc(100vh-64px-64px)]">
-        <div class="m-4 text-2xl mb-10">
-            <p class="font-semibold ml-40">User Profile</p>
+    <div class="min-h-[calc(100vh-64px-64px)] max-w-4xl mx-auto px-10 py-8">
+        <div class="flex flex-row items-center space-x-5 mb-8">
+            <i class="fa-solid fa-user fa-2xl text-indigo-600"></i>
+            <h1 class="text-2xl font-semibold my-auto">User Profile</h1>
         </div>
-        <div class="bg-white justify-center md:ml-40 md:mr-40 pb-10 pt-10 rounded-xl shadow-2xl">
+        <div class="bg-white justify-center mx-auto pb-8 pt-10 rounded-xl shadow-2xl">
             <div class="flex justify-center relative">
                 <div class="w-[160px] h-[160px] relative rounded-full overflow-hidden border">
                     <img id="userImage" src="images/user_image.png" class="object-cover w-full h-full">
@@ -47,7 +48,7 @@
                 </div>
             </div>
             <div class="flex flex-row justify-center md:space-x-20 space-x-5 mt-20">
-                <div class="flex flex-col">
+                <div class="flex flex-col space-y-2">
                     <p class="text-left md:text-2xl text-sm font-semibold">Username</p>
                     <p class="text-left md:text-2xl text-sm mt-5 font-semibold">Address</p>
                     <p class="text-left md:text-2xl text-sm mt-5 font-semibold">Date of Birth</p>
@@ -55,8 +56,8 @@
                 <div class="flex flex-col">
                     <div class="flex flex-row space-x-5">
                         <fieldset id="username">
-                            <input type="text" class="bg-white md:text-2xl text-sm border rounded-sm"
-                                placeholder="please enter username" id="username_text" readonly>
+                            <input type="text" class="bg-white md:text-2xl text-sm border p-2 rounded-sm"
+                                placeholder="Please enter username" id="username_text" readonly>
                         </fieldset>
                         <a href="#" id="enable_input_username">
                             <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30"
@@ -69,8 +70,8 @@
                     </div>
                     <div class="flex flex-row space-x-5 md:mt-5 mt-3">
                         <fieldset id="address">
-                            <input type="text" class="bg-white md:text-2xl text-sm border rounded-sm"
-                                placeholder="please enter address" id="address_text" readonly>
+                            <input type="text" class="bg-white md:text-2xl text-sm p-2 border rounded-sm"
+                                placeholder="Please enter address" id="address_text" readonly>
                         </fieldset>
                         <a href="#" id="enable_input_address">
                             <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30"
@@ -83,7 +84,7 @@
                     </div>
                     <div class="flex flex-row space-x-5 md:mt-5 mt-3">
                         <fieldset id="dob">
-                            <input type="date" class="bg-white md:text-2xl text-sm border rounded-sm" id="dob_date"
+                            <input type="date" class="bg-white p-2 md:text-2xl text-sm border rounded-sm" id="dob_date"
                                 readonly>
                         </fieldset>
                         <a href="#" id="enable_input_dob">
@@ -97,14 +98,15 @@
                     </div>
                 </div>
             </div>
+            <div class="flex justify-center mt-8 mx-8">
+                <button
+                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    id="save">
+                    <a href="#">Save</a>
+                </button>
+            </div>
         </div>
 
-        <div class="flex justify-end mr-40 mt-20">
-            <button class="bg-white md:text-2xl text-sm rounded-xl shadow-2xl p-4 hover:bg-black hover:text-white"
-                id="save">
-                <a href="#">Save</a>
-            </button>
-        </div>
     </div>
     <script src="../scripts/load_family_icon.js"></script>
 </body>
