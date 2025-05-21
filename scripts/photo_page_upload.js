@@ -152,7 +152,14 @@ async function fetchFamilyMemberMemories(memberUserId, familyId) {
             console.error("Failed to fetch family member memories:", error);
             return null;
         }
-        const memories = await response.json();
+        const allMemories = await response.json();
+
+        // filter out memories that are only images
+        const memories = allMemories.filter(memory => {
+            const isImage = memory.resource_type === "image";
+            return isImage;
+        });
+
         return memories;
     } catch (error) {
         console.error("Error fetching family member memories:", error);
@@ -285,24 +292,24 @@ async function modal(img, memory) {
     modalContent.appendChild(header);
 
     let contentElement;
-    const isPdf = data.src.toLowerCase().endsWith('.pdf');
+    // const isPdf = data.src.toLowerCase().endsWith('.pdf');
 
-    if (isPdf) {
-        contentElement = document.createElement('iframe');
-        contentElement.src = data.src;
-        contentElement.type = "application/pdf";
-        contentElement.className = "w-full rounded mb-4";
-        contentElement.style.height = "500px";
-        contentElement.style.minHeight = "500px";
-        contentElement.style.width = "100%";
-        contentElement.setAttribute("frameborder", "0");
-        contentElement.setAttribute("allowfullscreen", "true");
+    // if (isPdf) {
+    //     contentElement = document.createElement('iframe');
+    //     contentElement.src = data.src;
+    //     contentElement.type = "application/pdf";
+    //     contentElement.className = "w-full rounded mb-4";
+    //     contentElement.style.height = "500px";
+    //     contentElement.style.minHeight = "500px";
+    //     contentElement.style.width = "100%";
+    //     contentElement.setAttribute("frameborder", "0");
+    //     contentElement.setAttribute("allowfullscreen", "true");
 
-    } else {
-        contentElement = document.createElement('img');
-        contentElement.src = data.src;
-        contentElement.className = "w-full h-auto rounded mb-4";
-    }
+    // } else {
+    contentElement = document.createElement('img');
+    contentElement.src = data.src;
+    contentElement.className = "w-full h-auto rounded mb-4";
+    // }
     modalContent.appendChild(contentElement);
 
     const description = document.createElement('textarea');
@@ -447,45 +454,47 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
     if (!memories || memories.length === 0) return;
     memories.forEach((memory) => {
-        const isPdf = memory.file_url.toLowerCase().endsWith(".pdf");
+        // const isPdf = memory.file_url.toLowerCase().endsWith(".pdf");
 
         const wrapper = document.createElement("div");
-        wrapper.className = isPdf ? "relative w-full rounded" : "";
-
-        const element = isPdf
-            ? document.createElement("iframe")
-            : document.createElement("img");
-
+        // wrapper.className = isPdf ? "relative w-full rounded" : "";
+        wrapper.className = "";
+        // const element = isPdf
+        //     ? document.createElement("iframe")
+        //     : document.createElement("img");
+        const element = document.createElement("img");
         element.src = memory.file_url;
         element.dataset.imageId = memory.cloudinary_id;
         element.dataset.memoryId = memory.id;
-        element.className = isPdf ? "w-full h-auto rounded" : "w-full h-auto";
+        // element.className = isPdf ? "w-full h-auto rounded" : "w-full h-auto";
+        element.className = "w-full h-auto";
+
         element.style.border = "none";
 
-        if (isPdf) {
-            element.style.height = "250px";
+        // if (isPdf) {
+        //     element.style.height = "250px";
 
-            const overlay = document.createElement("div");
-            overlay.className = "absolute inset-0 z-10 cursor-pointer";
-            overlay.style.background = "transparent";
+        //     const overlay = document.createElement("div");
+        //     overlay.className = "absolute inset-0 z-10 cursor-pointer";
+        //     overlay.style.background = "transparent";
 
-            overlay.addEventListener("click", async () => {
-                modal(element, memory);
-            });
+        //     overlay.addEventListener("click", async () => {
+        //         modal(element, memory);
+        //     });
 
-            wrapper.appendChild(element);
-            wrapper.appendChild(overlay);
-            photoGrid.appendChild(wrapper);
-        } else {
-            element.classList.add("w-full", "h-auto", "rounded", "cursor-pointer");
-            element.addEventListener("click", async () => {
-                const memoryId = element.dataset.memoryId;
-                const latestMemory = memories.find(m => m.id == memoryId);
-                modal(element, latestMemory);
-            });
+        //     wrapper.appendChild(element);
+        //     wrapper.appendChild(overlay);
+        //     photoGrid.appendChild(wrapper);
+        // } else {
+        element.classList.add("w-full", "h-auto", "rounded", "cursor-pointer");
+        element.addEventListener("click", async () => {
+            const memoryId = element.dataset.memoryId;
+            const latestMemory = memories.find(m => m.id == memoryId);
+            modal(element, latestMemory);
+        });
 
-            photoGrid.appendChild(element);
-        }
+        photoGrid.appendChild(element);
+        //}
     });
 });
 
@@ -493,7 +502,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 fileInput.addEventListener("change", async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
+    const urlParams = new URLSearchParams(window.location.search);
+    const familyId = urlParams.get('familyId');
     const closeUploadingModal = showBasicUploadingModal();
 
     const formData = new FormData();
@@ -501,9 +511,11 @@ fileInput.addEventListener("change", async (event) => {
     formData.append("upload_preset", "digital_family_vault");
 
     try {
-        const uploadUrl = file.type === "application/pdf"
-            ? "https://api.cloudinary.com/v1_1/dz7lbivvf/raw/upload"
-            : "https://api.cloudinary.com/v1_1/dz7lbivvf/image/upload";
+        // const uploadUrl = file.type === "application/pdf"
+        //     ? "https://api.cloudinary.com/v1_1/dz7lbivvf/raw/upload"
+        //     : "https://api.cloudinary.com/v1_1/dz7lbivvf/image/upload";
+        const uploadUrl =
+            "https://api.cloudinary.com/v1_1/dz7lbivvf/image/upload";
 
         const upload_cloudinary = await fetch(uploadUrl, {
             method: "POST",
@@ -526,9 +538,9 @@ fileInput.addEventListener("change", async (event) => {
                 location,
                 file_url: imageURL,
                 cloudinary_id: publicID,
+                family_id: familyId,
                 tags: "Add tags",
-                description: "Add description",
-                family_id: 1
+                description: "Add description"
             });
 
             if (!uploadedMemory) {
