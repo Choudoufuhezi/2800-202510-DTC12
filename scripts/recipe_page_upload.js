@@ -439,7 +439,7 @@ async function modal(img, memory) {
         if (comments.length === 0) {
             commentsList.innerHTML = "<p class='text-gray-500 italic'>No comments yet.</p>";
         } else {
-            comments.forEach((c, index) => {
+            comments.forEach((c) => {
                 const familyMember = familyMembers.find(member => member.user_id === c.user_id);
                 const userName = familyMember ?
                     (familyMember.custom_name ? familyMember.custom_name : familyMember.email)
