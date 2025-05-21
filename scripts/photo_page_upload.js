@@ -6,6 +6,7 @@ const uploadButton = document.getElementById("uploadButton");
 const fileInput = document.getElementById("fileInput");
 const photoGrid = document.getElementById("photoGrid");
 const addMorePhotos = document.getElementById("addMorePhotosButton");
+let memories = [];
 
 uploadButton.addEventListener("click", () => {
     fileInput.click();
@@ -41,12 +42,12 @@ async function getComments(memoryID) {
 async function getImageData(memory) {
     const element = document.querySelector(`[data-image-id="${memory.cloudinary_id}"]`);
     const src = element?.getAttribute("src") || element?.src || memory.file_url;
-
+    console.log(memory);
     const location = await getLocation();
     return {
         src,
-        description: "This is a sample description for the image.",
-        tags: memory.tags,
+        description: memory.description?.trim() || "Add description",
+        tags: memory.tags?.trim() || "Add tags",
         geolocation: { location }
     };
 }
@@ -61,7 +62,7 @@ async function postComment(memoryId, text) {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 memory_id: memoryId,
                 comment_text: text
             })
@@ -103,7 +104,7 @@ async function deleteComment(commentId) {
     }
 }
 
-async function uploadMemory({ location, file_url, cloudinary_id, tags, family_id }) {
+async function uploadMemory({ location, file_url, cloudinary_id, family_id, tags, description }) {
     const token = localStorage.getItem("token");
 
     try {
@@ -115,13 +116,13 @@ async function uploadMemory({ location, file_url, cloudinary_id, tags, family_id
             },
             body: JSON.stringify({
                 location,
-                tags,
                 file_url,
                 cloudinary_id,
-                family_id
+                family_id,
+                tags,
+                description
             })
         });
-
 
         if (!response.ok) {
             const errorText = await response.json();
@@ -182,7 +183,46 @@ async function deleteMemory(memoryId) {
     }
 }
 
-function modal(img, data) {
+async function updateMemory(memoryId, { tags, description }) {
+    const token = localStorage.getItem("token");
+
+    try {
+        const response = await fetch(`${API_URL}/memories/${memoryId}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ tags, description })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            console.error("Failed to update memory:", error);
+            return null;
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("Error updating memory:", error);
+        return null;
+    }
+}
+
+function createSpinner() {
+    const spinner = document.createElement('div');
+    spinner.className = "flex items-center justify-center py-12";
+    spinner.innerHTML = `
+      <svg class="animate-spin h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+      </svg>
+      <span class="ml-4 text-gray-500">Loading...</span>
+    `;
+    return spinner;
+}
+
+async function modal(img, memory) {
     const modal = document.createElement('div');
     modal.className = "fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50";
     modal.addEventListener('click', (e) => {
@@ -193,6 +233,24 @@ function modal(img, data) {
 
     const modalContent = document.createElement('div');
     modalContent.className = "bg-white pt-2 pb-6 px-6 rounded shadow-lg max-w-md w-full";
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    // Add a spinner while loading
+    const spinner = createSpinner();
+    modalContent.appendChild(spinner);
+
+    // Fetch image data (takes time!)
+    let data;
+    try {
+        data = await getImageData(memory);
+    } catch (e) {
+        spinner.innerHTML = `<span class="text-red-500">Failed to load image data.</span>`;
+        return;
+    }
+
+    // Remove the spinner
+    modalContent.innerHTML = '';
 
     const header = document.createElement('div');
     header.className = "flex justify-between items-center";
@@ -247,20 +305,59 @@ function modal(img, data) {
     }
     modalContent.appendChild(contentElement);
 
-    const description = document.createElement('p');
-    description.innerText = data.description;
-    description.className = "text-gray-700 mb-4";
+    const description = document.createElement('textarea');
+    description.value = data.description || "";
+    description.className = "w-full p-2 mb-2 border rounded resize-none";
+    description.disabled = true;
     modalContent.appendChild(description);
 
-    const tags = document.createElement('p');
-    tags.innerText = `Tags: ${data.tags}`;
-    tags.className = "text-gray-700 mb-4";
+    const tags = document.createElement('input');
+    tags.value = data.tags || "";
+    tags.className = "w-full p-2 mb-4 border rounded";
+    tags.disabled = true;
     modalContent.appendChild(tags);
 
     const editButton = document.createElement('button');
     editButton.innerHTML = '<i class="fas fa-edit"></i>';
     editButton.className = "bg-sky-400 text-white px-2 py-1 hover:bg-sky-300 rounded mr-2 mb-4";
     modalContent.appendChild(editButton);
+
+    editButton.addEventListener('click', () => {
+        console.log('edit button clicked')
+        description.disabled = false;
+        tags.disabled = false;
+        saveButton.classList.remove("hidden");
+        editButton.classList.add("hidden");
+    });
+
+    const saveButton = document.createElement('button');
+    saveButton.innerHTML = '<i class="fa-solid fa-floppy-disk"></i>';
+    saveButton.className = "bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 hidden";
+    modalContent.appendChild(saveButton);
+
+    saveButton.addEventListener('click', async () => {
+        const memoryId = img.dataset.memoryId;
+        const updated = await updateMemory(memoryId, {
+            tags: tags.value.trim(),
+            description: description.value.trim()
+        });
+
+        if (updated) {
+            description.disabled = true;
+            tags.disabled = true;
+            alert("Memory updated successfully!");
+            saveButton.classList.add("hidden");
+            editButton.classList.remove("hidden");
+
+            const memory = memories.find(m => m.id == memoryId);
+            if (memory) {
+                memory.tags = tags.value.trim();
+                memory.description = description.value.trim();
+            }
+        } else {
+            alert("Failed to update memory.");
+        }
+    });
 
     const geolocation = document.createElement('p');
     geolocation.innerText = `Location: ${data.geolocation.location.address.city}, ${data.geolocation.location.address.country}`;
@@ -324,7 +421,7 @@ function modal(img, data) {
         e.preventDefault();
         const text = commentInput.value.trim();
         if (!text) return;
-        
+
         const posted = await postComment(img.dataset.memoryId, text);
         if (posted) {
             commentInput.value = "";
@@ -340,9 +437,10 @@ function modal(img, data) {
 };
 
 window.addEventListener("DOMContentLoaded", async () => {
-    const memberUserId = 1; // replace with dynamic logic
-    const familyId = 1; // replace with dynamic logic
-    const memories = await fetchFamilyMemberMemories(memberUserId, familyId);
+    const urlParams = new URLSearchParams(window.location.search);
+    const familyId = urlParams.get('familyId');
+    const memberUserId = urlParams.get('userId');
+    memories = await fetchFamilyMemberMemories(memberUserId, familyId);
     if (memories && memories.length > 0) {
         removePhotoEmptyMessage.classList.add("hidden");
         addMorePhotos.classList.remove("hidden");
@@ -372,8 +470,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             overlay.style.background = "transparent";
 
             overlay.addEventListener("click", async () => {
-                const data = await getImageData(memory);
-                modal(element, data);
+                modal(element, memory);
             });
 
             wrapper.appendChild(element);
@@ -382,8 +479,9 @@ window.addEventListener("DOMContentLoaded", async () => {
         } else {
             element.classList.add("w-full", "h-auto", "rounded", "cursor-pointer");
             element.addEventListener("click", async () => {
-                const data = await getImageData(memory);
-                modal(element, data);
+                const memoryId = element.dataset.memoryId;
+                const latestMemory = memories.find(m => m.id == memoryId);
+                modal(element, latestMemory);
             });
 
             photoGrid.appendChild(element);
@@ -395,6 +493,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 fileInput.addEventListener("change", async (event) => {
     const file = event.target.files[0];
     if (!file) return;
+
+    const closeUploadingModal = showBasicUploadingModal();
 
     const formData = new FormData();
     formData.append("file", file);
@@ -426,59 +526,60 @@ fileInput.addEventListener("change", async (event) => {
                 location,
                 file_url: imageURL,
                 cloudinary_id: publicID,
-                tags: "sample, test",
+                tags: "Add tags",
+                description: "Add description",
                 family_id: 1
             });
 
             if (!uploadedMemory) {
+                closeUploadingModal();
                 alert("Memory upload failed.");
                 return;
             }
 
+            closeUploadingModal();
+
             removePhotoEmptyMessage.classList.add("hidden");
             addMorePhotos.classList.remove("hidden");
-
-            const isPdf = file.type === "application/pdf";
-            const element = isPdf ? document.createElement("iframe") : document.createElement("img");
-
-            element.src = imageURL;
-            element.dataset.imageId = publicID;
-            element.dataset.memoryId = uploadedMemory.id;
-            element.className = "w-full rounded";
-            if (isPdf) {
-                element.style.height = "250px";
-                element.style.width = "100%";
-
-                // Create overlay for iframe
-                const overlay = document.createElement("div");
-                overlay.className = "absolute inset-0 cursor-pointer bg-transparent z-10";
-                overlay.addEventListener("click", async () => {
-                    const data = await getImageData(uploadedMemory);
-                    modal(element, data);
-                });
-
-                // Wrap iframe + overlay
-                const wrapper = document.createElement("div");
-                wrapper.className = "relative w-full";
-                wrapper.appendChild(element);
-                wrapper.appendChild(overlay);
-                photoGrid.appendChild(wrapper);
-
-            } else {
-                element.addEventListener("click", async () => {
-                    const data = await getImageData(uploadedMemory);
-                    modal(element, data);
-                });
-                photoGrid.appendChild(element);
-            }
+            window.location.reload();
 
         } else {
+            closeUploadingModal();
             alert("Upload failed. No secure_url returned.");
             console.error(result);
         }
 
     } catch (error) {
+        closeUploadingModal();
         console.error("Cloudinary upload error:", error);
         alert("Upload failed. Check console for details.");
     }
 });
+
+function showBasicUploadingModal() {
+    // Modal container
+    const modal = document.createElement('div');
+    modal.className = "fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50";
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+
+    // Modal content
+    const modalContent = document.createElement('div');
+    modalContent.className = "modal-content bg-white pt-2 pb-6 px-6 rounded shadow-lg max-w-md w-full flex flex-col items-center";
+    modal.appendChild(modalContent);
+
+    // Spinner + message
+    modalContent.innerHTML = `
+      <div class="flex flex-col items-center py-8">
+        <svg class="animate-spin h-8 w-8 text-gray-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        <span class="ml-4 text-gray-500">Uploading your memory...</span>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    return () => modal.remove();
+}
