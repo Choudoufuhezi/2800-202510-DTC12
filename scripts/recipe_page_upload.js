@@ -7,6 +7,7 @@ const fileInput = document.getElementById("fileInput");
 const recipeGrid = document.getElementById("recipeGrid");
 const addMoreRecipes = document.getElementById("addMoreRecipesButton");
 let memories = [];
+let familyMembers = [];
 
 uploadButton.addEventListener("click", () => {
     fileInput.click();
@@ -394,12 +395,16 @@ async function modal(img, memory) {
         const comments = await getComments(img.dataset.memoryId);
         commentsList.innerHTML = "";
         comments.forEach((c, index) => {
+            const familyMember = familyMembers.find(member => member.user_id === c.user_id);
+            const userName = familyMember ?
+                (familyMember.custom_name ? familyMember.custom_name : familyMember.email)
+                : `User ${c.user_id}`;
             const commentItem = document.createElement('div');
             commentItem.className = "flex justify-between items-center mb-1";
 
             const commentText = document.createElement('p');
             commentText.className = "text-gray-800";
-            commentText.innerText = `User ${c.user_id}: ${c.comment_text}`;
+            commentText.innerText = `${userName}: ${c.comment_text}`;
             commentItem.appendChild(commentText);
 
             const deleteButton = document.createElement('button');
@@ -434,10 +439,60 @@ async function modal(img, memory) {
     document.body.appendChild(modal);
 };
 
+async function getFamilyMembers() {
+    // make sure the user is logged in
+    if (!localStorage.getItem('token')) {
+        console.log('No token found, redirecting to login');
+        window.location.href = `${BASE_URL}/login.html`;
+    }
+
+    // make sure the familyId is present
+    const urlParams = new URLSearchParams(window.location.search);
+    const familyId = urlParams.get('familyId');
+    if (!familyId) {
+        console.log('No familyId found in URL');
+        window.location.href = `${BASE_URL}/login.html`;
+    }
+
+    const response = await fetch(`${API_URL}/family/${familyId}/members`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 401) {
+            window.location.href = `${BASE_URL}/login.html`;
+            throw new Error('Unauthorized: Please log in again');
+        }
+        if (response.status === 403) {
+            throw new Error('You are not a member of this family');
+        }
+        throw new Error(errorData.detail || 'Failed to fetch family members');
+    }
+
+    const family = await response.json();
+
+    return family.members;
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
+    // ensure the user is logged in
+    if (!localStorage.getItem('token')) {
+        window.location.href = `${BASE_URL}/login.html`;
+        return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const familyId = urlParams.get('familyId');
     const memberUserId = urlParams.get('userId');
+
+    if (!familyId || !memberUserId) {
+        console.error('Missing familyId or userId in URL');
+        window.location.href = `${BASE_URL}/index.html`;
+        return;
+    }
+
+    familyMembers = await getFamilyMembers();
     memories = await fetchFamilyMemberMemories(memberUserId, familyId);
     if (memories && memories.length > 0) {
         removeRecipeEmptyMessage.classList.add("hidden");
