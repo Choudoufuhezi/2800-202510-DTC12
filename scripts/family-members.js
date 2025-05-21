@@ -30,9 +30,15 @@ async function loadFamilyDetails() {
     try {
         if (isNaN(familyId)) throw new Error('Invalid family ID');
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
         const response = await fetch(`${API_URL}/family/${familyId}/members`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -165,10 +171,17 @@ async function loadFamilyDetails() {
         }
 
     } catch (error) {
-        console.error('Error in family-members.js:', error);
-        errorMessage.textContent = error.message;
-        errorMessage.classList.remove('hidden');
-        membersContainer.innerHTML = '';
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            console.log('Request timed out');
+            return;
+        }
+        else {
+            console.error('Error in family-members.js:', error);
+            errorMessage.textContent = error.message;
+            errorMessage.classList.remove('hidden');
+            membersContainer.innerHTML = '';
+        }
     }
 }
 
