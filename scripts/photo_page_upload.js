@@ -473,8 +473,10 @@ async function modal(img, memory) {
                 deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
                 deleteButton.className = "text-red-500 hover:text-red-700 ml-2";
                 deleteButton.addEventListener('click', async () => {
-                    const deleted = await deleteComment(c.id);
-                    if (deleted) await loadComments();
+                    if (confirm("Are you sure you want to delete this comment?")) {
+                        const deleted = await deleteComment(c.id);
+                        if (deleted) await loadComments();
+                    }
                 });
                 commentItem.appendChild(deleteButton);
 
