@@ -301,6 +301,7 @@ async function modal(video, memory) {
 
     modalVideo = document.createElement('video');
     modalVideo.src = data.src;
+    modalVideo.controls = true;
     modalVideo.className = "w-full h-auto block";
 
     videoWrapper.appendChild(modalVideo)
