@@ -156,8 +156,11 @@ async function loadFamilyDetails() {
             container.appendChild(dropdownMenu);
 
             memberContainer.appendChild(memberCard);
-            memberContainer.appendChild(container);
+            if (!member.is_admin) {
+                memberContainer.appendChild(container);
+            }
             membersContainer.appendChild(memberContainer);
+
         }
 
     } catch (error) {
