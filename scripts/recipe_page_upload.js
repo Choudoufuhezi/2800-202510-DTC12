@@ -1,11 +1,12 @@
 import { getLocation } from './geolocation.js';
-import { API_URL } from './config.js';
+import { API_URL, BASE_URL } from './config.js';
 
 const removeRecipeEmptyMessage = document.getElementById("recipeEmptyMessage");
 const uploadButton = document.getElementById("uploadButton");
 const fileInput = document.getElementById("fileInput");
 const recipeGrid = document.getElementById("recipeGrid");
 const addMoreRecipes = document.getElementById("addMoreRecipesButton");
+const backButton = document.getElementById("back")
 let memories = [];
 let familyMembers = [];
 
@@ -16,6 +17,22 @@ uploadButton.addEventListener("click", () => {
 addMoreRecipes.addEventListener('click', () => {
     fileInput.click();
 });
+
+backButton.addEventListener('click', () => {
+    backPreviousPage()
+});
+
+async function backPreviousPage() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const familyId = urlParams.get('familyId');
+    const userId = urlParams.get('userId');
+    if (!familyId || !userId) {
+        window.location.href = `${API_URL}/login.html`;
+        return;
+    }
+    window.location.href = `${BASE_URL}/member-categories.html?userId=${userId}&familyId=${familyId}`;
+}
+
 
 //  Comment fetch APIs 
 async function getComments(memoryID) {
