@@ -1,7 +1,9 @@
+import { API_URL } from './config.js';
+
 async function fetchGroupChats() {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:8000/users/chatrooms', {
+        const response = await fetch(`${API_URL}/users/chatrooms`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -23,7 +25,7 @@ async function fetchGroupChats() {
 
 async function fetchGroupChatInfo(groupID) {
     const token = localStorage.getItem('token');
-    const response = await fetch(`http://localhost:8000/chatrooms/${groupID}/info`, {
+    const response = await fetch(`${API_URL}/chatrooms/${groupID}/info`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

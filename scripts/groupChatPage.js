@@ -1,3 +1,5 @@
+import { API_URL } from './config.js';
+
 document.addEventListener("DOMContentLoaded", async () => {
     // Get token
     const token = localStorage.getItem("token");
@@ -10,7 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Get user ID
     let userId;
     try {
-        const response = await fetch("http://localhost:8000/user/id", {
+        const response = await fetch(`${API_URL}/user/id`, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -72,7 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function translateMessages(texts, targetLanguage) {
         try {
-            const response = await fetch("http://localhost:8000/translate/", {
+            const response = await fetch(`${API_URL}/translate/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -152,7 +154,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Fetch message history
     try {
-        const response = await fetch(`http://localhost:8000/chatrooms/${chatroomId}/messages`, {
+        const response = await fetch(`${API_URL}/chatrooms/${chatroomId}/messages`, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -193,7 +195,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.error("Error fetching message history:", error);
     }
 
-    const ws = new WebSocket(`ws://localhost:8000/ws/${userId}`);
+    const ws = new WebSocket(`${API_URL.replace("https://", "wss://")}/ws/${userId}`);
 
     console.log(`User ${userId}: Connected to WebSocket`);
 
