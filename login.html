@@ -86,6 +86,7 @@
                 if (response.ok) {
                     const { access_token } = await response.json();
                     localStorage.setItem('token', access_token);
+                    window.location.href = '/family-groups.html';
                 } else {
                     const error = await response.json();
                     alert(error.detail || 'Login failed');

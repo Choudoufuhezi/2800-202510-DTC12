@@ -16,12 +16,11 @@
 
     <!--Main Content-->
     <div class="min-h-[calc(101vh-64px-64px)] max-w-4xl mx-auto px-10 py-10">
-        <div id="back" class="mb-10 bg-indigo-600 hover:bg-indigo-700 hover:scale-110 transition-transform duration-200 text-white p-2 rounded-md shadow-md">
-            <button
-                title="back">
-                <i class="fa-solid fa-backward"></i>
+        <div id="back" class="pb-10 text-indigo-600 hover:text-indigo-700 cursor-pointer">
+            <button title="back">
+                <i class="fa-solid fa-arrow-left fa-xl mr-3 cursor-pointer"></i>
             </button>
-            <span class="font-medium select-none">Go back to the categories page</span>
+            <span class="text-gray-600 hover:text-black underline select-none">Go back to the categories page</span>
         </div>
         <div class="flex justify-between">
             <div class="flex flex-row items-center space-x-4 mb-8">
@@ -36,9 +35,9 @@
 
         <!--No photos message -->
         <div id="videoEmptyMessage" class="flex flex-col space-y-6 items-center justify-center text-center">
-            <h3>
+            <h3 class="text-lg py-5">
                 Start by uploading your very first video to share with your loved ones.
-                Don’t forget to include a description to give some background or share a special story
+                Don't forget to include a description to give some background or share a special story
             </h3>
 
             <!--Upload photos button-->
@@ -61,13 +60,10 @@
     <!--Bottom Nav-->
     <nav id="bottomNav" class="sticky bottom-0"></nav>
 
-    <!--Footer-->
-    <nav id="footer"></nav>
-
     <!--JavaScript-->
     <script src="../scripts/add_nav.js"></script>
     <script type="module" src="../scripts/video_page_upload.js"></script>
-    <script src="../scripts/load_family_icon.js"></script>
+    <script type="module" src="../scripts/load_family_icon.js"></script>
 </body>
 
 </html>

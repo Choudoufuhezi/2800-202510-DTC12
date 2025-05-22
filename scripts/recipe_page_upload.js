@@ -200,7 +200,7 @@ async function fetchFamilyMemberMemories(memberUserId, familyId) {
 
         // filter out memories that are only pdfs
         const memories = allMemories.filter(memory => {
-            const isPdf = memory.resource_type === "pdf";
+            const isPdf = memory.resource_type === "raw";
             return isPdf;
         });
 
@@ -354,13 +354,13 @@ async function modal(img, memory) {
 
     const description = document.createElement('textarea');
     description.value = data.description || "";
-    description.className = "w-full p-2 mb-2 border rounded resize-none";
+    description.className = "w-full border border-gray-300 p-2 mb-4 border rounded resize-none";
     description.disabled = true;
     modalContent.appendChild(description);
 
     const tags = document.createElement('input');
     tags.value = data.tags || "";
-    tags.className = "w-full p-2 mb-4 border rounded";
+    tags.className = "w-full border border-gray-300 p-2 mb-4 border rounded";
     tags.disabled = true;
     modalContent.appendChild(tags);
 
@@ -378,7 +378,7 @@ async function modal(img, memory) {
 
     const saveButton = document.createElement('button');
     saveButton.innerHTML = '<i class="fa-solid fa-floppy-disk"></i>';
-    saveButton.className = "bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 hidden";
+    saveButton.className = "bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 hidden mr-2 mb-4";
     modalContent.appendChild(saveButton);
 
     saveButton.addEventListener('click', async () => {
@@ -474,8 +474,10 @@ async function modal(img, memory) {
                 deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
                 deleteButton.className = "text-red-500 hover:text-red-700 ml-2";
                 deleteButton.addEventListener('click', async () => {
-                    const deleted = await deleteComment(c.id);
-                    if (deleted) await loadComments();
+                    if (confirm("Are you sure you want to delete this comment?")) {
+                        const deleted = await deleteComment(c.id);
+                        if (deleted) await loadComments();
+                    }
                 });
                 commentItem.appendChild(deleteButton);
 
