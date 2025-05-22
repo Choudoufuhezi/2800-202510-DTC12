@@ -12,3 +12,5 @@ venv/
 
 #Database
 *.db
+
+node_modules/
