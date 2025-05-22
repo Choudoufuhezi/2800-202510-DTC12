@@ -55,13 +55,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     translationSelect.className = "p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-300";
     translationSelect.innerHTML = `
         <option value="">Original Language</option>
+        <option value="Chinese">Chinese</option>
         <option value="English">English</option>
-        <option value="Spanish">Spanish</option>
         <option value="French">French</option>
         <option value="German">German</option>
-        <option value="Chinese">Chinese</option>
         <option value="Japanese">Japanese</option>
         <option value="Korean">Korean</option>
+        <option value="Spanish">Spanish</option>
     `;
 
     const inputContainer = input.parentElement;
@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Store og messages so always translating original
     const originalMessages = new Map();
 
-    async function translateMessage(text, targetLanguage) {
+    async function translateMessages(texts, targetLanguage) {
         try {
             const response = await fetch("http://localhost:8000/translate/", {
                 method: "POST",
@@ -78,43 +78,65 @@ document.addEventListener("DOMContentLoaded", async () => {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    text: text,
+                    texts: texts, 
                     target_language: targetLanguage
                 })
             });
-
+    
             if (!response.ok) {
                 throw new Error("Translation failed");
             }
-
-            return await response.text();
+    
+            const data = await response.json();
+            return data;  // Returns an array of translations
         } catch (error) {
             console.error("Translation error:", error);
-            return text; // Return original text if translation fails
+            return texts; // Return original texts if translation fails
         }
     }
 
     // Update translation function was enhanced by deepseek to be more efficient and readable
     async function updateTranslations(targetLanguage) {
-        const messageElements = chatBox.querySelectorAll("[data-id]");
+        const messageElements = Array.from(chatBox.querySelectorAll("[data-id]"));
+        
+        const translationBatch = [];
+        const messageElementsToUpdate = [];
         
         for (const element of messageElements) {
             const messageId = element.dataset.id;
-            const messageText = element.querySelector("div > div:last-child");
+            const messageTextElement = element.querySelector("[data-translate='content']");
             
-            if (!messageText) continue;
-
+            if (!messageTextElement) continue;
+    
             if (!originalMessages.has(messageId)) {
-                originalMessages.set(messageId, messageText.textContent);
+                originalMessages.set(messageId, messageTextElement.textContent);
             }
-
+    
             const originalText = originalMessages.get(messageId);
             
             if (targetLanguage) {
-                const translatedText = await translateMessage(originalText, targetLanguage);
-                messageText.textContent = translatedText;
+                translationBatch.push(originalText);
+                messageElementsToUpdate.push({ element, messageTextElement });
             } else {
-                messageText.textContent = originalText;
+                messageTextElement.textContent = originalText;
+            }
+        }
+    
+        if (translationBatch.length > 0) {
+            try {
+                const translations = await translateMessages(translationBatch, targetLanguage);
+                
+                translations.forEach((translatedText, index) => {
+                    const { messageTextElement } = messageElementsToUpdate[index];
+                    messageTextElement.textContent = translatedText;
+                });
+            } catch (error) {
+                console.error("Batch translation failed:", error);
+                // Fallback to original texts
+                messageElementsToUpdate.forEach(({ messageTextElement }, index) => {
+                    const messageId = messageElementsToUpdate[index].element.dataset.id;
+                    messageTextElement.textContent = originalMessages.get(messageId);
+                });
             }
         }
     }
@@ -249,6 +271,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     
         const messageText = document.createElement("div");
+        messageText.dataset.translate = "content";
         messageText.textContent = text;
         bubble.appendChild(messageText);
         bubbleContainer.appendChild(bubble);
