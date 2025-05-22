@@ -61,6 +61,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     backButton.href = `family-members.html?familyId=${familyId}`;
 
     try {
+        const familyResponse = await fetch(`${API_URL}/family/${familyId}/members`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+
+        if (!familyResponse.ok) {
+            throw new Error('Failed to load member details');
+        }
+
+        const familyDetails = await familyResponse.json();
+        //get member from full family details
+        const member = familyDetails.members.find(m => m.user_id === parseInt(userId));
+        const memberDisplayName = member.custom_name || member.email;
+        
         // Fetch all memories for the selected member
         const response = await fetch(`${API_URL}/memories/member/${userId}/family/${familyId}`, {
             headers: {
@@ -90,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // Update header
-        familyNameElement.textContent = `Categories for Member #${userId}`;
+        familyNameElement.textContent = `Categories for ${memberDisplayName}`;
 
         // Optional: log for debug
         console.log('Grouped memories:', grouped);

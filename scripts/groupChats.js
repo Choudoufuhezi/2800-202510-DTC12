@@ -83,7 +83,11 @@ async function renderGroupChats() {
             <div class="text-center py-8 text-gray-500">
                 <i class="fas fa-comments text-4xl mb-3"></i>
                 <p>You haven't joined any group chats yet.</p>
-                <p class="mt-2">Click "New Group" to create one!</p>
+                <p class="mt-2">Go to your family page to create one!</p>
+                <button onclick="window.location.href='family-groups.html'" 
+                        class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                    Go to Family Page
+                </button>
             </div>
         `;
         return;
