@@ -1,27 +1,57 @@
+import json
+from typing import List
 from openai import OpenAI
 from pydantic import BaseModel
 from config import settings
 from fastapi import APIRouter
 client = OpenAI(api_key=settings.deepseek_api_key, base_url="https://api.deepseek.com")
 
-def translate_text(text, target_language):
+def translate_text(texts, target_language):
     response = client.chat.completions.create(
         model="deepseek-chat",
-        messages=[{"role": "system", "content": f"You are a translator. You will be given a text and a target language. You will translate the text to the target language. Do not include any other text in your response. Translate it as it is without interpretation or explanation. If you cannot translate the text, return only 'N/A' and nothing else."},
-                  {"role": "user", "content": f"Text: {text}\nTarget Language: {target_language}"}],
-        temperature=1.3
+        messages=[
+            {
+                "role": "system",
+                "content": """You are a professional translation system. Your task is to:
+                1. Accurately translate each given text to the specified target language
+                2. Maintain the original meaning, tone, and style
+                3. Preserve any special terms, names, or technical vocabulary
+                4. Return translations in exact same order as input
+                5. For untranslatable texts, return "N/A" for that item
+
+                Output must be a JSON list of translations only, with no additional commentary.
+                Example input: ["Hello", "Goodbye"]
+                Example output: ["Hola", "Adiós"]"""
+            },
+            {
+                "role": "user",
+                "content": f"""Texts to translate (as JSON list): {texts}
+                Target Language: {target_language}
+                Respond with ONLY a JSON list of translations:"""
+            }
+        ],
+        temperature=0.7,  # Slightly lower temperature for more consistent results
+        response_format={"type": "json_object"}  # Ensure JSON output
     )
-    return response.choices[0].message.content
+    try:
+        # Parse the JSON response
+        translations = json.loads(response.choices[0].message.content)
+        if isinstance(translations, dict):
+            translations = translations.get("translations", ["N/A"] * len(texts))
+        return translations
+    except:
+        return ["N/A"] * len(texts)
 
 router = APIRouter(prefix="/translate")
 
 class TranslationRequest(BaseModel):
-    text: str
+    texts: List[str]
     target_language: str
 
 @router.post("/")
 async def translate(request: TranslationRequest):
-    return translate_text(request.text, request.target_language)
+    return translate_text(request.texts, request.target_language)
 
 if __name__ == "__main__":
-    print(translate_text("无法翻译", "English"))
+    test_texts = ["Hello world", "How are you?"]
+    print(translate_text(test_texts, "Chinese"))
