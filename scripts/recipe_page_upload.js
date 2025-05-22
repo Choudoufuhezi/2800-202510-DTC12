@@ -606,6 +606,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 // Uploading pdf to Cloudinary
 fileInput.addEventListener("change", async (event) => {
+    if (confirm("Are you sure you want to upload this file?")) {
     const file = event.target.files[0];
     if (!file) return;
     const urlParams = new URLSearchParams(window.location.search);
@@ -664,6 +665,7 @@ fileInput.addEventListener("change", async (event) => {
         console.error("Cloudinary upload error:", error);
         alert("Upload failed. Check console for details.");
     }
+}
 });
 
 function showBasicUploadingModal() {
