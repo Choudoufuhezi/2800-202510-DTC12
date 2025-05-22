@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.error("Error fetching message history:", error);
     }
 
-    const ws = new WebSocket(`${API_URL}/ws/${userId}`);
+    const ws = new WebSocket(`${API_URL.replace("https://", "wss://")}/ws/${userId}`);
 
     console.log(`User ${userId}: Connected to WebSocket`);
 
