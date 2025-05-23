@@ -214,29 +214,38 @@ Frontend will be available at: http://localhost:3000/login.html
 ## About Us
 Team Name: DTC-12
 Team Members: 
-- Derek Cao (Set 1E) 
-- Hank Zhao (Set 1F)
-- Courtney Lum (Set 1E)
-- Kiana Karimi (Set 2F)
-- Ramandeep Kaur (Set 2F)
+- Derek Cao (Set 1E) - dcao12@my.bcit.ca
+- Hank Zhao (Set 1F) -  hzhao74@my.bcit.ca
+- Courtney Lum (Set 1E) - clum27@my.bcit.ca
+- Kiana Karimi (Set 2F) - kkarimi7@my.bcit.ca
+- Ramandeep Kaur (Set 2F) - rramandeepkaur11@my.bcit.ca
 
 ## Credits
 
-This project has used AI language models such as ChatGPT and Deepseek for ideas and to generate content for our terms of service and privacy policy as well as assorted animations and SVG graphics.
+This project has used AI language models such as ChatGPT (https://openai.com/) and Deepseek (https://www.deepseek.com/) for ideas and to generate content for our terms of service and privacy policy as well as assorted animations and SVG graphics.
+
+The idea to use Cloudinary was inspired by a video created by Patrick Guichon in the Tech Gems folder.
+
+File upload functionality was implemented with guidance from MDN Web Docs (https://developer.mozilla.org/), using their examples and documentation.
 
 This project makes use of the following open-source libraries and APIs. We gratefully acknowledge their authors and maintainers:
 
 ### Libraries & Frameworks
-- TailwindCSS (MIT License)
-- FastAPI (MIT License)
-- SQLAlchemy (MIT License)
-- Uvicorn (BSD License)
-- SQLite (Public Domain)
-- ESLint (MIT License)
+- <a href="https://tailwindcss.com/">TailwindCSS</a> (MIT License)
+- <a href="https://fastapi.tiangolo.com/">FastAPI</a> (MIT License)
+- <a href="https://www.sqlalchemy.org/">SQLAlchemy</a> (MIT License)
+- <a href="https://www.uvicorn.org/">Uvicorn</a> (BSD License)
+- <a href="https://sqlite.org/">SQLite </a> (Public Domain)
+- <a href="https://eslint.org/">ESLint</a> (MIT License) 
+- <a href="https://fontawesome.com/">Font Awesome</a> (MIT License)
 
 ### APIs & Cloud Services
-- Cloudinary
-- Deepseek API
-- Google Cloud Services
+- <a href="https://cloudinary.com/">Cloudinary</a>
+- <a href="https://deepseeksai.com/api/">Deepseek API</a>
+- <a href="https://cloud.google.com/apis">Google Cloud Services</a>
 
-All services are used in compliance with their terms of services
+### Hosting
+- <a href="https://www.netlify.com/">Netlify</a>
+- <a href="https://render.com/">Render</a>
+
+All services are used in compliance with their terms of services.
