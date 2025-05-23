@@ -52,7 +52,7 @@ async function renderGroupChatItem(group) {
     
     return `
         <div class="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow cursor-pointer relative"
-             onclick="window.location.href='GroupChatPage.html?chatroomId=${groupID}'">
+             onclick="window.location.href='group_chat_page.html?chatroomId=${groupID}'">
             <div class="flex justify-between items-start">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-800">${group.name}</h3>
