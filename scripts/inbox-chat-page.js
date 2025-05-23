@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
         row.className = "flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer";
         row.addEventListener("click", () => {
             localStorage.setItem("activeChat", JSON.stringify(chat));
-            window.location.href = "GroupChatPage.html";
+            window.location.href = "group_chat_page.html";
         });
 
         row.innerHTML = `

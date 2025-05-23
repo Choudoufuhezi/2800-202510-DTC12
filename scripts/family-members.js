@@ -221,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Update click handler to navigate to existing chat
                     createGroupChatBtn.onclick = () => {
-                        window.location.href = `GroupChatPage.html?chatroomId=${chatData.chatroom_id}`;
+                        window.location.href = `group_chat_page.html?chatroomId=${chatData.chatroom_id}`;
                     };
                 } else {
                     // No family chat exists, keep original create behavior
@@ -244,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             const chatData = await response.json();
                             // Redirect to the group chat page
-                            window.location.href = `GroupChatPage.html?chatroomId=${chatData.chatroom_id}`;
+                            window.location.href = `group_chat_page.html?chatroomId=${chatData.chatroom_id}`;
                         } catch (error) {
                             console.error('Error creating group chat:', error);
                             alert('Failed to create group chat. Please try again.');
