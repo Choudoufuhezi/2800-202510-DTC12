@@ -130,51 +130,5 @@ def test_email():
         print("Failed to send test email.")
         return False
 
-def send_missed_messages_email(email: str, missed_messages: list):
-    """
-    Send an email to notify a user about missed messages
-    
-    :param email: The email address of the recipient
-    :param missed_messages: A list of dictionaries containing message details
-    :return: True if email was sent successfully, False otherwise
-    """
-    msg = MIMEMultipart()
-    msg['From'] = settings.smtp_username
-    msg['To'] = email
-    msg['Subject'] = "You have missed messages"
-
-    # Create HTML body with message details
-    messages_html = ""
-    for message in missed_messages:
-        messages_html += f"""
-        <div style="margin-bottom: 20px; padding: 10px; border-left: 3px solid #007bff;">
-            <p><strong>From:</strong> {message.get('sender', 'Unknown')}</p>
-            <p><strong>Time:</strong> {message.get('timestamp', 'Unknown')}</p>
-            <p><strong>Message:</strong> {message.get('content', 'No content')}</p>
-        </div>
-        """
-
-    body = f"""
-    <html>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6;">
-            <h2>You have missed messages</h2>
-            <p>You have {len(missed_messages)} unread message(s):</p>
-            {messages_html}
-        </body>
-    </html>
-    """
-
-    msg.attach(MIMEText(body, 'html'))
-
-    try:
-        with smtplib.SMTP(settings.smtp_server, settings.smtp_port) as server:
-            server.starttls()
-            server.login(settings.smtp_username, settings.smtp_password)
-            server.send_message(msg)
-        return True
-    except Exception as e:
-        print(f"Error sending missed messages email: {e}")
-        return False
-
 if __name__ == "__main__":
     test_email()
