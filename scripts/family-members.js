@@ -285,7 +285,7 @@ async function delete_user(target_user_id, family_id) {
 async function update_admin(target_user_id, family_id) {
     const token = localStorage.getItem("token");
     try {
-        const response = await fetch(`${API_URL}/family/${family_id}/${target_user_id}`, {
+        const response = await fetch(`${API_URL}/family/${family_id}/members/${target_user_id}/admin`, {
             method: "PUT",
             headers: {
                 Authorization: `Bearer ${token}`
