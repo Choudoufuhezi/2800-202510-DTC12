@@ -391,7 +391,7 @@ async def delete_user(
 
     return DeleteResponse(message="Member deleted successfully.")
 
-@router.put("/{family_id}/{member_id}", response_model=dict)
+@router.put("/{family_id}/members/{member_id}/admin", response_model=dict)
 async def admin_user(
     family_id: int,
     member_id: int,
