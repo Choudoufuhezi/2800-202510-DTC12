@@ -260,6 +260,16 @@
         const address = document.getElementById("address_text").value
         const date_of_birth = document.getElementById("dob_date").value
 
+        if (username.length === 0) {
+            username = null;
+        }
+        if (address.length === 0) {
+            address = null;
+        }
+        if (date_of_birth.length === 0) {
+            date_of_birth = null;
+        }
+
         console.log(username, address, date_of_birth)
         await fetch(`${API_URL}/profile/update`, {
             method: "PUT",
