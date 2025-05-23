@@ -98,7 +98,12 @@ Frontend will be available at: http://localhost:3000/login.html
 
 ## File Structure
 ```shell
-├── backend
+├── .gitignore
+├── README.md
+├── .vscode/
+│   └── settings.json
+├── backend/
+│   ├── .env
 │   ├── auth.py
 │   ├── chat_api.py
 │   ├── chat_server.py
@@ -110,65 +115,100 @@ Frontend will be available at: http://localhost:3000/login.html
 │   ├── main.py
 │   ├── memory.py
 │   ├── profile.py
-│   └── translate.py
-├── frontend
-│   ├── components
-│   │   ├── family_icon.html
-│   │   ├── nav_bottom.html
-│   │   ├── nav_top_auth.html
-│   │   └── nav_top_guest.html
-│   ├── scripts
-│   │   ├── add_nav.js
-│   │   ├── announcement.js
-│   │   ├── config.js
-│   │   ├── create_family.js
-│   │   ├── dark_mode.js
-│   │   ├── family_details.js
-│   │   ├── family_photo_upload.js
-│   │   ├── family-groups.js
-│   │   ├── family-members.js
-│   │   ├── geolocation.js
-│   │   ├── groupChatPage.js
-│   │   ├── groupChats.js
-│   │   ├── inbox-chat-page.js
-│   │   ├── invite.js
-│   │   ├── join_family.js
-│   │   ├── join_link.js
-│   │   ├── load_family_icon.js
-│   │   ├── loading.js
-│   │   ├── manage-mambers.js
-│   │   ├── member-cathegories.js
-│   │   ├── photo_page_upload.js
-│   │   ├── recipe_page_upload.js
-│   │   ├── video_page_upload.js
+│   ├── readme.md
+│   ├── requirements.txt
+│   ├── runtime.txt
+│   ├── translate.py
+│   ├── data/
+│   │   └── users.db
+│   ├── models/
+│   │   ├── auth_models.py
+│   │   ├── comment_models.py
+│   │   ├── family_models.py
+│   │   ├── memory_models.py
+│   │   ├── profile_models.py
+│   │   └── __pycache__/
+│   ├── utils/
+│   │   ├── auth_utils.py
+│   │   ├── user_utils.py
+│   │   └── __pycache__/
+│   └── __pycache__/
+├── frontend/
 │   ├── 404.html
 │   ├── about.html
 │   ├── create-family.html
 │   ├── delete-account.html
+│   ├── eslint.config.js
 │   ├── family-groups.html
 │   ├── family-members.html
 │   ├── forgot-password.html
 │   ├── group-chats.html
-│   ├── GroupChatPage.html
+│   ├── group_chat_page.html
 │   ├── inbox_chats.html
 │   ├── inbox_page.html
 │   ├── index.html
+│   ├── inject_family_icon.py
 │   ├── invite.html
 │   ├── join-family.html
 │   ├── login.html
 │   ├── manage-members.html
-│   ├── member-cathegories.html
+│   ├── member-categories.html
 │   ├── photos.html
-│   ├── pivacy.html
+│   ├── privacy.html
 │   ├── profile.html
 │   ├── recipes.html
 │   ├── register.html
 │   ├── reset-password.html
 │   ├── settings.html
+│   ├── stories.html
 │   ├── template.html
+│   ├── terms.html
 │   ├── unsubscribe.html
 │   ├── verify-email.html
-│   └── videos.html
+│   ├── videos.html
+│   ├── _redirects
+│   ├── components/
+│   │   ├── family_icon.html
+│   │   ├── nav_bottom.html
+│   │   ├── nav_top_auth.html
+│   │   └── nav_top_guest.html
+│   ├── images/
+│   │   ├── default-icon.png
+│   │   ├── family.webp
+│   │   ├── family2.webp
+│   │   ├── family3.jpg
+│   │   ├── family4.jpg
+│   │   ├── family_digital_vault.png
+│   │   ├── images.jfif
+│   │   ├── Instagram-Pink-Background-edit-online-1.jpg
+│   │   ├── sample_video.png
+│   │   └── user_image.png
+│   └── scripts/
+│       ├── add_nav.js
+│       ├── announcement.js
+│       ├── config.js
+│       ├── create-family.js
+│       ├── dark_mode.js
+│       ├── family-groups.js
+│       ├── family-members.js
+│       ├── family_details.js
+│       ├── family_photo_upload.js
+│       ├── geolocation.js
+│       ├── group_chats.js
+│       ├── group_chat_page.js
+│       ├── inbox-chat-page.js
+│       ├── invite.js
+│       ├── join-link.js
+│       ├── join_family.js
+│       ├── loading.js
+│       ├── load_family_icon.js
+│       ├── manage-members.js
+│       ├── member-categories.js
+│       ├── photo_page_upload.js
+│       ├── recipe_page_upload.js
+│       ├── tailwind.config.js
+│       ├── verify_JWT.js
+│       └── video_page_upload.js
 ```
 
 ## About Us
