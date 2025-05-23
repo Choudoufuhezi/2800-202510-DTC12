@@ -1,11 +1,7 @@
-import secrets
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
-from passlib.context import CryptContext
 from datetime import datetime, timedelta
 import jwt
-from typing import Optional
 import os
 from sqlalchemy.orm import Session
 from database import get_db, get_user, create_user
@@ -14,47 +10,16 @@ from config import settings, oauth2_scheme  # Import oauth2_scheme from config
 from email_service import generate_verification_token, send_password_reset_email, send_verification_email
 import importlib
 
+from models.auth_models import UserCreate
+from utils.auth_utils import (
+    verify_password,
+    get_password_hash,
+    generate_password_reset_token,
+    get_password_reset_token_expiry,
+    create_access_token
+)
+
 router = APIRouter()
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# Pydantic Models
-class UserBase(BaseModel):
-    email: str
-
-class UserCreate(UserBase):
-    password: str
-
-class UserInDB(UserBase):
-    hashed_password: str
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-# Utility functions
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
-
-def generate_password_reset_token() -> str:
-    return secrets.token_urlsafe(32)
-
-def get_password_reset_token_expiry() -> datetime:
-    return datetime.utcnow() + timedelta(hours=1)
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    token = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
-    return token if isinstance(token, str) else token.decode("utf-8")
 
 async def get_current_user_email(request: Request, token: str = Depends(oauth2_scheme)):
     """
