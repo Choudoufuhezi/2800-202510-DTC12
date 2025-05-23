@@ -16,12 +16,16 @@
 
     <!--Main Content-->
     <div class="min-h-[calc(101vh-64px-64px)] max-w-4xl mx-auto px-10 py-10">
+
+        <!-- Back Button -->
         <div id="back" class="pb-10 text-indigo-600 hover:text-indigo-700 cursor-pointer">
             <button title="back">
                 <i class="fa-solid fa-arrow-left fa-xl mr-3 cursor-pointer"></i>
             </button>
             <span class="text-gray-600 hover:text-black underline select-none">Go back to the categories page</span>
         </div>
+
+        <!-- Page Header and Add More Button -->
         <div class="flex justify-between">
             <div class="flex flex-row items-center space-x-4 mb-8">
                 <i class="fa-solid fa-video fa-2xl text-indigo-600"></i>
@@ -33,14 +37,14 @@
             </div>
         </div>
 
-        <!--No photos message -->
+        <!--No Video Message -->
         <div id="videoEmptyMessage" class="flex flex-col space-y-6 items-center justify-center text-center">
             <h3 class="text-lg py-5">
                 Start by uploading your very first video to share with your loved ones.
                 Don't forget to include a description to give some background or share a special story
             </h3>
 
-            <!--Upload photos button-->
+            <!--Upload Video button-->
             <div id="uploadButton"
                 class="cursor-pointer max-w-3xl w-full inline-flex items-center justify-center gap-2 bg-indigo-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-indigo-700 transition">
                 <p>Upload Video</p>
@@ -52,9 +56,8 @@
             class="hidden">
 
         <div id="videoGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <!-- Images added here -->
+            <!-- Videos added here -->
         </div>
-
     </div>
 
     <!--Bottom Nav-->
