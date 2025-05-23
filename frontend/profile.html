@@ -253,28 +253,68 @@
         dateInput.focus();
     });
 
-    document.getElementById("save").addEventListener("click", async function () {
-        const token = localStorage.getItem("token");
+    // document.getElementById("save").addEventListener("click", async function () {
+    //     const token = localStorage.getItem("token");
 
-        const username = document.getElementById("username_text").value
-        const address = document.getElementById("address_text").value
-        const date_of_birth = document.getElementById("dob_date").value
+    //     const username = document.getElementById("username_text").value
+    //     const address = document.getElementById("address_text").value
+    //     const date_of_birth = document.getElementById("dob_date").value
 
-        console.log(username, address, date_of_birth)
-        await fetch(`${API_URL}/profile/update`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({ username, address, date_of_birth })
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data)
-                alert("Profile updated successfully!");
-            })
-    })
+    //     console.log(username, address, date_of_birth)
+    //     await fetch(`${API_URL}/profile/update`, {
+    //         method: "PUT",
+    //         headers: {
+    //             "Content-Type": "application/json",
+    //             "Authorization": `Bearer ${token}`
+    //         },
+    //         body: JSON.stringify({ username, address, date_of_birth })
+    //     })
+    //         .then(response => response.json())
+    //         .then(data => {
+    //             console.log(data)
+    //             alert("Profile updated successfully!");
+    //         })
+    // })
+
+    document.getElementById("save").addEventListener("click", async function (e) {
+            e.preventDefault();
+
+            const token = localStorage.getItem("token");
+            const username = document.getElementById("username_text").value.trim();
+            const address = document.getElementById("address_text").value.trim();
+            const dobInput = document.getElementById("dob_date").value;
+
+            // Basic validation: if date is empty or invalid, set null
+            let dob = null;
+            if (dobInput) {
+                const parsedDate = new Date(dobInput);
+                if (!isNaN(parsedDate.getTime())) {
+                    dob = dobInput;
+                }
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/profile/update`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        username,
+                        address,
+                        date_of_birth: dob // Will be null or valid date string
+                    })
+                });
+
+                if (!response.ok) throw new Error("Failed to update profile");
+
+                alert("Profile saved successfully!");
+            } catch (error) {
+                console.error(error);
+                alert("Failed to save profile. Please try again.");
+            }
+        });
 
     document.addEventListener("DOMContentLoaded", async function () {
         const token = localStorage.getItem('token');
