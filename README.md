@@ -1,7 +1,8 @@
 # Digital Family Vault 
 
 ## Project Description
-....
+
+Due to families losing memories, traditions, and struggling to stay connected, we are creating a 'digital heirloom' vault, that is a secure, organized platform to preserve memories in one central place, tightening the bond between generations.
 
 ## Technologies Used
 - Frontend:
@@ -68,6 +69,32 @@ python -m http.server 3000
 Backend API will be available at: http://localhost:8000
 Frontend will be available at: http://localhost:3000/login.html
 
+
+## Features
+- **Family Management**
+  - Create and join families through button in family-groups.html
+  - Invite family members via unique invite codes after a family has been created
+
+- **Memory Preservation**
+  - Upload and organize family memories by clicking on a family member, selecting the type of memory, and uploading it through a form
+  - Location tags are automatically applied to memories
+  - Add descriptions and tags to memories by clicking on a memory, the blue edit button, and editing the description text
+  - Leave a comment on a memory by navigating to it, typing a comment in the comment box, and sending it
+  - Delete a memory by navigating to it as a family admin or memory uploader and clicking on the red trash symbol in the top left corner
+
+- **Real Time Chat**
+  - Family group chat functionality
+     - Create a new groupchat by creating a new family and clicking the "Create family groupchat" option
+     - Groupchat can be accessed through the family details page or the groupchats page which lists all existing groupchats
+  - Unread markers on the groupchat list page
+  - Multi-language support with AI translation
+
+- **User Features**
+  - Google OAuth integration
+  - Customizable user profiles
+  - Profile picture and background customization
+  - Email verification system
+  - Password reset functionality
 
 ## File Structure
 ```shell
