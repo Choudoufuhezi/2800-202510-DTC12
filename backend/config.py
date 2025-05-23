@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     smtp_port: int
     smtp_username: str
     smtp_password: str
-    
+
     cloudinary_cloud_name: str
     cloudinary_cloud_key: str
     cloudinary_cloud_secret: str
