@@ -5,29 +5,50 @@
 
 ## Technologies Used
 - Frontend:
-.
-.
-.
+  - HTML5
+  - JavaScript
+  - TailwindCSS
+  - Font Awesome Icons
+  - WebSocket (Chat)
+  - Geolocation API
+  - File Upload API
+
 - Backend:
-.
-.
-.
-.
+  - Python 3.11.12
+  - FastAPI
+  - SQLAlchemy
+  - SQLite
+  - JWT 
+  - OAuth2 
+  - Cloudinary
+  - OpenAI/DeepSeek
+  - WebSocket
+  - SMTP
+  - Uvicorn
 
 ## API & Libraries:
-.
-.
-.
+- FastAPI
+- SQLAlchemy
+- Pydantic
+- Passlib
+- PyJWT
+- Authlib
+- Cloudinary
+- OpenAI (Deepseek API)
+- Python-socketio
+- Python-multipart
+- Requests
+- Bcrypt
 
 ## Tools
-- Visual Studio Code (recommended IDE)
-- Git + GitHub (version control)
-- mongoDB (database)
-- Trello (Project management)
+- Visual Studio Code 
+- Git + GitHub 
+- Trello 
+- ESLint
 
-## File Structure
-...
-
+## Deploy
+- Render (Backend)
+- Netlify (Frontend)
 
 ## Installation & Setup
 
@@ -56,7 +77,7 @@ python -m http.server 3000
 Backend API will be available at: http://localhost:8000
 Frontend will be available at: http://localhost:3000/login.html
 
-## Files Structure
+## File Structure
 ```shell
 ├── backend
 │   ├── auth.py
@@ -65,42 +86,42 @@ Frontend will be available at: http://localhost:3000/login.html
 │   ├── comments.py
 │   ├── config.py
 │   ├── database.py
-│   ├── email_service.py
-│   ├── family_management.py
-│   ├── main.py
-│   ├── memory.py
-│   ├── profile.py
+│   ├── email_service.py
+│   ├── family_management.py
+│   ├── main.py
+│   ├── memory.py
+│   ├── profile.py
 │   └── translate.py
 ├── components
-│   ├── family_icon.html
-│   ├── nav_bottom.html
-│   ├── nav_top_auth.html
-│   └── nav_top_guest.html
+│   ├── family_icon.html
+│   ├── nav_bottom.html
+│   ├── nav_top_auth.html
+│   └── nav_top_guest.html
 ├── scripts
-│   ├── add_nav.js
-│   ├── announcement.js
-│   ├── config.js
-│   ├── create_family.js
-│   ├── dark_mode.js
-│   ├── family_details.js
-│   ├── family_photo_upload.js
-│   ├── family-groups.js
-│   ├── family-members.js
-│   ├── geolocation.js
-│   ├── groupChatPage.js
-│   ├── groupChats.js
-│   ├── inbox-chat-page.js
-│   ├── invite.js
-│   ├── join_family.js
-│   ├── join_link.js
-│   ├── load_family_icon.js
-│   ├── manage-mambers.js
-│   ├── member-cathegories.js
-│   ├── nav.js
-│   ├── photo_page_upload.js
-│   ├── recipe_page_upload.js
-│   ├── stories_page_upload.js
-│   ├── video_page_upload.js
+│   ├── add_nav.js
+│   ├── announcement.js
+│   ├── config.js
+│   ├── create_family.js
+│   ├── dark_mode.js
+│   ├── family_details.js
+│   ├── family_photo_upload.js
+│   ├── family-groups.js
+│   ├── family-members.js
+│   ├── geolocation.js
+│   ├── groupChatPage.js
+│   ├── groupChats.js
+│   ├── inbox-chat-page.js
+│   ├── invite.js
+│   ├── join_family.js
+│   ├── join_link.js
+│   ├── load_family_icon.js
+│   ├── manage-mambers.js
+│   ├── member-cathegories.js
+│   ├── nav.js
+│   ├── photo_page_upload.js
+│   ├── recipe_page_upload.js
+│   ├── stories_page_upload.js
+│   ├── video_page_upload.js
 ├── 404.html
 ├── about.html
 ├── create-family.html
