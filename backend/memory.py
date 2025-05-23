@@ -4,13 +4,9 @@ from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-
+from config import settings
 from database import Registered, User, Memory, create_memory, delete_memory, get_db
 from family_management import get_current_user
-
-# Set your Cloudinary credentials
-from dotenv import load_dotenv
-load_dotenv()
 
 # Import the Cloudinary libraries
 import cloudinary
@@ -18,9 +14,9 @@ from cloudinary.uploader import destroy
 
 # Set configuration parameter
 cloudinary.config(
-    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.getenv("CLOUDINARY_API_KEY"),
-    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    cloud_name=settings.cloudinary_cloud_name,
+    api_key=settings.cloudinary_cloud_key,
+    api_secret=settings.cloudinary_cloud_secret,
     secure=True  
 )
 
@@ -140,9 +136,9 @@ async def delete_single_memory_endpoint(
 
         try:
             cloudinary.config(
-                cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
-                api_key=os.getenv("CLOUDINARY_API_KEY"),
-                api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+                cloud_name=settings.cloudinary_cloud_name,
+                api_key=settings.cloudinary_cloud_key,
+                api_secret=settings.cloudinary_cloud_secret,
                 secure=True
             )
             print("Cloudinary config after being manually set:", cloudinary.config().api_key)
