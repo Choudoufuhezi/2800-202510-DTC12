@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Messages</title>
+
+    <!-- Tailwind and Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
+
+    <!-- Page-specific Script -->
+    <script defer src="scripts/inbox-chat-page.js"></script>
+</head>
+
+<body class="bg-[#f5f3eb98]">
+    <!-- Top Nav -->
+    <nav id="topNav" class="sticky top-0 z-50"></nav>
+
+    <div id="familyIconContainer"></div>
+
+    <!-- Main Content -->
+    <div class="w-screen h-[calc(100vh-64px-64px)]">
+        <div class="flex flex-col shadow-lg w-full h-full rounded-none overflow-hidden">
+    
+    
+            <!-- Announcement Button -->
+            <div class="w-full flex justify-end px-4 pt-4">
+                <button id="announcement-btn"
+                    class="bg-blue-500 text-white px-4 py-2 rounded-full text-sm shadow hover:bg-blue-600">
+                    🔔 Announcements
+                </button>
+            </div>
+    
+            <!-- Chat List (Scrollable) -->
+            <div id="chat-list" class="grow overflow-y-auto divide-y divide-gray-200 px-4 pb-4">
+                <!-- JavaScript will insert chat rows here -->
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- Announcement Modal -->
+    <div id="announcement-modal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white w-full max-w-sm p-6 rounded-lg shadow-lg relative">
+            <button id="close-announcement" class="absolute top-2 right-2 text-gray-500 text-xl">&times;</button>
+            <h3 class="text-xl font-semibold mb-3 text-blue-700">🔔 Updates</h3>
+
+            <button id="toggle-announcement-form" class="mb-3 text-sm text-blue-600 hover:underline">
+                + New Announcement
+            </button>
+            
+            <form id="announcement-form" class="hidden mb-4 space-y-2">
+                <input type="text" id="announcement-title" placeholder="Title"
+                    class="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring" required />
+                <textarea id="announcement-body" placeholder="Write your message..."
+                    class="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring" rows="3" required></textarea>
+                <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm">Post
+                    Announcement</button>
+            </form>
+
+            
+            <div id="announcement-content" class="max-h-80 overflow-y-auto space-y-2">
+                <!-- JavaScript will insert announcements here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav id="bottomNav" class="sticky bottom-0"></nav>
+
+    <!-- Scripts -->
+    <script src="../scripts/add_nav.js"></script>
+    <script src="../scripts/load_family_icon.js"></script>
+</body>
+
+</html>

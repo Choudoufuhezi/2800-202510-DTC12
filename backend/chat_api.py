@@ -3,15 +3,13 @@ from sqlalchemy.orm import Session
 from typing import List
 from database import Message, Registered, UserChatRoom, create_chatroom, create_userchatroom, get_db, User, ChatRoom
 from datetime import datetime
-from family_management import get_current_user
+from utils.user_utils import get_current_user
 
 router = APIRouter()
 
 def verify_chatroom_membership(db: Session, user_id: int, chatroom_id: int):
     """
     Verify if user is a member of the specified chatroom
-    
-    TODO: authenticate using token instead of using raw user id
     """
     membership = db.query(UserChatRoom).filter(
         UserChatRoom.user_id == user_id,
@@ -52,8 +50,30 @@ async def get_messages(
     # Verify membership
     verify_chatroom_membership(db, current_user.id, chatroom_id)
     
-    # Get and return messages
-    return get_chatroom_messages(db, chatroom_id)
+    # Get all messages
+    messages = db.query(Message, User).join(
+        User,
+        Message.user_id == User.id
+    ).filter(
+        Message.chatroom_id == chatroom_id
+    ).order_by(Message.time_stamp.asc()).all()
+    
+    # Get user's last read message
+    user_chatroom = db.query(UserChatRoom).filter(
+        UserChatRoom.user_id == current_user.id,
+        UserChatRoom.chatroom_id == chatroom_id
+    ).first()
+    last_read_id = user_chatroom.last_read_message_id if user_chatroom else None
+    
+    return [{
+        "id": msg.Message.id,
+        "sender_id": msg.Message.user_id,
+        "sender_name": msg.User.username or msg.User.email,
+        "content": msg.Message.message_text,
+        "timestamp": msg.Message.time_stamp.isoformat(),
+        "chatroom_id": msg.Message.chatroom_id,
+        "is_unread": last_read_id is None or msg.Message.id > last_read_id
+    } for msg in messages]
 
 @router.get("/users/chatrooms")
 async def get_user_chatrooms(
@@ -70,11 +90,30 @@ async def get_user_chatrooms(
         UserChatRoom.user_id == current_user.id
     ).all()
     
-    return [{
-        "chatroom_id": chatroom.ChatRoom.id,
-        "name": chatroom.ChatRoom.name,
-        "created_date": chatroom.ChatRoom.created_date.isoformat() if chatroom.ChatRoom.created_date else None
-    } for chatroom in chatrooms]
+    result = []
+    for chatroom in chatrooms:
+        # Get the last message
+        last_message = db.query(Message).filter(
+            Message.chatroom_id == chatroom.ChatRoom.id
+        ).order_by(Message.time_stamp.desc()).first()
+        
+        # Get unread count
+        unread_count = 0
+        if last_message and chatroom.UserChatRoom.last_read_message_id:
+            unread_count = db.query(Message).filter(
+                Message.chatroom_id == chatroom.ChatRoom.id,
+                Message.id > chatroom.UserChatRoom.last_read_message_id
+            ).count()
+        
+        result.append({
+            "chatroom_id": chatroom.ChatRoom.id,
+            "name": chatroom.ChatRoom.name,
+            "created_date": chatroom.ChatRoom.created_date.isoformat() if chatroom.ChatRoom.created_date else None,
+            "last_message": last_message.message_text if last_message else None,
+            "unread_count": unread_count
+        })
+    
+    return result
     
 @router.get("/chatrooms/{chatroom_id}/info")
 async def get_chatroom_info(

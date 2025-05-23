@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Categories</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
+</head>
+
+<body class="bg-[#f5f3eb98] text-gray-800">
+    <!-- Top Navigation -->
+    <nav id="topNav" class="sticky top-0 z-50"></nav>
+    <div id="familyIconContainer"></div>
+
+    <main class="max-w-3xl mx-auto px-4 py-10 min-h-[calc(101vh-64px-64px)]">
+        <!-- Loading Spinner -->
+        <div id="loading" class="flex justify-center mb-6">
+            <svg class="animate-spin h-5 w-5 text-sky-600" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8z"></path>
+            </svg>
+        </div>
+
+        <!-- Heading -->
+        <h1 id="family-name" class="justify-left text-2xl font-semibold my-auto text-gray-900 mb-8">Loading...</h1>
+
+        <!-- Error Message -->
+        <p id="error-message" class="text-red-500 mt-4 hidden text-center"></p>
+
+        <!-- Group Cards Section -->
+        <section class="space-y-5">
+            <p id="photo-section"></p>
+
+            <p id="videos-section"></p>
+
+            <p id="recipes-section"></p>
+
+        </section>
+
+        <!-- Back to Members Button -->
+        <section class="mt-10">
+            <a id="back-to-members" href="family-members.html?familyId="
+                class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-blue-700 transition">
+                <i class="fas fa-arrow-left"></i> Back to Members
+            </a>
+        </section>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav id="bottomNav" class="sticky bottom-0"></nav>
+
+    <!-- Inject Nav -->
+    <script src="../scripts/add_nav.js"></script>
+    <script src="../scripts/dark_mode.js"></script>
+    <script src="../scripts/load_family_icon.js"></script>
+    <script type="module" src="../scripts/member-categories.js"></script>
+</body>
+
+</html>

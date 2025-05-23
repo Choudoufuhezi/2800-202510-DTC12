@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Videos</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://kit.fontawesome.com/dd6ea4ec65.js" crossorigin="anonymous"></script>
+</head>
+
+<body class="bg-[#f5f3eb98]">
+    <!--Top Nav-->
+    <nav id="topNav" class="sticky top-0 z-50"></nav>
+
+    <!--Main Content-->
+    <div class="min-h-[calc(101vh-64px-64px)] max-w-4xl mx-auto px-10 py-10">
+
+        <!-- Back Button -->
+        <div id="back" class="pb-10 text-indigo-600 hover:text-indigo-700 cursor-pointer">
+            <button title="back">
+                <i class="fa-solid fa-arrow-left fa-xl mr-3 cursor-pointer"></i>
+            </button>
+            <span class="text-gray-600 hover:text-black underline select-none">Go back to the categories page</span>
+        </div>
+
+        <!-- Page Header and Add More Button -->
+        <div class="flex justify-between">
+            <div class="flex flex-row items-center space-x-4 mb-8">
+                <i class="fa-solid fa-video fa-2xl text-indigo-600"></i>
+                <h1 class="text-2xl font-semibold my-auto">Videos</h1>
+            </div>
+            <div id="addMoreVideosButton"
+                class="hidden text-indigo-600 hover:text-indigo-700 transition cursor-pointer">
+                <i class="fa-solid fa-square-plus fa-2xl "></i>
+            </div>
+        </div>
+
+        <!--No Video Message -->
+        <div id="videoEmptyMessage" class="flex flex-col space-y-6 items-center justify-center text-center">
+            <h3 class="text-lg py-5">
+                Start by uploading your very first video to share with your loved ones.
+                Don't forget to include a description to give some background or share a special story
+            </h3>
+
+            <!--Upload Video button-->
+            <div id="uploadButton"
+                class="cursor-pointer max-w-3xl w-full inline-flex items-center justify-center gap-2 bg-indigo-600 text-white font-medium py-3 px-6 rounded-xl shadow hover:bg-indigo-700 transition">
+                <p>Upload Video</p>
+            </div>
+        </div>
+
+        <!--Upload file functionality-->
+        <input id="fileInput" type="file" accept=".mp4, .avi, .mov, .mkv, .wmv, .flv, .webm, .mpeg, .mpg, .3gp, .m4v"
+            class="hidden">
+
+        <div id="videoGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+            <!-- Videos added here -->
+        </div>
+    </div>
+
+    <!--Bottom Nav-->
+    <nav id="bottomNav" class="sticky bottom-0"></nav>
+
+    <!--JavaScript-->
+    <script src="../scripts/add_nav.js"></script>
+    <script type="module" src="../scripts/video_page_upload.js"></script>
+    <script type="module" src="../scripts/load_family_icon.js"></script>
+</body>
+
+</html>

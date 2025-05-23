@@ -1,40 +1,25 @@
-from fastapi import APIRouter, Depends, HTTPException, status, FastAPI, Body
-from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
-
-from database import Registered, User, create_memory, delete_memory, get_db
-from family_management import get_current_user
+from models.profile_models import UserProfileResponse, UserProfileUpdate, DeleteImageRequest
+from database import User, get_db
+from utils.user_utils import get_current_user
 from cloudinary.uploader import destroy
 from cloudinary.exceptions import Error as CloudinaryError
 
 router = APIRouter(prefix="/profile")
 
-class UserProfileResponse(BaseModel):
-    username: Optional[str] = None
-    date_of_birth: Optional[datetime] = None
-    address: Optional[str] = None
-    profile_picture: Optional[str] = None
-    profile_background_picture: Optional[str] = None
-    cloudinary_profile_pictur_id: Optional[str] = None
-    cloudinary_profile_background_picture_id: Optional[str] = None
-
-
-class UserProfileUpdate(BaseModel):
-    username: Optional[str] = None
-    date_of_birth: Optional[datetime] = None
-    address: Optional[str] = None
-    profile_picture: Optional[str] = None
-    profile_background_picture: Optional[str] = None
-    cloudinary_profile_picture_id: Optional[str] = None
-    cloudinary_profile_background_picture_id: Optional[str] = None
-
-class DeleteImageRequest(BaseModel):
-    type: str  
-
 @router.get("/current", response_model=UserProfileResponse)
 def get_my_profile(current_user: User = Depends(get_current_user)):
+    """
+    Get the current user's profile
+    
+    Usage:
+    curl -X GET http://localhost:8000/profile/current -H "Authorization: Bearer <token>" -H "Content-Type: application/json"
+    
+    Preconditions:
+    User must be logged in
+    User must have a profile
+    """
     return UserProfileResponse(
         username=current_user.username,
         date_of_birth=current_user.date_of_birth,
@@ -47,6 +32,21 @@ def get_my_profile(current_user: User = Depends(get_current_user)):
 
 @router.delete("/delete")
 def delete_my_profile(delete_request: DeleteImageRequest=Body(...), current_user: User = Depends(get_current_user)):
+    """
+    Delete a profile image
+
+    Usage:
+    curl -X DELETE http://localhost:8000/profile/delete -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"type": "profile_picture"}'
+    curl -X DELETE http://localhost:8000/profile/delete -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"type": "profile_background_picture"}'
+    
+    Raises:
+    HTTPException: 404 if the image is not found
+    HTTPException: 500 if the image deletion fails
+
+    Preconditions:
+    User must be logged in
+    User must have a profile
+    """
     image_type = delete_request.type
     if image_type == "profile_picture":
         if current_user.profile_picture is not None:
@@ -75,9 +75,23 @@ def delete_my_profile(delete_request: DeleteImageRequest=Body(...), current_user
 
 @router.put("/update", response_model=UserProfileResponse)
 def update_my_profile(updates: UserProfileUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Update the current user's profile
+    
+    Usage:
+    curl -X PUT http://localhost:8000/profile/update -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"username": "new_username", "date_of_birth": "2000-01-01", "address": "123 Main St", "profile_picture": "https://example.com/profile.jpg", "cloudinary_profile_picture_id": "1234567890"}'
+    
+    Raises:
+        HTTPException: 400 if the request is invalid
+        HTTPException: 500 if the profile update fails
+    
+    Preconditions:
+    User must be logged in
+    User must have a profile
+    """
     if updates.username is not None:
         current_user.username = updates.username
-    if updates.date_of_birth:
+    if updates.date_of_birth is not None:
         current_user.date_of_birth = updates.date_of_birth
     if updates.address is not None:
         current_user.address = updates.address
