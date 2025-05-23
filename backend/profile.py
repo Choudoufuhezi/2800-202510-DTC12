@@ -91,7 +91,7 @@ def update_my_profile(updates: UserProfileUpdate, db: Session = Depends(get_db),
     """
     if updates.username is not None:
         current_user.username = updates.username
-    if updates.date_of_birth:
+    if updates.date_of_birth is not None:
         current_user.date_of_birth = updates.date_of_birth
     if updates.address is not None:
         current_user.address = updates.address
