@@ -45,7 +45,8 @@ Due to families losing memories, traditions, and struggling to stay connected, w
 ## Installation & Setup
 
 ### 1. Prerequisites
-Make sure you have the following installed:
+1. Create a file called .env in root and add the contents from passwords.txt.
+2. Make sure you have the following installed:
 - Python 3.7+
 
 ### 2. Setup Instructions
