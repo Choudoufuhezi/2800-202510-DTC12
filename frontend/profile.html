@@ -256,9 +256,9 @@
     document.getElementById("save").addEventListener("click", async function () {
         const token = localStorage.getItem("token");
 
-        const username = document.getElementById("username_text").value
-        const address = document.getElementById("address_text").value
-        const date_of_birth = document.getElementById("dob_date").value
+        let username = document.getElementById("username_text").value
+        let address = document.getElementById("address_text").value
+        let date_of_birth = document.getElementById("dob_date").value
 
         if (username.length === 0) {
             username = null;
@@ -301,7 +301,14 @@
 
         document.getElementById("username_text").value = data.username;
         document.getElementById("address_text").value = data.address;
-        document.getElementById("dob_date").value = data.date_of_birth.slice(0, 10);
+
+        console.log(data.date_of_birth)
+
+        if (data.date_of_birth === null) {
+            document.getElementById("dob_date").value = "";
+        } else {
+            document.getElementById("dob_date").value = data.date_of_birth.slice(0, 10);
+        }
 
         const user_profile_image = document.getElementById("userImage");
         console.log(data.profile_picture)
