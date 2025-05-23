@@ -116,6 +116,7 @@ async def delete_single_memory_endpoint(
     Delete a memory from Cloudinary and then from the database
     """
     try:
+        print("Cloudinary config before being manually set:", cloudinary.config().api_key)
         db_memory = db.query(Memory).filter(Memory.id == memory_id).first()
 
         if not db_memory:
@@ -138,6 +139,13 @@ async def delete_single_memory_endpoint(
             )
 
         try:
+            cloudinary.config(
+                cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+                api_key=os.getenv("CLOUDINARY_API_KEY"),
+                api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+                secure=True
+            )
+            print("Cloudinary config after being manually set:", cloudinary.config().api_key)
             destroy(
                 public_id=db_memory.cloudinary_id,
                 resource_type=db_memory.resource_type or "image"
