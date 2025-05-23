@@ -1,13 +1,12 @@
 import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel
+from typing import List
 from sqlalchemy.orm import Session
 from config import settings
 from database import Registered, User, Memory, create_memory, delete_memory, get_db
 from utils.user_utils import get_current_user
-
+from models.memory_models import MemoryCreateRequest, MemoryResponse, MemoryUpdateRequest, MemoryDeleteResponse
 # Import the Cloudinary libraries
 import cloudinary
 from cloudinary.uploader import destroy
@@ -22,42 +21,6 @@ cloudinary.config(
 
 router = APIRouter(prefix="/memories")
 
-
-# ---------------------------
-# Models
-# ---------------------------
-class MemoryCreateRequest(BaseModel):
-    location: dict
-    tags: Optional[str] = None 
-    description: Optional[str] = None
-    file_url: str
-    cloudinary_id: str
-    date_for_notification: Optional[datetime] = None
-    family_id: int
-
-class MemoryResponse(BaseModel):
-    id: int
-    location: dict
-    tags: str
-    description: str
-    file_url: str
-    cloudinary_id: str
-    date_for_notification: datetime
-    user_id: int
-    family_id: int
-    resource_type: Optional[str] = "image"
-
-class MemoryUpdateRequest(BaseModel):
-    tags: Optional[str] = None
-    description: Optional[str] = None
-
-class MemoryDeleteResponse(BaseModel):
-    message: str
-
-
-# ---------------------------
-# Endpoints
-# ---------------------------
 @router.post("/", response_model=MemoryResponse)
 async def create_memory_endpoint(
     memory_data: MemoryCreateRequest,
