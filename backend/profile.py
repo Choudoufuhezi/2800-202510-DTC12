@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from models.profile_models import UserProfileResponse, UserProfileUpdate, DeleteImageRequest
 from database import User, get_db
-from family_management import get_current_user
+from utils.user_utils import get_current_user
 from cloudinary.uploader import destroy
 from cloudinary.exceptions import Error as CloudinaryError
 

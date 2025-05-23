@@ -4,7 +4,7 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from database import Memory, User, Comment, Registered, create_comment, get_db
-from family_management import get_current_user
+from utils.user_utils import get_current_user
 
 router = APIRouter(prefix="/comments")
 

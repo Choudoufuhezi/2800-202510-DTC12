@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from config import settings
 from database import Registered, User, Memory, create_memory, delete_memory, get_db
-from family_management import get_current_user
+from utils.user_utils import get_current_user
 
 # Import the Cloudinary libraries
 import cloudinary
