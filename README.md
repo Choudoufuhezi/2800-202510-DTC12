@@ -111,65 +111,64 @@ Frontend will be available at: http://localhost:3000/login.html
 │   ├── memory.py
 │   ├── profile.py
 │   └── translate.py
-├── components
-│   ├── family_icon.html
-│   ├── nav_bottom.html
-│   ├── nav_top_auth.html
-│   └── nav_top_guest.html
-├── scripts
-│   ├── add_nav.js
-│   ├── announcement.js
-│   ├── config.js
-│   ├── create_family.js
-│   ├── dark_mode.js
-│   ├── family_details.js
-│   ├── family_photo_upload.js
-│   ├── family-groups.js
-│   ├── family-members.js
-│   ├── geolocation.js
-│   ├── groupChatPage.js
-│   ├── groupChats.js
-│   ├── inbox-chat-page.js
-│   ├── invite.js
-│   ├── join_family.js
-│   ├── join_link.js
-│   ├── load_family_icon.js
-│   ├── manage-mambers.js
-│   ├── member-cathegories.js
-│   ├── nav.js
-│   ├── photo_page_upload.js
-│   ├── recipe_page_upload.js
-│   ├── stories_page_upload.js
-│   ├── video_page_upload.js
-├── 404.html
-├── about.html
-├── create-family.html
-├── delete-account.html
-├── family-groups.html
-├── family-members.html
-├── forgot-password.html
-├── group-chats.html
-├── GroupChatPage.html
-├── inbox_chats.html
-├── inbox_page.html
-├── index.html
-├── invite.html
-├── join-family.html
-├── login.html
-├── manage-members.html
-├── member-cathegories.html
-├── photos.html
-├── pivacy.html
-├── profile.html
-├── recipes.html
-├── register.html
-├── reset-password.html
-├── settings.html
-├── stories.html
-├── template.html
-├── unsubscribe.html
-├── verify-email.html
-└── videos.html
+├── frontend
+│   ├── components
+│   │   ├── family_icon.html
+│   │   ├── nav_bottom.html
+│   │   ├── nav_top_auth.html
+│   │   └── nav_top_guest.html
+│   ├── scripts
+│   │   ├── add_nav.js
+│   │   ├── announcement.js
+│   │   ├── config.js
+│   │   ├── create_family.js
+│   │   ├── dark_mode.js
+│   │   ├── family_details.js
+│   │   ├── family_photo_upload.js
+│   │   ├── family-groups.js
+│   │   ├── family-members.js
+│   │   ├── geolocation.js
+│   │   ├── groupChatPage.js
+│   │   ├── groupChats.js
+│   │   ├── inbox-chat-page.js
+│   │   ├── invite.js
+│   │   ├── join_family.js
+│   │   ├── join_link.js
+│   │   ├── load_family_icon.js
+│   │   ├── loading.js
+│   │   ├── manage-mambers.js
+│   │   ├── member-cathegories.js
+│   │   ├── photo_page_upload.js
+│   │   ├── recipe_page_upload.js
+│   │   ├── video_page_upload.js
+│   ├── 404.html
+│   ├── about.html
+│   ├── create-family.html
+│   ├── delete-account.html
+│   ├── family-groups.html
+│   ├── family-members.html
+│   ├── forgot-password.html
+│   ├── group-chats.html
+│   ├── GroupChatPage.html
+│   ├── inbox_chats.html
+│   ├── inbox_page.html
+│   ├── index.html
+│   ├── invite.html
+│   ├── join-family.html
+│   ├── login.html
+│   ├── manage-members.html
+│   ├── member-cathegories.html
+│   ├── photos.html
+│   ├── pivacy.html
+│   ├── profile.html
+│   ├── recipes.html
+│   ├── register.html
+│   ├── reset-password.html
+│   ├── settings.html
+│   ├── template.html
+│   ├── unsubscribe.html
+│   ├── verify-email.html
+│   └── videos.html
 ```
 
 ## About Us
