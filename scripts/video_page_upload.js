@@ -1,5 +1,6 @@
 import { getLocation } from './geolocation.js';
 import { API_URL, BASE_URL } from './config.js';
+import { showBasicUploadingModal, createSpinner } from './loading.js';
 
 const removeVideoEmptyMessage = document.getElementById("videoEmptyMessage");
 const uploadButton = document.getElementById("uploadButton");
@@ -225,19 +226,6 @@ async function updateMemory(memoryId, { tags, description }) {
         console.error("Error updating memory:", error);
         return null;
     }
-}
-
-function createSpinner() {
-    const spinner = document.createElement('div');
-    spinner.className = "flex items-center justify-center py-12";
-    spinner.innerHTML = `
-      <svg class="animate-spin h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-      </svg>
-      <span class="ml-4 text-gray-500">Loading...</span>
-    `;
-    return spinner;
 }
 
 async function modal(video, memory) {
@@ -618,38 +606,4 @@ async function getFamilyMembers() {
         }
         throw error;
     }
-}
-
-function showBasicUploadingModal() {
-    const modal = document.createElement('div');
-    modal.className = "fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50";
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.remove();
-    });
-
-    const modalContent = document.createElement('div');
-    modalContent.className = "modal-content bg-white pt-2 pb-6 px-6 rounded shadow-lg max-w-md w-full flex flex-col items-center"; // Fixed unterminated string
-    modal.appendChild(modalContent);
-
-    const spinner = document.createElement('div');
-    spinner.className = "animate-spin h-8 w-8 text-gray-400";
-    spinner.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-      </svg>
-    `;
-
-    const message = document.createElement('span');
-    message.className = "ml-4 text-gray-500";
-    message.innerText = "Uploading video, please wait...";
-
-    modalContent.appendChild(spinner);
-    modalContent.appendChild(message);
-
-    document.body.appendChild(modal);
-
-    return () => {
-        modal.remove();
-    };
 }
