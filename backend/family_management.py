@@ -1,68 +1,33 @@
 import random
-import secrets
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime, timedelta
-from typing import Optional
-import os
 from sqlalchemy.orm import Session
-from auth import get_current_user_email
+from utils.user_utils import get_current_user
 from database import FamilyInvite, delete_family, get_db, Family, User, Registered
 from config import settings
 from typing import List
-from database import create_message, Message  # Importing the create_message function from database module
+from database import create_message, Message
+from models.family_models import (
+    MemberInfo,
+    FamilyCreateRequest,
+    FamilyUpdateRequest,
+    CreateInviteRequest,
+    JoinFamilyRequest,
+    SendMessageRequest,
+    MemberUpdateRequest,
+    FamilyInfoResponse,
+    InviteResponse,
+    FamilyMembersResponse,
+    MessageResponse,
+    MemberUpdateResponse,
+    DeleteResponse
+)
 
 router = APIRouter()
-
-async def get_current_user(db: Session = Depends(get_db), email: str = Depends(get_current_user_email)):  
-    db_user = db.query(User).filter(User.email == email).first() #first because there's only one occurence (ideally)
-    if not db_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-    return db_user
-
-class MemberInfo(BaseModel):
-    user_id: int # user_id of the member
-    email: str
-    is_admin: bool
-    custom_name: Optional[str] = None
-    relationship: Optional[str] = None
-
-class FamilyCreate(BaseModel):
-    family_name: str
-    family_banner: Optional[str] = None  # Optional field for family banner
-
-class FamilyInfo(BaseModel):
-    id: int
-    admin: int  # user_id of the admin
-    members: List[MemberInfo]
-    family_name: str  # Add family_name
-
-class FamilyUpdate(BaseModel):  # Added for updating family name
-    family_name: Optional[str] = None
-    family_banner: Optional[str] = None
     
-class CreateInviteRequest(BaseModel):
-    family_id: int
-    expires_in_hours: Optional[int] = 24  # Default 24 hour expiration
-    max_uses: Optional[int] = 1  # Default single use
-
-class InviteResponse(BaseModel):
-    code: str
-    expires_at: datetime
-    max_uses: int
-    family_id: int
-    invite_link: str
-    uses: int
-    
-class JoinFamilyRequest(BaseModel):
-    code: str
-    
-@router.post("/create", response_model=FamilyInfo)
+@router.post("/create", response_model=FamilyInfoResponse)
 async def create_family(
-    family_data: FamilyCreate,
+    family_data: FamilyCreateRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -99,12 +64,12 @@ async def create_family(
             )
         ]
 
-        return FamilyInfo(
+        return FamilyInfoResponse(
             id=db_family.id,
             admin=current_user.id,
             members=members,
             family_name=db_family.family_name
-        ).dict() 
+        )
 
     except Exception as e:
         db.rollback()
@@ -151,16 +116,16 @@ async def create_invite(
     db.commit()
     db.refresh(db_invite)
 
-    return {
-        "code": code,
-        "expires_at": expires_at,
-        "max_uses": request.max_uses,
-        "family_id": request.family_id,
-        "invite_link": f"{settings.frontend_url}/invite.html?code={code}",
-        "uses": 0
-    }
+    return InviteResponse(
+        code=code,
+        expires_at=expires_at,
+        max_uses=request.max_uses,
+        family_id=request.family_id,
+        invite_link=f"{settings.frontend_url}/invite.html?code={code}",
+        uses=0
+    )
     
-@router.post("/join", response_model=FamilyInfo)
+@router.post("/join", response_model=FamilyInfoResponse)
 async def join_family(
     request: JoinFamilyRequest,
     db: Session = Depends(get_db),
@@ -223,14 +188,14 @@ async def join_family(
 
     family = db.query(Family).filter(Family.id == db_invite.family_id).first()
 
-    return FamilyInfo(
+    return FamilyInfoResponse(
         id=db_invite.family_id,
         admin=admin[0] if admin else None,
         members=[MemberInfo(user_id=user_id, email=email, is_admin=is_admin) for user_id, email, is_admin in members],
         family_name=family.family_name
     )
     
-@router.delete("/{family_id}", response_model=dict)
+@router.delete("/{family_id}", response_model=DeleteResponse)
 async def delete_family_endpoint(
     family_id: int,
     db: Session = Depends(get_db),
@@ -244,7 +209,7 @@ async def delete_family_endpoint(
     try:
         success = delete_family(db, family_id, current_user.id)
         if success:
-            return {"message": "Family deleted successfully"}
+            return DeleteResponse(message="Family deleted successfully")
         
     except ValueError as e:
         # Family does not exist
@@ -265,7 +230,7 @@ async def delete_family_endpoint(
             detail=f"Failed to delete family: {str(e)}"
         )
         
-@router.get("/{family_id}/members", response_model=dict)
+@router.get("/{family_id}/members", response_model=FamilyMembersResponse)
 async def get_family_members(
     family_id: int,
     db: Session = Depends(get_db),
@@ -319,7 +284,7 @@ async def get_family_members(
     }
 
 
-@router.delete("/{family_id}/{member_id}", response_model=dict)
+@router.delete("/{family_id}/{member_id}", response_model=DeleteResponse)
 async def delete_user(
     family_id: int,
     member_id: int,
@@ -337,18 +302,18 @@ async def delete_user(
     ).first()
 
     if not admin_record or not admin_record.is_admin:
-        return {"error": "You do not have admin privileges."}
+        return DeleteResponse(message="You do not have admin privileges.")
     
     if not opponent_record:
-        return {"error": "The member you are trying to delete does not exist."}
+        return DeleteResponse(message="The member you are trying to delete does not exist.")
 
     if opponent_record.is_admin:
-        return {"error": "You cannot delete another admin."}
+        return DeleteResponse(message="You cannot delete another admin.")
 
     db.delete(opponent_record)
     db.commit()
 
-    return {"message": "Member deleted successfully."}
+    return DeleteResponse(message="Member deleted successfully.")
 
 @router.put("/{family_id}/{member_id}", response_model=dict)
 async def admin_user(
@@ -379,7 +344,7 @@ async def admin_user(
 
     return {"message": "Member have been updated as admin."}
 
-@router.get("/my-families", response_model=List[FamilyInfo])
+@router.get("/my-families", response_model=List[FamilyInfoResponse])
 async def get_user_families(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -408,7 +373,7 @@ async def get_user_families(
             Registered.is_admin == True
         ).first()
 
-        families.append(FamilyInfo(
+        families.append(FamilyInfoResponse(
             id=db_family.id,
             admin=admin[0] if admin else None,
             members=[
@@ -439,13 +404,13 @@ async def get_invite_details(
             detail="Invalid or expired invite code"
         )
 
-    return {
-        "code": invite.code,
-        "expires_at": invite.expires_at,
-        "max_uses": invite.max_uses,
-        "family_id": invite.family_id,
-        "uses": invite.uses
-    }
+    return InviteResponse(
+        code=invite.code,
+        expires_at=invite.expires_at,
+        max_uses=invite.max_uses,
+        family_id=invite.family_id,
+        uses=invite.uses
+    )
 
 @router.get("/{family_id}/invites", response_model=List[InviteResponse])
 async def get_family_invites(
@@ -482,10 +447,10 @@ async def get_family_invites(
         for invite in invites
     ]
 
-@router.put("/{family_id}/update", response_model=FamilyInfo)
+@router.put("/{family_id}/update", response_model=FamilyInfoResponse)
 async def update_family(
     family_id: int,
-    update_data: FamilyUpdate,
+    update_data: FamilyUpdateRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -559,11 +524,7 @@ async def update_family(
             detail=f"Failed to update family: {str(e)}"
         )
 
-class SendMessageRequest(BaseModel):
-    text: str
-    reply_to: Optional[int] = None
-
-@router.post("/{family_id}/messages")
+@router.post("/{family_id}/messages", response_model=MessageResponse)
 async def send_message(
     family_id: int,
     payload: SendMessageRequest,
@@ -585,14 +546,14 @@ async def send_message(
         time_stamp=datetime.utcnow()
     )
 
-    return {
-        "id": msg.id,
-        "from": current_user.email,
-        "text": msg.message_text,
-        "reply_to": msg.reply_to
-    }
+    return MessageResponse(
+        id=msg.id,
+        from_=current_user.email,
+        text=msg.message_text,
+        reply_to=msg.reply_to
+    )
 
-@router.get("/{family_id}/messages")
+@router.get("/{family_id}/messages", response_model=List[MessageResponse])
 async def get_messages(
     family_id: int,
     db: Session = Depends(get_db),
@@ -620,11 +581,7 @@ async def get_messages(
         })
     return result
 
-class MemberUpdateRequest(BaseModel):
-    custom_name: Optional[str] = None
-    relationship: Optional[str] = None
-
-@router.put("/{family_id}/me", response_model=dict)
+@router.put("/{family_id}/me", response_model=MemberUpdateResponse)
 async def update_member_info(
     family_id: int,
     update: MemberUpdateRequest,
@@ -647,8 +604,8 @@ async def update_member_info(
     db.commit()
     db.refresh(member)
 
-    return {
-        "message": "Member info updated",
-        "custom_name": member.custom_name,
-        "relationship": member.relationship
-    }
+    return MemberUpdateResponse(
+        message="Member info updated",
+        custom_name=member.custom_name,
+        relationship=member.relationship
+    )

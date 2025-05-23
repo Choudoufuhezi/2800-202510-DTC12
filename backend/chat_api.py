@@ -3,15 +3,13 @@ from sqlalchemy.orm import Session
 from typing import List
 from database import Message, Registered, UserChatRoom, create_chatroom, create_userchatroom, get_db, User, ChatRoom
 from datetime import datetime
-from family_management import get_current_user
+from utils.user_utils import get_current_user
 
 router = APIRouter()
 
 def verify_chatroom_membership(db: Session, user_id: int, chatroom_id: int):
     """
     Verify if user is a member of the specified chatroom
-    
-    TODO: authenticate using token instead of using raw user id
     """
     membership = db.query(UserChatRoom).filter(
         UserChatRoom.user_id == user_id,

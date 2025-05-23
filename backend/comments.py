@@ -1,25 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 from typing import List
 from sqlalchemy.orm import Session
 
+from models.comment_models import CommentResponse, CommentCreateRequest, CommentDeleteResponse
 from database import Memory, User, Comment, Registered, create_comment, get_db
-from family_management import get_current_user
+from utils.user_utils import get_current_user
 
 router = APIRouter(prefix="/comments")
 
-class CommentCreateRequest(BaseModel):
-    memory_id: int
-    comment_text: str
 
-class CommentResponse(BaseModel):
-    id: int
-    memory_id: int
-    comment_text: str
-    user_id: int
-
-class CommentDeleteResponse(BaseModel):
-    message: str
 
 @router.get("/memory/{memory_id}", response_model=List[CommentResponse])
 async def get_comments_endpoint(
