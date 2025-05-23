@@ -1,5 +1,5 @@
 import random
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from utils.user_utils import get_current_user
@@ -283,6 +283,82 @@ async def get_family_members(
         "is_admin": is_member.is_admin
     }
 
+@router.put("/{family_id}/update", response_model=FamilyInfoResponse)
+async def update_family(
+    family_id: int,
+    update_data: FamilyUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update a family's name
+    """
+    is_admin = db.query(Registered).filter(
+        Registered.user_id == current_user.id,
+        Registered.family_id == family_id,
+        Registered.is_admin == True
+    ).first()
+
+    if not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail = "Only family admin can update the family name",
+        )
+
+    db_family = db.query(Family).filter(Family.id == family_id).first()
+    if not db_family:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Family not found",
+        )
+
+    try:
+        if update_data.family_name is not None:
+            db_family.family_name = update_data.family_name
+        if update_data.family_banner is not None:
+            db_family.family_banner = update_data.family_banner
+        db.commit()
+        db.refresh(db_family)
+
+        members = db.query(
+                    User.id,
+                    User.email,
+                    Registered.is_admin,
+                    Registered.custom_name,
+                    Registered.relationship_
+                ).join(
+                    Registered, Registered.user_id == User.id
+                ).filter(
+                    Registered.family_id == family_id
+                ).all()
+
+        admin = db.query(Registered.user_id).filter(
+            Registered.family_id == family_id,
+            Registered.is_admin == True
+        ).first()
+        
+        return {
+            "id": db_family.id,
+            "admin": admin[0] if admin else None,
+            "members": [
+                MemberInfo(
+                    user_id=user_id,
+                    email=email,
+                    is_admin=is_admin,
+                    custom_name=custom_name,
+                    relationship_=relationship_
+                ).dict()
+                for user_id, email, is_admin, custom_name, relationship_ in members
+            ],
+            "family_name": db_family.family_name,
+            "family_banner": db_family.family_banner
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update family: {str(e)}"
+        )
 
 @router.delete("/{family_id}/{member_id}", response_model=DeleteResponse)
 async def delete_user(
@@ -446,83 +522,6 @@ async def get_family_invites(
         }
         for invite in invites
     ]
-
-@router.put("/{family_id}/update", response_model=FamilyInfoResponse)
-async def update_family(
-    family_id: int,
-    update_data: FamilyUpdateRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Update a family's name
-    """
-    is_admin = db.query(Registered).filter(
-        Registered.user_id == current_user.id,
-        Registered.family_id == family_id,
-        Registered.is_admin == True
-    ).first()
-
-    if not is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail = "Only family admin can update the family name",
-        )
-
-    db_family = db.query(Family).filter(Family.id == family_id).first()
-    if not db_family:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Family not found",
-        )
-
-    try:
-        if update_data.family_name is not None:
-            db_family.family_name = update_data.family_name
-        if update_data.family_banner is not None:
-            db_family.family_banner = update_data.family_banner
-        db.commit()
-        db.refresh(db_family)
-
-        members = db.query(
-                    User.id,
-                    User.email,
-                    Registered.is_admin,
-                    Registered.custom_name,
-                    Registered.relationship_
-                ).join(
-                    Registered, Registered.user_id == User.id
-                ).filter(
-                    Registered.family_id == family_id
-                ).all()
-
-        admin = db.query(Registered.user_id).filter(
-            Registered.family_id == family_id,
-            Registered.is_admin == True
-        ).first()
-        
-        return {
-            "id": db_family.id,
-            "admin": admin[0] if admin else None,
-            "members": [
-                MemberInfo(
-                    user_id=user_id,
-                    email=email,
-                    is_admin=is_admin,
-                    custom_name=custom_name,
-                    relationship_=relationship_
-                ).dict()
-                for user_id, email, is_admin, custom_name, relationship_ in members
-            ],
-            "family_name": db_family.family_name,
-            "family_banner": db_family.family_banner
-        }
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update family: {str(e)}"
-        )
 
 @router.post("/{family_id}/messages", response_model=MessageResponse)
 async def send_message(
