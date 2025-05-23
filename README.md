@@ -29,27 +29,35 @@
 ...
 
 
-## Installation & Setup (macOS & Windows)
-1. Prerequisites
+## Installation & Setup
+
+### 1. Prerequisites
 Make sure you have the following installed:
-....
+- Python 3.7+
 
-2. Clone the repository
-https://github.com/Choudoufuhezi/2800-202510-DTC12
+### 2. Setup Instructions
 
+1. Create and activate a virtual environment
+2. Install requirements.txt
+3. Update backend/config.py to reflect dev and frontend server addresses (eg: setting backend_url to http://localhost:8000)
+4. Update backend/config.py to reflect dev and frontend server addresses (eg: setting BASE_URL to http://localhost:3000)
 
-3. Run the app
+#### Run the backend server:
+```bash
+cd backend
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+#### Run the frontend server (in a separate terminal):
+``` bash
+python -m http.server 3000
+```
+3. Access the Application
+
+Backend API will be available at: http://localhost:8000
+Frontend will be available at: http://localhost:3000/login.html
 
 ## Files Structure
 ```shell
-shallow_backup/
-├── configs
-│   ├── plist
-│   │   └── com.apple.Terminal.plist
-│   ├── sublime_2
-│   │   └── ...
-│   └── sublime_3
-│       └── ...
 ├── backend
 │   ├── auth.py
 │   ├── chat_api.py
@@ -93,16 +101,6 @@ shallow_backup/
 │   ├── recipe_page_upload.js
 │   ├── stories_page_upload.js
 │   ├── video_page_upload.js
-├── packages
-│   ├── brew-cask_list.txt
-│   ├── brew_list.txt
-│   ├── cargo_list.txt
-│   ├── gem_list.txt
-│   ├── installed_apps_list.txt
-│   ├── npm_list.txt
-│   ├── macports_list.txt
-│   ├── pip_list.txt
-│   └── sublime3_list.txt
 ├── 404.html
 ├── about.html
 ├── create-family.html
