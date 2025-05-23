@@ -1,4 +1,4 @@
-**Digital Family Vault**
+# Digital Family Vault 
 
 ## Project Description
 ....
@@ -26,19 +26,10 @@
   - SMTP
   - Uvicorn
 
-## API & Libraries:
-- FastAPI
-- SQLAlchemy
-- Pydantic
-- Passlib
-- PyJWT
-- Authlib
+## APIs Used:
 - Cloudinary
 - OpenAI (Deepseek API)
-- Python-socketio
-- Python-multipart
-- Requests
-- Bcrypt
+- Google Cloud Services
 
 ## Tools
 - Visual Studio Code 
@@ -76,6 +67,7 @@ python -m http.server 3000
 
 Backend API will be available at: http://localhost:8000
 Frontend will be available at: http://localhost:3000/login.html
+
 
 ## File Structure
 ```shell
@@ -153,15 +145,6 @@ Frontend will be available at: http://localhost:3000/login.html
 └── videos.html
 ```
 
-
-## Contributing
-1. Fork this repo
-2. Create a new branch
-3. Make changes
-4. Commit and push
-5.Create a pull request
-
-
 ## About Us
 Team Name: DTC-12
 Team Members: 
@@ -171,3 +154,23 @@ Team Members:
 - Kiana Karimi (Set 2F)
 - Ramandeep Kaur (Set 2F)
 
+## Credits
+
+This project has used AI language models such as ChatGPT and Deepseek for ideas and to generate content for our terms of service and privacy policy as well as assorted animations and SVG graphics.
+
+This project makes use of the following open-source libraries and APIs. We gratefully acknowledge their authors and maintainers:
+
+### Libraries & Frameworks
+- TailwindCSS (MIT License)
+- FastAPI (MIT License)
+- SQLAlchemy (MIT License)
+- Uvicorn (BSD License)
+- SQLite (Public Domain)
+- ESLint (MIT License)
+
+### APIs & Cloud Services
+- Cloudinary
+- Deepseek API
+- Google Cloud Services
+
+All services are used in compliance with their terms of services
